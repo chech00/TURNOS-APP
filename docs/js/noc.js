@@ -1,24 +1,27 @@
 "use strict";
 
-// Importar el cliente de Supabase desde CDN (versión ESM)
+// =============================
+// Importar Supabase (ESM)
+// =============================
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 // Inicializar Supabase (reemplaza los valores por los de tu proyecto)
 const supabaseUrl = "https://jmrzvajipfdqvzilqjvq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcnp2YWppcGZkcXZ6aWxxanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3ODU3MTksImV4cCI6MjA1NDM2MTcxOX0.xQZX2i-6wynnRnEKBb_mwbt63S6vvrr10SilIyug5Mg"; // <-- tu key real
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcnp2YWppcGZkcXZ6aWxxanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3ODU3MTksImV4cCI6MjA1NDM2MTcxOX0.xQZX2i-6wynnRnEKBb_mwbt63S6vvrr10SilIyug5Mg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Se asume que auth y db se han inicializado globalmente (por ejemplo, en firebase.js)
+const auth = window.auth;
+const db = window.db;
 
-const auth = window.auth; 
-const db = window.db;  
-
+// =============================
+// Variables globales
+// =============================
 let usuarioEsAdmin = false;
 let currentDate = new Date();
 let selectedDays = [];
-
 const vacationIcon = `<i data-lucide="tree-palm"></i>`;
 
-// Feriados de ejemplo
 const feriadosChile = [
   "2025-01-01", "2025-04-18", "2025-04-19", "2025-05-01",
   "2025-05-21", "2025-06-29", "2025-07-16", "2025-08-15",
@@ -43,7 +46,6 @@ const feriadosInfo = {
   "2025-12-25": "Navidad"
 };
 
-// Empleados de ejemplo para el calendario general
 const empleados = [
   { nombre: "Sergio Castillo", turnos: [] },
   { nombre: "Ignacio Aburto", turnos: [] },
@@ -52,19 +54,18 @@ const empleados = [
   { nombre: "Gabriel Trujillo", turnos: [] }
 ];
 
-// Lista de encargados de bitácora (ejemplo)
 const bitacoraEmployees = [
   "Sergio Castillo",
   "Ignacio Aburto",
   "Julio Oliva",
-  "Carolina",
+  "Carolina Gonzalez",
   "Gabriel Trujillo",
   "Claudio Bustamante"
 ];
 
-// ---------------------------------------
-// 4) FUNCIONES DE CONFIGURACIÓN
-// ---------------------------------------
+// =============================
+// 1) FUNCIONES DE CONFIGURACIÓN
+// =============================
 function verificarRolUsuario(callback) {
   auth.onAuthStateChanged((user) => {
     if (!user) {
@@ -91,20 +92,16 @@ function configurarSidebar() {
   const sidebar = document.getElementById("sidebar");
   const mainContent = document.getElementById("main-content");
   const menuToggleBtns = document.querySelectorAll("#menu-toggle");
-
   if (!sidebar || !mainContent || menuToggleBtns.length === 0) {
     console.error("No se encontró el sidebar o main content.");
     return;
   }
-
   menuToggleBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       sidebar.classList.toggle("active");
       mainContent.classList.toggle("shift");
     });
   });
-
-  // Inicializa iconos en el sidebar
   lucide.createIcons();
 }
 
@@ -123,16 +120,13 @@ function configurarLogout() {
   }
 }
 
-// ---------------------------------------
-// 5) LOGICA DEL CALENDARIO
-// ---------------------------------------
+// =============================
+// 2) LÓGICA DEL CALENDARIO
+// =============================
 function asignarDomingosLibres(year, month, daysInMonth) {
   empleados.forEach((empleado) => {
     empleado.turnos = Array(daysInMonth).fill("");
-    if (
-      empleado.nombre === "Sergio Castillo" ||
-      empleado.nombre === "Ignacio Aburto"
-    ) {
+    if (empleado.nombre === "Sergio Castillo" || empleado.nombre === "Ignacio Aburto") {
       for (let day = 1; day <= daysInMonth; day++) {
         const fecha = new Date(year, month, day);
         if (fecha.getDay() === 0) {
@@ -175,7 +169,7 @@ function renderCalendar(date) {
 
   asignarDomingosLibres(year, month, daysInMonth);
 
-
+  // Construir HTML para el calendario general
   let generalHTML = "";
   empleados.forEach((empleado) => {
     generalHTML += `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
@@ -184,20 +178,12 @@ function renderCalendar(date) {
       const esFeriado = feriadosChile.includes(dateStr);
       const turno = empleado.turnos[day - 1] || "";
       let displayTurno = turno;
-
-      if (
-        esFeriado &&
-        turno === "" &&
-        (empleado.nombre === "Sergio Castillo" || empleado.nombre === "Ignacio Aburto")
-      ) {
+      if (esFeriado && turno === "" && (empleado.nombre === "Sergio Castillo" || empleado.nombre === "Ignacio Aburto")) {
         displayTurno = "F";
       }
       const extraClass = turno === "DL" ? "domingo-libre" : "";
       const claseFeriado = displayTurno === "F" ? "feriado" : "";
-
-      // Si es "V", usamos icono
       const cellContent = turno === "V" ? vacationIcon : displayTurno;
-
       generalHTML += `
         <td>
           <button data-date="${dateStr}" data-empleado="${empleado.nombre}" data-day="${day}"
@@ -211,8 +197,8 @@ function renderCalendar(date) {
     }
     generalHTML += `</tr>`;
   });
-
   
+  // Fila de bitácora
   const totalCols = daysInMonth + 1;
   const bitacoraIndex = ((month - 1) + bitacoraEmployees.length) % bitacoraEmployees.length;
   const bitacoraEmpleado = bitacoraEmployees[bitacoraIndex];
@@ -231,7 +217,7 @@ function renderCalendar(date) {
     console.error("No se encontró el tbody de la tabla general");
   }
 
-  
+  // Construir HTML para el calendario nocturno
   let nocturnoHTML = "";
   const cristianTurnos = [];
   for (let day = 1; day <= daysInMonth; day++) {
@@ -257,9 +243,7 @@ function renderCalendar(date) {
     if (turno === "DL") turnoClass = "domingo-libre";
     else if (turno === "L") turnoClass = "dia-libre";
     else if (turno === "N") turnoClass = "nocturno";
-
     const claseFeriado = turno === "F" ? "feriado" : "";
-
     nocturnoHTML += `
       <td>
         <button class="calendar-day w-full h-full ${turnoClass} ${claseFeriado}">
@@ -276,7 +260,7 @@ function renderCalendar(date) {
     console.error("No se encontró el tbody de la tabla nocturna");
   }
 
-  
+  // Agregar títulos a feriados
   document.querySelectorAll(".calendar-day").forEach((btn) => {
     if (btn.textContent.trim() === "F") {
       const dateStr = btn.getAttribute("data-date");
@@ -287,33 +271,11 @@ function renderCalendar(date) {
     }
   });
 
- 
-  document.querySelectorAll(".calendar-day").forEach((btn) => {
-    if (usuarioEsAdmin) {
-      btn.addEventListener("click", function () {
-        if (this.classList.contains("selected")) {
-          this.classList.remove("selected");
-          selectedDays = selectedDays.filter((el) => el !== this);
-        } else {
-          this.classList.add("selected");
-          selectedDays.push(this);
-        }
-      });
-      btn.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
-        this.textContent = "";
-        this.removeAttribute("style");
-        this.className = "calendar-day w-full h-full";
-        selectedDays = selectedDays.filter((el) => el !== this);
-      });
-    } else {
-      
-      btn.addEventListener("click", (e) => e.preventDefault());
-      btn.addEventListener("contextmenu", (e) => e.preventDefault());
-    }
-  });
+  // Al final de renderCalendar, si es admin, re-adjuntamos los listeners
+  if (usuarioEsAdmin) {
+    attachAdminCellListeners();
+  }
 
-  
   lucide.createIcons();
 }
 
@@ -322,16 +284,63 @@ function todosLosDiasRellenos() {
     "#general-calendar .calendar-day, #nocturno-calendar .calendar-day"
   );
   for (let btn of dayButtons) {
-    if (btn.textContent.trim() === "") {
+    if (btn.innerHTML.trim() === "") {
       return false;
     }
   }
   return true;
 }
 
-// ---------------------------------------
-// 6) MODALES, GUARDAR Y CARGAR CALENDARIO
-// ---------------------------------------
+// =============================
+// 3) Funciones para asignar eventos de admin
+// =============================
+let isSelecting = false;
+
+function adminMousedown(e) {
+  if (e.button === 0) { // botón izquierdo
+    isSelecting = true;
+    if (!this.classList.contains("selected")) {
+      this.classList.add("selected");
+      selectedDays.push(this);
+    }
+  }
+}
+
+function adminMouseover(e) {
+  if (usuarioEsAdmin && isSelecting) {
+    if (!this.classList.contains("selected")) {
+      this.classList.add("selected");
+      selectedDays.push(this);
+    }
+  }
+}
+
+function adminContextmenu(e) {
+  e.preventDefault();
+  this.textContent = "";
+  this.removeAttribute("style");
+  this.className = "calendar-day w-full h-full";
+  selectedDays = selectedDays.filter(el => el !== this);
+}
+
+function adminMouseup(e) {
+  if (usuarioEsAdmin) {
+    isSelecting = false;
+  }
+}
+
+function attachAdminCellListeners() {
+  document.querySelectorAll(".calendar-day").forEach(cell => {
+    cell.addEventListener("mousedown", adminMousedown);
+    cell.addEventListener("mouseover", adminMouseover);
+    cell.addEventListener("contextmenu", adminContextmenu);
+  });
+  document.addEventListener("mouseup", adminMouseup);
+}
+
+// =============================
+// 4) MODALES, GUARDAR Y CARGAR CALENDARIO
+// =============================
 const btnGuardar   = document.getElementById("btnGuardar");
 const btnCargar    = document.getElementById("btnCargar");
 const btnEliminar  = document.getElementById("btnEliminar");
@@ -344,15 +353,11 @@ const btnVerHorarios  = document.getElementById("btnVerHorarios");
 const modalHorarios   = document.getElementById("modalHorarios");
 const cerrarHorarios  = document.getElementById("cerrarHorarios");
 
-// === Nuevo para Estadísticas ===
 const btnVerEstadisticas   = document.getElementById("btnVerEstadisticas");
 const modalEstadisticas    = document.getElementById("modalEstadisticas");
 const cerrarEstadisticas   = document.getElementById("cerrarEstadisticas");
 const estadisticasContenido = document.getElementById("estadisticas-contenido");
 
-/**
- * Obtiene la data del calendario (HTML) para guardarla en Firestore.
- */
 function obtenerDatosCalendario() {
   const currentMonthElement = document.getElementById("current-month");
   const generalTable = document.getElementById("general-calendar");
@@ -363,7 +368,6 @@ function obtenerDatosCalendario() {
     nocturnoHTML: nocturnoTable.outerHTML
   };
 }
-
 
 function cargarListaCalendarios() {
   db.collection("calendarios").get()
@@ -381,19 +385,16 @@ function cargarListaCalendarios() {
     });
 }
 
-// ---------------------------------------
-// 7) CARGAR FOTOS DESDE FIRESTORE
-// ---------------------------------------
+// =============================
+// 5) CARGAR FOTOS DE EMPLEADOS DESDE FIRESTORE
+// =============================
 function cargarFotosEmpleados() {
-  
   const employeeCards = document.querySelectorAll(".employee-card");
   employeeCards.forEach(card => {
     const nameSpan = card.querySelector("span");
     const imgElement = card.querySelector(".employee-photo");
     if (!nameSpan || !imgElement) return;
-    
     const employeeName = nameSpan.textContent.trim();
-  
     db.collection("empleados").doc(employeeName).get()
       .then(doc => {
         if (doc.exists) {
@@ -407,77 +408,263 @@ function cargarFotosEmpleados() {
   });
 }
 
-// ---------------------------------------
-// 8) FUNCIONES DE ESTADÍSTICAS (EJEMPLO)
-// ---------------------------------------
-/**
- * Calcula cuántas veces aparece cada turno en el calendario general.
- * @returns {Object} 
- */
-function calcularEstadisticas() {
 
+// =============================
+//  FUNCIÓN PARA CALCULAR ESTADÍSTICAS GLOBALES
+// =============================
+function calcularEstadisticas() {
   const celdas = document.querySelectorAll("#general-calendar .calendar-day");
   const conteoTurnos = {};
+
   celdas.forEach((celda) => {
     const turno = celda.textContent.trim();
     if (turno) {
-   
-      if (turno.includes("tree-palm")) {
-     
-        conteoTurnos["V"] = (conteoTurnos["V"] || 0) + 1;
-      } else {
-        conteoTurnos[turno] = (conteoTurnos[turno] || 0) + 1;
-      }
+      conteoTurnos[turno] = (conteoTurnos[turno] || 0) + 1;
     }
   });
+
   return conteoTurnos;
 }
 
-function mostrarEstadisticas() {
-  const estadisticas = calcularEstadisticas();
+// =============================
+//  FUNCIÓN PARA CALCULAR TURNOS POR EMPLEADO (SOLO UNA VEZ)
+// =============================
+function calcularTurnosPorEmpleado() {
+  const empleadosTurnos = {};
 
- 
-  let html = `<table class="tabla-horarios">
-    <thead>
-      <tr>
-        <th>Turno</th>
-        <th>Cantidad</th>
-      </tr>
-    </thead>
-    <tbody>`;
-  
-  for (const turno in estadisticas) {
-    html += `
-      <tr>
-        <td>${turno}</td>
-        <td>${estadisticas[turno]}</td>
-      </tr>`;
-  }
-  html += `</tbody></table>`;
+  document.querySelectorAll("#general-calendar tbody tr").forEach(row => {
+    const empleado = row.querySelector("td")?.textContent.trim();
+    if (!empleado) return;
 
-  estadisticasContenido.innerHTML = html;
+    empleadosTurnos[empleado] = empleadosTurnos[empleado] || {};
 
+    row.querySelectorAll("td button.calendar-day").forEach(btn => {
+      const turno = btn.textContent.trim();
+      if (turno) {
+        empleadosTurnos[empleado][turno] = (empleadosTurnos[empleado][turno] || 0) + 1;
+      }
+    });
+  });
 
-  modalEstadisticas.style.display = "block";
+  return Object.entries(empleadosTurnos).map(([empleado, turnos]) => {
+    let turnoMasAsignado = "-";
+    let turnoMenosAsignado = "-";
+    let maxTurnos = 0;
+    let minTurnos = Infinity;
+
+    Object.entries(turnos).forEach(([turno, cantidad]) => {
+      if (cantidad > maxTurnos) {
+        maxTurnos = cantidad;
+        turnoMasAsignado = turno;
+      }
+      if (cantidad < minTurnos) {
+        minTurnos = cantidad;
+        turnoMenosAsignado = turno;
+      }
+    });
+
+    return { empleado, turnoMasAsignado, turnoMenosAsignado };
+  });
 }
 
-// ---------------------------------------
-// 9) EVENTO PRINCIPAL DOMContentLoaded
-// ---------------------------------------
+// =============================
+// 3 FUNCIÓN PARA MOSTRAR ESTADÍSTICAS EN EL MODAL
+// =============================
+function mostrarEstadisticas() {
+  const conteoTurnos = calcularEstadisticas();
+  const empleadosTurnos = calcularTurnosPorEmpleado();
+
+  let turnoMasUsado = "-";
+  let turnoMenosUsado = "-";
+  let maxCount = 0, minCount = Infinity;
+
+  Object.entries(conteoTurnos).forEach(([turno, cantidad]) => {
+    if (cantidad > maxCount) {
+      maxCount = cantidad;
+      turnoMasUsado = turno;
+    }
+    if (cantidad < minCount) {
+      minCount = cantidad;
+      turnoMenosUsado = turno;
+    }
+  });
+
+  document.getElementById("total-turnos").textContent = Object.values(conteoTurnos).reduce((a, b) => a + b, 0);
+  document.getElementById("turno-mas-usado").textContent = turnoMasUsado;
+  document.getElementById("turno-menos-usado").textContent = turnoMenosUsado;
+
+  const tablaEmpleados = document.getElementById("tabla-turnos-empleados");
+  tablaEmpleados.innerHTML = empleadosTurnos.map(({ empleado, turnoMasAsignado, turnoMenosAsignado }) => `
+    <tr>
+      <td>${empleado}</td>
+      <td>${turnoMasAsignado}</td>
+      <td>${turnoMenosAsignado}</td>
+    </tr>
+  `).join("");
+
+  generarGraficoBarras(conteoTurnos);
+  generarGraficoPastel(empleadosTurnos);
+  generarGraficoLineas(conteoTurnos);
+
+  document.getElementById("modalEstadisticas").style.display = "block";
+}
+
+// =============================
+//  GRÁFICOS CON CHART.JS
+// =============================
+
+// Variables globales para almacenar las instancias de los gráficos
+let chartBarras;
+let chartPastel;
+let chartLineas;
+
+function generarGraficoBarras(datos) {
+  const ctx = document.getElementById("graficoTurnos").getContext("2d");
+
+  // Destruir el gráfico existente si ya existe
+  if (chartBarras) {
+    chartBarras.destroy();
+  }
+
+  chartBarras = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(datos),
+      datasets: [{
+        label: "Frecuencia de Turnos",
+        data: Object.values(datos),
+        backgroundColor: "#7796cb"
+      }]
+    },
+    options: { responsive: true }
+  });
+}
+
+
+function generarGraficoPastel(datos) {
+  const ctx = document.getElementById("graficoEmpleados").getContext("2d");
+  if (chartPastel) {
+    chartPastel.destroy();
+  }
+  chartPastel = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: Object.keys(datos),
+      datasets: [{
+        label: "Turnos por empleado",
+        data: Object.values(datos),
+        backgroundColor: ["#8FBCBB", "#88C0A6", "#D77A7A", "#7796cb"]
+      }]
+    },
+    options: { responsive: true }
+  });
+}
+
+function generarGraficoLineas(datos) {
+  const ctx = document.getElementById("graficoTendencias").getContext("2d");
+  if (chartLineas) {
+    chartLineas.destroy();
+  }
+  chartLineas = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: Object.keys(datos),
+      datasets: [{
+        label: "Tendencia de Turnos",
+        data: Object.values(datos),
+        borderColor: "#7796cb",
+        fill: false
+      }]
+    },
+    options: { responsive: true }
+  });
+}
+
+
+// =============================
+// 5️⃣ INTERACCIÓN CON EL MODAL
+// =============================
+document.getElementById("btnVerEstadisticas").addEventListener("click", mostrarEstadisticas);
+
+document.getElementById("cerrarEstadisticas").addEventListener("click", () => {
+  document.getElementById("modalEstadisticas").style.display = "none";
+});
+
+// =============================
+// 7) SUSCRIPCIÓN EN TIEMPO REAL AL CALENDARIO
+// =============================
+let unsubscribeCalendar = null;
+function subscribeCalendar() {
+  const monthId = document.getElementById("current-month").textContent.trim();
+  if (unsubscribeCalendar) {
+    unsubscribeCalendar();
+  }
+  unsubscribeCalendar = db.collection("calendarios").doc(monthId)
+    .onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        const generalContainer = document.getElementById("general-calendar");
+        const nocturnoContainer = document.getElementById("nocturno-calendar");
+        generalContainer.outerHTML = data.generalHTML;
+        nocturnoContainer.outerHTML = data.nocturnoHTML;
+        lucide.createIcons();
+        // Si es admin, re-adjuntamos los event listeners
+        if (usuarioEsAdmin) {
+          attachAdminCellListeners();
+        }
+      } else {
+        renderCalendar(currentDate);
+        if (usuarioEsAdmin) {
+          attachAdminCellListeners();
+        }
+      }
+    });
+}
+
+// =============================
+// 8) ACTUALIZACIÓN EN TIEMPO REAL DESDE ADMIN (con debounce)
+// =============================
+let updateTimeout;
+function scheduleFirestoreUpdate() {
+  clearTimeout(updateTimeout);
+  updateTimeout = setTimeout(() => {
+    const datos = obtenerDatosCalendario();
+    db.collection("calendarios").doc(datos.mes).set(datos)
+      .then(() => {
+        console.log("Actualización en tiempo real guardada.");
+      })
+      .catch((error) => {
+        console.error("Error al actualizar en tiempo real:", error);
+      });
+  }, 1000); // espera 1 segundo de inactividad
+}
+
+// =============================
+// 9) EVENTO PRINCIPAL (DOMContentLoaded)
+// =============================
 document.addEventListener("DOMContentLoaded", function () {
   configurarSidebar();
   configurarLogout();
 
   verificarRolUsuario(function(isAdmin) {
     usuarioEsAdmin = isAdmin;
-
-   
     if (usuarioEsAdmin) {
       document.querySelectorAll(".admin-only").forEach(el => {
         el.classList.remove("admin-only");
       });
     }
 
+    const btnAutoAsignar = document.getElementById("btnAutoAsignar");
+    if (btnAutoAsignar) {
+      btnAutoAsignar.addEventListener("click", function () {
+        Swal.fire({
+          icon: "info",
+          title: "Próxima actualización",
+          text: "Función en proceso",
+          confirmButtonText: "Entendido"
+        });
+      });
+    }
 
     const prevMonthButton = document.getElementById("prev-month");
     const nextMonthButton = document.getElementById("next-month");
@@ -486,29 +673,31 @@ document.addEventListener("DOMContentLoaded", function () {
     prevMonthButton.addEventListener("click", function () {
       currentDate.setMonth(currentDate.getMonth() - 1);
       renderCalendar(currentDate);
+      subscribeCalendar();
     });
     nextMonthButton.addEventListener("click", function () {
       currentDate.setMonth(currentDate.getMonth() + 1);
       renderCalendar(currentDate);
+      subscribeCalendar();
     });
     todayButton.addEventListener("click", function () {
       currentDate = new Date();
       renderCalendar(currentDate);
+      subscribeCalendar();
     });
 
-    
     renderCalendar(currentDate);
-  
+    subscribeCalendar();
     cargarListaCalendarios();
-    
     cargarFotosEmpleados();
 
-   
+    // ================================
+    // Asignación de turnos (botones) - Actualización en tiempo real
+    // ================================
     const turnosButtons = document.querySelectorAll(".turnos-buttons button");
     turnosButtons.forEach((button) => {
       button.addEventListener("click", function () {
-        if (!usuarioEsAdmin) return; 
-
+        if (!usuarioEsAdmin) return;
         if (selectedDays.length > 0) {
           const turno = this.getAttribute("data-turno");
           const color = this.getAttribute("data-color");
@@ -526,6 +715,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           lucide.createIcons();
           selectedDays = [];
+          scheduleFirestoreUpdate();
         } else {
           Swal.fire({
             icon: "warning",
@@ -536,11 +726,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
-    // ------------------ GUARDAR CALENDARIO ------------------
+    // ================================
+    // Guardar Calendario (acción manual)
+    // ================================
     if (btnGuardar) {
       btnGuardar.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
-
         if (!todosLosDiasRellenos()) {
           Swal.fire({
             icon: "error",
@@ -549,10 +740,8 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           return;
         }
-
         const datos = obtenerDatosCalendario();
         const docRef = db.collection("calendarios").doc(datos.mes);
-
         docRef.get().then((doc) => {
           if (doc.exists) {
             Swal.fire({
@@ -592,7 +781,9 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // ------------------ CARGAR CALENDARIO ------------------
+    // ================================
+    // Cargar Calendario
+    // ================================
     if (btnCargar) {
       btnCargar.addEventListener("click", function () {
         const mesSeleccionado = selectMeses.value;
@@ -604,7 +795,6 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           return;
         }
-
         db.collection("calendarios").doc(mesSeleccionado).get()
           .then((doc) => {
             if (doc.exists) {
@@ -628,11 +818,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // ------------------ ELIMINAR CALENDARIO ------------------
+    // ================================
+    // Eliminar Calendario
+    // ================================
     if (btnEliminar) {
       btnEliminar.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
-
         const mesSeleccionado = selectMeses.value;
         if (!mesSeleccionado) {
           Swal.fire({
@@ -642,7 +833,6 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           return;
         }
-
         Swal.fire({
           icon: "warning",
           title: "¿Eliminar Calendario?",
@@ -667,7 +857,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // ------------------ CERRAR MODAL CALENDARIO ------------------
+    // Cerrar modal de calendario
     if (cerrarModal) {
       cerrarModal.addEventListener("click", function () {
         modal.style.display = "none";
@@ -679,7 +869,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // ------------------ VER HORARIOS ------------------
+    // ================================
+    // Modal de Horarios
+    // ================================
     if (btnVerHorarios) {
       btnVerHorarios.addEventListener("click", function () {
         modalHorarios.style.display = "block";
@@ -696,7 +888,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // ------------------ NUEVA LÓGICA: VER ESTADÍSTICAS ------------------
+    // ================================
+    // Modal de Estadísticas
+    // ================================
     if (btnVerEstadisticas) {
       btnVerEstadisticas.addEventListener("click", function () {
         mostrarEstadisticas();
@@ -713,9 +907,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // ====================================================
-    //   SUBIR FOTO A SUPABASE Y GUARDAR EN FIRESTORE
-    // ====================================================
+    // ================================
+    // Subida de fotos (Admin)
+    // ================================
     if (usuarioEsAdmin) {
       const uploadButtons = document.querySelectorAll(".upload-photo-btn");
       uploadButtons.forEach(button => {
@@ -733,76 +927,55 @@ document.addEventListener("DOMContentLoaded", function () {
           photoInput.click();
         });
       });
-
       const photoInputs = document.querySelectorAll(".photo-input");
       photoInputs.forEach(input => {
         input.addEventListener("change", async function() {
           if (this.files && this.files[0]) {
             const file = this.files[0];
             console.log("Archivo seleccionado para subir:", file);
-
             const employeeCard = this.closest(".employee-card");
             if (!employeeCard) {
               console.error("No se encontró la tarjeta del empleado para este input.");
               return;
             }
-
             const employeeNameElement = employeeCard.querySelector("span");
             const employeeName = employeeNameElement ? employeeNameElement.textContent.trim() : "Empleado";
-
-           
             const fileName = `${employeeName}_${Date.now()}_${file.name}`;
             console.log("Nombre del archivo (fileName):", fileName);
-
-            
             console.log("Iniciando subida a Supabase...");
             const { data, error } = await supabase
               .storage
               .from("documentos-noc")
               .upload(fileName, file, { upsert: true });
-
             console.log("Resultado de la subida -> data:", data);
             console.log("Resultado de la subida -> error:", error);
-
             if (error) {
               console.error("Error al subir la foto a Supabase:", error);
               return;
             }
-
-           
             const pathUploaded = data.path || fileName;
             console.log("Path devuelto por la subida (data.path):", pathUploaded);
-
-          
             console.log("Obteniendo la URL pública con getPublicUrl...");
             const { data: urlData, error: urlError } = supabase
               .storage
               .from("documentos-noc")
               .getPublicUrl(pathUploaded);
-
             if (urlError) {
               console.error("Error al obtener la URL pública:", urlError);
               return;
             }
-
             if (!urlData) {
               console.error("No se recibió respuesta de URL pública. data es:", urlData);
               return;
             }
-
-            // data.publicUrl = la URL real
             const finalURL = `${urlData.publicUrl}?ts=${Date.now()}`;
             console.log("URL final:", finalURL);
-
-            // Asignar al <img> en la tarjeta para verlo de inmediato
             const imgElement = employeeCard.querySelector(".employee-photo");
             if (imgElement) {
               imgElement.src = finalURL;
             } else {
               console.error("No se encontró el elemento <img> en la tarjeta.");
             }
-
-           
             db.collection("empleados").doc(employeeName).set({
               photoURL: finalURL
             }, { merge: true })
@@ -820,4 +993,47 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
   });
+});
+
+
+
+
+function generarSugerencias() {
+  
+  const conteoTurnos = calcularEstadisticas();
+  const totalTurnos = Object.values(conteoTurnos).reduce((a, b) => a + b, 0);
+  const promedio = totalTurnos / Object.keys(conteoTurnos).length;
+  
+  const sugerencias = [];
+
+  for (const [turno, cantidad] of Object.entries(conteoTurnos)) {
+    if (cantidad > promedio * 1.5) {
+      sugerencias.push(`El turno "${turno}" se asigna con mucha frecuencia (${cantidad} veces). Considera re-distribuirlo para balancear la carga.`);
+    } else if (cantidad < promedio * 0.5) {
+      sugerencias.push(`El turno "${turno}" tiene pocas asignaciones (${cantidad} veces). Evalúa si se necesita reforzar esta área.`);
+    }
+  }
+  
+  
+  return sugerencias;
+}
+
+document.getElementById("btnVerSugerencias").addEventListener("click", () => {
+  const sugerencias = generarSugerencias();
+  const lista = document.getElementById("listaSugerencias");
+  lista.innerHTML = sugerencias.map(s => `<li>${s}</li>`).join("");
+  document.getElementById("modalSugerencias").style.display = "block";
+});
+
+document.getElementById("cerrarSugerencias").addEventListener("click", () => {
+  document.getElementById("modalSugerencias").style.display = "none";
+});
+
+
+
+
+
+
+document.querySelector('.theme-toggle').addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
 });

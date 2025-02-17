@@ -4,26 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Turnos Noc - Calendario de Turnos</title>
-  
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
-  
- 
   <script src="https://unpkg.com/lucide@latest"></script>
-  
-  
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-
-
   <link rel="stylesheet" href="./css/user.css">
-
   <link rel="stylesheet" href="./css/noc.css"/>
 </head>
 <body>
@@ -54,26 +44,31 @@
           <i data-lucide="panel-left"></i>
         </button>
         <h1>Turnos Noc</h1>
-        <!-- Navegación del Calendario -->
-        <div class="month-navigator">
-          <button id="prev-month" class="btn-icon">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span id="current-month" class="text-xl">Mes y Año</span>
-          <button id="next-month" class="btn-icon">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-          <button id="today" class="btn-icon">
-            <i class="fas fa-calendar-day"></i> Hoy
-          </button>
-        </div>
+        <button class="theme-toggle">🌓</button>
+
       </div>
     </header>
 
     <main>
       <div class="container">
        
+        <!-- Sección Calendario General con encabezado personalizado -->
         <section id="general-calendar-container" class="calendar-container">
+          <div class="calendar-header">
+          
+            <div class="month-navigator">
+              <button id="prev-month" class="btn-icon">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <span id="current-month" class="text-xl">Mes y Año</span>
+              <button id="next-month" class="btn-icon">
+                <i data-lucide="chevron-right"></i>
+              </button>
+              <button id="today" class="btn-icon">
+                <i data-lucide="calendar-day"></i> Hoy
+              </button>
+            </div>
+          </div>
           <table id="general-calendar" class="calendar">
             <thead>
               <tr>
@@ -81,7 +76,6 @@
               </tr>
             </thead>
             <tbody>
-           
             </tbody>
           </table>
         </section>
@@ -96,13 +90,12 @@
               </tr>
             </thead>
             <tbody id="calendario-nocturno">
-              
             </tbody>
           </table>
         </section>
 
+        <!-- Sección Turnos y Backup -->
         <section class="turnos-backup">
-        
           <div class="turnos-section admin-only">
             <h2>Turnos</h2>
             <div class="assignment-container">
@@ -126,15 +119,75 @@
           <div class="backup-container">
             <h2>Backup</h2>
             <div class="backup-controls">
-         
               <button id="btnGuardar" class="btn-guardar admin-only">Guardar Calendario</button>
               <button id="btnEliminar" class="btn-cargar admin-only" style="background-color: #d77a7a;">Eliminar</button>
-           
               <button id="btnCargar" class="btn-cargar">Cargar Calendario</button>
               <button id="btnVerHorarios" class="btn-horarios">Ver Horarios de Turnos</button>
+              <button id="btnVerEstadisticas" class="btn-horarios admin-only">Ver Estadísticas</button>
+              <button id="btnVerSugerencias" class="btn-horarios admin-only">Ver Sugerencias</button>
+<!-- Modal para Sugerencias -->
+<div id="modalSugerencias" class="modal-horarios">
+  <div class="modal-horarios-content">
+    <span id="cerrarSugerencias" class="close-horarios">&times;</span>
+    <h2>Sugerencias de Optimización</h2>
+    <ul id="listaSugerencias"></ul>
+  </div>
+</div>
+
+                    
+              <!-- Modal para Estadísticas Mejoradas -->
+<div id="modalEstadisticas" class="modal-horarios">
+  <div class="modal-horarios-content">
+    <span id="cerrarEstadisticas" class="close-horarios">&times;</span>
+    <h2>Turnos - Estadísticas</h2>
+
+    <!-- Tarjetas de Métricas -->
+    <div class="stats-cards">
+      <div class="stats-card">
+        <h3>Total Turnos</h3>
+        <p id="total-turnos">0</p>
+      </div>
+      <div class="stats-card">
+        <h3>Turno más usado</h3>
+        <p id="turno-mas-usado">-</p>
+      </div>
+      <div class="stats-card">
+        <h3>Turno menos usado</h3>
+        <p id="turno-menos-usado">-</p>
+      </div>
+    </div>
+
+    <!-- Tabla de Turnos por Empleado -->
+    <h3>Distribución de Turnos por Empleado</h3>
+    <table class="tabla-turnos-empleados">
+      <thead>
+        <tr>
+          <th>Empleado</th>
+          <th>Turno más asignado</th>
+          <th>Turno menos asignado</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-turnos-empleados">
+        <!-- Se llenará dinámicamente con JS -->
+      </tbody>
+    </table>
+
+    <!-- Contenedor de Gráficos -->
+    <div class="charts-container">
+      <h3>Distribución de Turnos</h3>
+      <canvas id="graficoTurnos"></canvas>
+
+      <h3>Carga de Trabajo por Empleado</h3>
+      <canvas id="graficoEmpleados"></canvas>
+
+      <h3>Tendencias de Asignación de Turnos</h3>
+      <canvas id="graficoTendencias"></canvas>
+    </div>
+  </div>
+</div>
+
+                    
               
-              
-              <button id="btnVerEstadisticas" class="btn-horarios">Ver Estadísticas</button>
             </div>
             <div class="dropdown-container">
               <select id="mesesGuardados" class="select-meses">
@@ -144,7 +197,7 @@
           </div>
         </section>
 
-        
+        <!-- Sección Empleados -->
         <section class="employees">
           <h2>Empleados</h2>
           <div class="employee-cards">
@@ -269,17 +322,16 @@
     </div>
   </div>
 
-  <!-- NUEVO MODAL PARA ESTADÍSTICAS -->
+  <!-- Modal para Estadísticas -->
   <div id="modalEstadisticas" class="modal-horarios">
     <div class="modal-horarios-content">
       <span id="cerrarEstadisticas" class="close-horarios">&times;</span>
       <h2>Estadísticas</h2>
-      
       <div id="estadisticas-contenido"></div>
     </div>
   </div>
-
   
+
   <script type="module" src="./js/firebase.js"></script>
   <script type="module" src="./js/noc.js"></script>
   <script>
@@ -287,3 +339,5 @@
   </script>
 </body>
 </html>
+
+

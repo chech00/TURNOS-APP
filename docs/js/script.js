@@ -2,6 +2,7 @@
 const auth = window.auth;
 const db = window.db;
 
+let editingUserId = null; // Si es null, estamos en modo creación; si tiene un valor, en modo edición
 
 // ----------------------
 // 2) VARIABLES GLOBALES
@@ -743,6 +744,12 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(error => console.error("Error al cerrar sesión:", error));
     });
   }
+  db.collection("userRoles").get().then((snapshot) => {
+    snapshot.forEach((doc) => {
+      console.log(`📄 Documento ID: ${doc.id}`, doc.data());
+    });
+  });
+  
 
   const elemento = document.getElementById("elemento-id");
   if (elemento) {
@@ -1088,44 +1095,65 @@ if (saveEmpleadoBtn) {
   const createUserBtn = document.getElementById("create-user-btn");
   if (createUserBtn) {
     createUserBtn.addEventListener("click", () => {
-      const newUserEmailInput = document.getElementById("new-user-email");
-      const newUserPasswordInput = document.getElementById("new-user-password");
-      const newUserRoleSelect = document.getElementById("new-user-role");
-      if (!newUserEmailInput || !newUserPasswordInput || !newUserRoleSelect) return;
-
-      const email = newUserEmailInput.value.trim();
-      const password = newUserPasswordInput.value.trim();
-      const role = newUserRoleSelect.value;
-
-      if (!email || !password) {
-        alert("Por favor, complete el correo y la contraseña.");
+      const email = document.getElementById("new-user-email").value.trim();
+      const password = document.getElementById("new-user-password").value.trim();
+      const role = document.getElementById("new-user-role").value;
+  
+      if (!email) {
+        alert("Por favor, ingresa un correo electrónico.");
         return;
       }
-
-      window.secondaryAuth.createUserWithEmailAndPassword(email, password)
-        .then(async (userCredential) => {
-          const newUser = userCredential.user;
-          await db.collection("userRoles").doc(newUser.uid).set({ 
-            email,
-            rol: role
-          });
-          alert("Usuario creado exitosamente (secondaryAuth).");
-          // Cerrar modal y limpiar
-          createUserModal.style.display = "none";
-          newUserEmailInput.value = "";
-          newUserPasswordInput.value = "";
-          newUserRoleSelect.value = "user";
-
-          // **** IMPORTANTE ****
-          // Llamar aquí para recargar el listado de usuarios del "manage-user-modal"
-          cargarUsuarios();
+  
+      if (editingUserId) {
+        // **Actualizar usuario existente**
+        db.collection("userRoles").doc(editingUserId).update({
+          email,
+          rol: role
         })
-        .catch(err => {
-          console.error("Error creando usuario secondaryAuth:", err);
-          alert("Error al crear usuario: " + err.message);
+        .then(() => {
+          alert("Usuario actualizado correctamente.");
+          createUserBtn.textContent = "Crear Usuario"; // Restaurar el botón
+          editingUserId = null; // Restablecer edición
+          limpiarFormularioUsuario();
+          cargarUsuarios(); // Recargar la lista de usuarios
+        })
+        .catch(error => {
+          console.error("🚨 Error al actualizar usuario:", error);
+          alert("No se pudo actualizar el usuario.");
         });
+      } else {
+        // **Crear un nuevo usuario**
+        if (!password) {
+          alert("Por favor, ingresa una contraseña para el nuevo usuario.");
+          return;
+        }
+  
+        window.secondaryAuth.createUserWithEmailAndPassword(email, password)
+          .then(async (userCredential) => {
+            const newUser = userCredential.user;
+            await db.collection("userRoles").doc(newUser.uid).set({ 
+              email,
+              rol: role
+            });
+            alert("Usuario creado exitosamente.");
+            limpiarFormularioUsuario();
+            cargarUsuarios();
+          })
+          .catch(err => {
+            console.error("🚨 Error creando usuario:", err);
+            alert("Error al crear usuario: " + err.message);
+          });
+      }
     });
   }
+  
+  // **Función para limpiar los campos después de crear/editar usuario**
+  function limpiarFormularioUsuario() {
+    document.getElementById("new-user-email").value = "";
+    document.getElementById("new-user-password").value = "";
+    document.getElementById("new-user-role").value = "user";
+  }
+  
 
   // 15.8 *** BOTÓN QUE ABRE EL MODAL DE GESTIONAR USUARIOS ***
   const openManageUserBtn = document.getElementById("open-manage-user-btn"); 
@@ -1265,34 +1293,51 @@ if (saveEmpleadoBtn) {
     });
   }
 
-  const editName = document.getElementById("edit-user-name");
-const editEmail = document.getElementById("edit-user-email");
-const editRole = document.getElementById("edit-user-role");
-if (!editName || !editEmail || !editRole) {
-  console.error("❌ ERROR: No se encontraron los elementos del formulario de edición.");
-  return;
-}
-
   // Editar usuario
   if (editUserBtn) {
-    editUserBtn.addEventListener("click", async () => {
+    editUserBtn.addEventListener("click", () => {
       const userId = userSelect.value;
       if (!userId) {
         alert("Selecciona un usuario para editar.");
         return;
       }
-      const role = userRoleSelect.value;
-      try {
-        await db.collection("userRoles").doc(userId).update({ rol: role });
-        alert("Usuario editado correctamente.");
-        resetFormUserManagement();
-        cargarUsuarios();
-      } catch (error) {
-        console.error("Error al editar usuario:", error);
-        alert("No se pudo editar el usuario.");
-      }
+      db.collection("userRoles").doc(userId).get()
+        .then((doc) => {
+          if (doc.exists) {
+            const userData = doc.data();
+            console.log("✅ Datos obtenidos de Firestore:", userData);
+  
+            // Usamos los mismos campos del modal de creación
+            document.getElementById("new-user-email").value = userData.email || "";
+            // La contraseña no se puede recuperar; se deja vacía para que el administrador decida si desea cambiarla
+            document.getElementById("new-user-password").value = "";
+            document.getElementById("new-user-role").value = userData.rol || "user";
+  
+            // Opcional: Cambiar el título del modal para indicar que es edición
+            const modalHeaderTitle = document.querySelector("#create-user-modal h3");
+            if (modalHeaderTitle) {
+              modalHeaderTitle.textContent = "Editar Usuario";
+            }
+  
+            // Mostrar el modal de creación/edición
+            document.getElementById("create-user-modal").style.display = "flex";
+  
+            // Guardar el ID del usuario que se está editando (para usarlo al guardar)
+            editingUserId = userId;
+          } else {
+            alert("El usuario no existe en la base de datos.");
+            console.warn("🚨 Documento no encontrado en Firestore.");
+          }
+        })
+        .catch(error => {
+          console.error("🚨 Error al obtener datos del usuario:", error);
+          alert("Ocurrió un error al cargar los datos del usuario.");
+        });
     });
   }
+  
+  
+  
 
   // Eliminar usuario
   if (deleteUserBtn) {

@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asignación de Turnos</title>
   <link rel="stylesheet" href="./css/styles.css" />
-  <script src="https://unpkg.com/lucide@latest"></script> <!-- Librería de iconos modernos -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
+  <!-- SIDEBAR -->
   <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa" class="logo-sidebar" />
@@ -49,17 +50,7 @@
           <button id="next-month">Mes Siguiente &raquo;</button>
         </div>
         <table id="calendar">
-          <thead>
-            <tr>
-              <th>Lunes</th>
-              <th>Martes</th>
-              <th>Miércoles</th>
-              <th>Jueves</th>
-              <th>Viernes</th>
-              <th>Sábado</th>
-              <th>Domingo</th>
-            </tr>
-          </thead>
+          <thead></thead>
           <tbody></tbody>
         </table>
       </section>
@@ -92,37 +83,59 @@
       <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
     </footer>
 
-    <!-- Modal para editar semana -->
-    <div id="edit-modal" class="modal">
+    <!-- Modal para crear/gestionar usuarios (se usa tanto para crear como para editar) -->
+    <div id="create-user-modal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Editar Semana</h2>
-          <span class="close-modal">&times;</span>
+          <h2>Crear / Gestionar Usuarios</h2>
+          <span id="close-create-user-modal" class="close-modal">&times;</span>
         </div>
+        <!-- Sección para listar usuarios existentes -->
         <div class="form-group">
-          <label for="edit-tecnico">Técnico:</label>
-          <select id="edit-tecnico"></select>
+          <label for="user-select">Seleccionar Usuario:</label>
+          <select id="user-select">
+            <option value="">-- Seleccione un usuario --</option>
+            <!-- Opciones dinámicas se cargarán desde Firebase -->
+          </select>
+          <div class="button-container">
+            <button id="edit-user-btn" class="primary-btn" disabled>Editar Usuario</button>
+            <button id="delete-user-btn" class="primary-btn" disabled>Eliminar Usuario</button>
+          </div>
+          <hr />
+          <!-- Sección para crear o editar un usuario -->
+          <h3 id="create-user-title">Crear Usuario</h3>
+          <div class="form-group">
+            <label for="new-user-email">Correo Electrónico:</label>
+            <input type="email" id="new-user-email" placeholder="correo@ejemplo.com" required />
+          </div>
+          <div class="form-group">
+            <label for="new-user-password">Contraseña:</label>
+            <input type="password" id="new-user-password" placeholder="Contraseña segura" required />
+          </div>
+          <div class="form-group">
+            <label for="new-user-role">Rol:</label>
+            <select id="new-user-role">
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <button id="create-user-btn" class="primary-btn">Crear Usuario</button>
         </div>
-        <div class="form-group">
-          <label for="edit-ingeniero">Ingeniero:</label>
-          <select id="edit-ingeniero"></select>
-        </div>
-        <div class="form-group">
-          <label for="edit-planta">Planta Externa:</label>
-          <select id="edit-planta"></select>
-        </div>
-        <button id="update-week">Actualizar Semana</button>
       </div>
     </div>
 
-    <!-- Modal de alerta personalizada -->
-    <div id="custom-alert" class="modal">
+    <!-- Modal de confirmación personalizado -->
+    <div id="custom-confirm" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Mensaje</h2>
+          <h2 id="confirm-title">Confirmación</h2>
+          <span id="close-confirm" class="close-modal">&times;</span>
         </div>
-        <p id="alert-message"></p>
-        <button id="close-alert">Cerrar</button>
+        <p id="confirm-message">¿Estás seguro?</p>
+        <div class="button-container">
+          <button id="confirm-yes" class="primary-btn">Sí</button>
+          <button id="confirm-no" class="primary-btn">No</button>
+        </div>
       </div>
     </div>
 
@@ -197,88 +210,7 @@
         <button id="save-empleado" class="primary-btn">Guardar Empleado</button>
       </div>
     </div>
-
-    <!-- Modal para crear/gestionar usuarios -->
-    <div id="create-user-modal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Crear / Gestionar Usuarios</h2>
-          <span id="close-create-user-modal" class="close-modal">&times;</span>
-        </div>
-        <!-- Sección para listar usuarios existentes -->
-        <div class="form-group">
-          <label for="user-select">Seleccionar Usuario:</label>
-          <select id="user-select">
-            <option value="">-- Seleccione un usuario --</option>
-            <!-- Opciones dinámicas -->
-          </select>
-          <div class="button-container">
-            <button id="edit-user-btn" class="primary-btn" disabled>Editar Usuario</button>
-            <button id="delete-user-btn" class="primary-btn" disabled>Eliminar Usuario</button>
-          </div>
-          <hr />
-          <!-- Sección para crear un nuevo usuario -->
-          <h3>Crear Nuevo Usuario</h3>
-          <div class="form-group">
-            <label for="new-user-email">Correo Electrónico:</label>
-            <input type="email" id="new-user-email" placeholder="correo@ejemplo.com" required />
-          </div>
-          <div class="form-group">
-            <label for="new-user-password">Contraseña:</label>
-            <input type="password" id="new-user-password" placeholder="Contraseña segura" required />
-          </div>
-          <div class="form-group">
-            <label for="new-user-role">Rol:</label>
-            <select id="new-user-role">
-              <option value="user">Usuario</option>
-              <option value="admin">Administrador</option>
-            </select>
-          </div>
-          <button id="create-user-btn" class="primary-btn">Crear Usuario</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal para editar usuario -->
-    <div id="edit-user-modal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Editar Usuario</h2>
-          <span id="close-edit-user-modal" class="close-modal">&times;</span>
-        </div>
-        <div class="form-group">
-          <label for="edit-user-name">Nombre:</label>
-          <input type="text" id="edit-user-name" placeholder="Nombre del usuario" />
-        </div>
-        <div class="form-group">
-          <label for="edit-user-email">Correo Electrónico:</label>
-          <input type="email" id="edit-user-email" placeholder="correo@ejemplo.com" />
-        </div>
-        <div class="form-group">
-          <label for="edit-user-role">Rol:</label>
-          <select id="edit-user-role">
-            <option value="user">Usuario</option>
-            <option value="admin">Administrador</option>
-          </select>
-        </div>
-        <button id="save-user-changes" class="primary-btn">Guardar Cambios</button>
-      </div>
-    </div>
-
-    <!-- Modal de confirmación personalizado -->
-    <div id="custom-confirm" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="confirm-title">Confirmación</h2>
-          <span id="close-confirm" class="close-modal">&times;</span>
-        </div>
-        <p id="confirm-message">¿Estás seguro?</p>
-        <div class="button-container">
-          <button id="confirm-yes" class="primary-btn">Sí</button>
-          <button id="confirm-no" class="primary-btn">No</button>
-        </div>
-      </div>
-    </div>
+  </div>
 
     <!-- Cargar Firebase desde CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>

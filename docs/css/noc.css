@@ -15,6 +15,22 @@
 }
 
 /* =============================
+   Dark Mode Variables (cuando se aplica .dark-mode en body)
+============================= */
+body.dark-mode {
+  --color-fondo-principal: #121212;
+  --color-fondo-secundario: #1e1e1e;
+  --color-texto-principal: #e0e0e0;
+  --color-texto-secundario: #a0a0a0;
+  --color-acento-primario: #556cd6;
+  --color-acento-secundario: #7986cb;
+  --color-detalle: #444;
+  --color-error: #cf6679;
+  --color-exito: #81c784;
+  --color-advertencia: #ffb74d;
+}
+
+/* =============================
    Estilos Base
 ============================= */
 body {
@@ -23,7 +39,9 @@ body {
   padding: 0;
   background: var(--color-fondo-principal);
   color: var(--color-texto-principal);
+  transition: background 0.3s ease, color 0.3s ease;
 }
+
 .container {
   max-width: 1200px;
   width: 90%;
@@ -46,53 +64,27 @@ header h1 {
   font-size: 1.8rem;
   font-weight: 600;
 }
-.month-navigator {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.btn-icon {
-  background: linear-gradient(145deg, #3a3f47, #2e3239);
-  border: none;
-  color: #fff;
-  padding: 10px;
-  border-radius: 50%;
-  box-shadow: 4px 4px 8px rgba(0,0,0,0.4),
-              -4px -4px 8px rgba(255,255,255,0.1);
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-icon:hover {
-  transform: translateY(-3px);
-  box-shadow: 6px 6px 12px rgba(0,0,0,0.4),
-              -6px -6px 12px rgba(255,255,255,0.1);
-}
-.btn-icon:active {
-  transform: translateY(1px);
-  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4),
-              inset -2px -2px 5px rgba(255,255,255,0.1);
-}
-.text-xl {
-  font-size: 1.2rem;
-}
 
 /* =============================
    Calendarios
 ============================= */
 .calendar-container {
-  margin: 20px 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto;
   padding: 15px;
   background: var(--color-fondo-secundario);
   border-radius: 10px;
   box-shadow: 0 6px 10px rgba(0,0,0,0.15);
   overflow-x: auto;
 }
+
 .calendar {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
+
 .calendar th,
 .calendar td {
   border: 1px solid var(--color-detalle);
@@ -100,6 +92,7 @@ header h1 {
   height: 35px;
   padding: 0;
 }
+
 .calendar th:first-child,
 .calendar td:first-child {
   width: 180px;
@@ -107,6 +100,8 @@ header h1 {
   text-align: left;
   padding-left: 10px;
 }
+
+/* Botones dentro del calendario */
 .calendar-day {
   width: 100%;
   height: 100%;
@@ -187,6 +182,8 @@ header h1 {
   max-width: 550px;
   justify-items: center;
 }
+
+/* Botones de Turno */
 .btn-turno {
   width: 60px;
   height: 35px;
@@ -194,21 +191,19 @@ header h1 {
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
   color: var(--color-texto-principal);
-  box-shadow: 3px 3px 6px rgba(0,0,0,0.3),
-              -3px -3px 6px rgba(255,255,255,0.05);
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.3), -3px -3px 6px rgba(255,255,255,0.05);
 }
 .btn-turno:hover {
   transform: translateY(-3px);
-  box-shadow: 4px 4px 8px rgba(0,0,0,0.3),
-              -4px -4px 8px rgba(255,255,255,0.05);
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.3), -4px -4px 8px rgba(255,255,255,0.05);
 }
 .btn-turno:active {
   transform: translateY(1px);
-  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3),
-              inset -2px -2px 5px rgba(255,255,255,0.05);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3), inset -2px -2px 5px rgba(255,255,255,0.05);
 }
+
 .backup-controls {
   display: flex;
   flex-wrap: wrap;
@@ -290,6 +285,7 @@ header h1 {
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
+  text-align: center;
 }
 .employee-card img {
   width: 120px;
@@ -304,16 +300,13 @@ header h1 {
 }
 .employee-card span {
   display: block;
-  text-align: center;
   font-weight: 600;
   color: var(--color-texto-principal);
   font-size: 1.1rem;
   padding-bottom: 0.5rem;
 }
 
-/* =============================
-   Botón de Cambiar Foto
-============================= */
+/* Botón para cambiar foto */
 .upload-photo-btn {
   margin-top: 8px;
   padding: 4px 8px;
@@ -336,10 +329,10 @@ header h1 {
 /* =============================
    Modales
 ============================= */
-.modal {
+.modal,
+.modal-horarios {
   display: none;
   position: fixed;
-  z-index: 1000;
   left: 0;
   top: 0;
   width: 100%;
@@ -347,12 +340,14 @@ header h1 {
   overflow: auto;
   background-color: rgba(0,0,0,0.6);
   animation: fadeIn 0.5s ease;
+  z-index: 1000;
 }
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-.modal-content {
+.modal-content,
+.modal-horarios-content {
   background-color: var(--color-fondo-secundario);
   margin: 5% auto;
   padding: 30px;
@@ -362,55 +357,32 @@ header h1 {
   color: var(--color-texto-principal);
   border-radius: 10px;
   animation: slideIn 0.5s ease;
+  position: relative;
 }
 @keyframes slideIn {
   from { transform: translateY(-50px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
-.close {
-  color: var(--color-texto-principal);
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-.close:hover {
-  color: var(--color-acento-secundario);
-}
-.modal-horarios {
-  display: none;
-  position: fixed;
-  z-index: 2000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.6);
-  overflow: auto;
-}
-.modal-horarios-content {
-  background: var(--color-fondo-secundario);
-  margin: 5% auto;
-  padding: 30px;
-  border: 1px solid var(--color-detalle);
-  width: 90%;
-  max-width: 900px;
-  color: var(--color-texto-principal);
-  border-radius: 10px;
-  position: relative;
-}
+.close,
 .close-horarios {
   color: var(--color-texto-principal);
   float: right;
-  font-size: 24px;
   font-weight: bold;
   cursor: pointer;
   transition: color 0.3s ease;
 }
-.close-horarios:hover {
-  color: var(--color-error);
+.close {
+  font-size: 28px;
 }
+.close-horarios {
+  font-size: 24px;
+}
+.close:hover,
+.close-horarios:hover {
+  color: var(--color-acento-secundario);
+}
+
+/* Tabla de Horarios */
 .tabla-horarios {
   width: 100%;
   border-collapse: collapse;
@@ -434,6 +406,111 @@ header h1 {
 }
 
 /* =============================
+   Estadísticas y Dashboard de Sugerencias
+============================= */
+.stats-cards {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+.stats-card {
+  background: var(--color-fondo-secundario);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  width: 30%;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+.stats-card h3 {
+  font-size: 1.2rem;
+  color: var(--color-acento-primario);
+}
+.stats-card p {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+/* Tabla de Turnos por Empleado */
+.tabla-turnos-empleados {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background: var(--color-fondo-secundario);
+  color: var(--color-texto-principal);
+  text-align: center;
+}
+.tabla-turnos-empleados th {
+  background: var(--color-acento-primario);
+  color: #fff;
+  padding: 10px;
+  border: 1px solid var(--color-detalle);
+}
+.tabla-turnos-empleados td {
+  padding: 10px;
+  border: 1px solid var(--color-detalle);
+  background: #2f343b;
+  color: var(--color-texto-principal);
+}
+
+/* Gráficos de Estadísticas */
+.charts-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.charts-container canvas {
+  width: 90%;
+  max-width: 600px;
+  background: var(--color-fondo-secundario);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* =============================
+   Navegación de Meses en Calendario
+============================= */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.month-navigator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =============================
+   Elementos Admin (ocultos para usuarios no-admin)
+============================= */
+.admin-only {
+  display: none !important;
+}
+
+/* =============================
+   Botón para Cambiar Tema (Dark Mode)
+============================= */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  background: var(--color-acento-primario);
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  color: #fff;
+  z-index: 3000;
+  transition: background 0.3s ease;
+}
+.theme-toggle:hover {
+  background: var(--color-acento-secundario);
+}
+
+/* =============================
    Responsividad
 ============================= */
 @media (max-width: 768px) {
@@ -449,8 +526,7 @@ header h1 {
     height: 35px;
   }
   .calendar-container {
-    height: auto;
-    max-height: 400px;
+    max-height: 600px;
   }
   .turnos-backup {
     flex-direction: column;
@@ -461,9 +537,4 @@ header h1 {
     width: 100%;
     margin-bottom: 20px;
   }
-}
-
-
-.admin-only {
-  display: none !important;
 }
