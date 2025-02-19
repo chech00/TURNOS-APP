@@ -174,19 +174,41 @@
   gap: 1.5rem;
 }
 
+/* Tarjetas de archivos con animaciones y microinteracciones */
 .file-card {
   background: #1f2937;
   border: 1px solid #374151;
   border-radius: 12px;
   padding: 1.5rem;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .file-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border-color: #3b82f6;
 }
 
+/* Skeleton Loading para tarjetas */
+.skeleton {
+  background: #374151;
+  border-radius: 4px;
+  min-height: 180px;
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(to right, #374151 8%, #4b5563 18%, #374151 33%);
+  background-size: 800px 104px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+/* Miniatura de archivo */
 .file-thumbnail {
   height: 180px;
   background: #111827;
@@ -195,6 +217,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.file-thumbnail:hover {
+  opacity: 0.9;
 }
 
 .file-thumbnail img,
@@ -211,6 +238,7 @@
   color: #4b5563;
 }
 
+/* Nombre del archivo */
 .file-name {
   font-weight: 600;
   margin-bottom: 0.75rem;
@@ -220,13 +248,14 @@
   overflow: hidden;
 }
 
+/* Acciones en el archivo */
 .file-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 1rem;
 }
 
-/* Botones de Acción */
+/* Botones de acción */
 .primary-btn {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   padding: 0.75rem 1.5rem;
@@ -240,6 +269,34 @@
 .primary-btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+/* Estilos generales para botones */
+button, .primary-btn, .download-btn, .delete-btn, .view-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+/* Estilos para botones en acciones de archivo */
+.file-actions button, .file-actions a {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Tipografía y jerarquía */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.75rem;
+}
+p, label, input, textarea {
+  font-size: 1rem;
 }
 
 /* Responsividad */
@@ -271,4 +328,55 @@
   .file-thumbnail {
     height: 160px;
   }
+  
+  /* Botones más grandes para interacción táctil */
+  button, .primary-btn, .download-btn, .delete-btn, .view-btn {
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .file-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Modal para vista previa */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+  background: #1f2937;
+  margin: 10% auto;
+  padding: 1.5rem;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  color: #f3f4f6;
+  cursor: pointer;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 1rem;
+  background: #111827;
+  color: #9ca3af;
 }

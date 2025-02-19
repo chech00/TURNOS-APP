@@ -1,0 +1,36 @@
+/* registros.css */
+/* Ajusta según tu diseño preferido */
+
+.registros-section {
+    padding: 1.5rem;
+    background: var(--color-fondo-secundario);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .tabla-registros {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: var(--color-fondo-principal);
+    color: var(--color-texto-principal);
+  }
+  
+  .tabla-registros thead th {
+    background-color: var(--color-acento-primario);
+    color: var(--color-fondo-principal);
+    padding: 0.75rem;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    text-align: left;
+  }
+  
+  .tabla-registros tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .tabla-registros td, .tabla-registros th {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-detalle);
+  }
+  

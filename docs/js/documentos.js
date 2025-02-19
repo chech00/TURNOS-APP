@@ -1,5 +1,3 @@
-// documentos_espectacular.js
-
 const auth = window.auth;
 const db = window.db;
 
@@ -46,9 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Configurar vista según el rol:
-  // - Si es "admin": se muestra el panel de subida y la grilla se organiza en dos columnas.
-  // - Si es "user": se oculta el panel de subida y la grilla se muestra a lo ancho (una sola columna).
+  // Configurar vista según el rol
   function configureView() {
     const uploadSection = document.getElementById("upload-section");
     const container = document.querySelector(".documentos-container");
@@ -59,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
       uploadSection.style.display = "none";
       container.style.gridTemplateColumns = "1fr";
     }
-    // Remover la clase que oculta el contenedor una vez configurada la vista
+    // Remover la clase oculta y cargar archivos
     container.classList.remove("hidden");
     loadFiles();
   }
@@ -135,11 +131,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Cargar y mostrar archivos ---
   async function loadFiles() {
     const filesGrid = document.getElementById("files-grid");
-    filesGrid.innerHTML = "<p>Cargando archivos...</p>";
+    
+    // Mostrar skeleton loading (4 tarjetas)
+    filesGrid.innerHTML = Array(4)
+      .fill('<div class="file-card skeleton"></div>')
+      .join('');
+
     try {
       const response = await fetch(`${API_BASE_URL}/files`);
       const files = await response.json();
-      filesGrid.innerHTML = "";
+      filesGrid.innerHTML = ""; // Limpiar skeleton
+
       files.forEach(file => {
         // Crear tarjeta para cada archivo
         const fileCard = document.createElement("div");
@@ -241,20 +243,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("preview-modal");
     const modalContent = document.getElementById("modal-preview-content");
     if (/\.(png|jpg|jpeg|gif)$/i.test(fileUrl)) {
-      modalContent.innerHTML = `<span id="modal-close">&times;</span><img src="${fileUrl}" alt="Vista previa">`;
+      modalContent.innerHTML = `<span id="modal-close" class="close-button">&times;</span><img src="${fileUrl}" alt="Vista previa">`;
     } else if (/\.pdf$/i.test(fileUrl)) {
-      modalContent.innerHTML = `<span id="modal-close">&times;</span><iframe src="${fileUrl}"></iframe>`;
+      modalContent.innerHTML = `<span id="modal-close" class="close-button">&times;</span><iframe src="${fileUrl}"></iframe>`;
     } else {
-      modalContent.innerHTML = `<span id="modal-close">&times;</span><p>No se puede previsualizar este archivo.</p>`;
+      modalContent.innerHTML = `<span id="modal-close" class="close-button">&times;</span><p>No se puede previsualizar este archivo.</p>`;
     }
     modal.style.display = "block";
-    // Reasignar el evento de cierre (ya que se rehace el contenido)
+    // Reasignar el evento de cierre
     document.getElementById("modal-close").addEventListener("click", () => {
       modal.style.display = "none";
     });
   };
 
-  // También se puede cerrar el modal haciendo clic fuera del contenido
+  // Cerrar modal al hacer clic fuera del contenido
   window.addEventListener("click", (event) => {
     const modal = document.getElementById("preview-modal");
     if (event.target === modal) {

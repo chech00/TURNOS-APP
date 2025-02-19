@@ -10,7 +10,6 @@
 </head>
 <body>
 
-  <!-- SIDEBAR -->
   <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa" class="logo-sidebar" />
@@ -21,6 +20,12 @@
         <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> Señal de Fibra</a></li>
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> Documentos Noc</a></li>
         <li><a href="noc.html" id="calendar-check" class="active"><i data-lucide="calendar-check"></i> Turnos Noc</a></li>
+        <li id="li-registros" style="display:none;">
+          <a href="registros.html">
+            <i data-lucide="file-text"></i> 
+            Registros
+          </a>
+        </li>
       </ul>
     </nav>
     <button id="logout-btn" class="primary-btn logout-btn">
@@ -77,7 +82,7 @@
         <button id="search-button" class="primary-btn">Buscar</button>
         <div id="search-result"></div>
       </section>
-    </main> 
+    </main>
 
     <footer>
       <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
@@ -95,7 +100,6 @@
           <label for="user-select">Seleccionar Usuario:</label>
           <select id="user-select">
             <option value="">-- Seleccione un usuario --</option>
-            <!-- Opciones dinámicas se cargarán desde Firebase -->
           </select>
           <div class="button-container">
             <button id="edit-user-btn" class="primary-btn" disabled>Editar Usuario</button>
@@ -117,6 +121,7 @@
             <select id="new-user-role">
               <option value="user">Usuario</option>
               <option value="admin">Administrador</option>
+              <option value="superadmin">SuperAdmin</option>
             </select>
           </div>
           <button id="create-user-btn" class="primary-btn">Crear Usuario</button>
@@ -210,117 +215,74 @@
         <button id="save-empleado" class="primary-btn">Guardar Empleado</button>
       </div>
     </div>
+
+    <!-- Modal para editar semanas (¡Agregado para solucionar el error!) -->
+    <div id="edit-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Editar Semana</h2>
+          <span id="close-edit-modal" class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit-tecnico">Técnico:</label>
+            <select id="edit-tecnico"></select>
+          </div>
+          <div class="form-group">
+            <label for="edit-ingeniero">Ingeniero:</label>
+            <select id="edit-ingeniero"></select>
+          </div>
+          <div class="form-group">
+            <label for="edit-planta">Planta Externa:</label>
+            <select id="edit-planta"></select>
+          </div>
+          <button id="update-week" class="primary-btn">Actualizar Semana</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-    <!-- Cargar Firebase desde CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Cargar Firebase desde CDN -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <script type="module" src="./js/firebase.js"></script>
-    <script type="module" src="./js/script.js"></script>
+  <!-- Tus scripts de configuración -->
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/script.js"></script>
 
-    <script>
-      auth.onAuthStateChanged(async (user) => {
-        if (!user) {
-          window.location.href = "login.html"; // Redirigir si no está autenticado
-          return;
+  <script>
+    // Ejemplo de verificación del rol y mostrar la opción "Registros" solo si es superadmin
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html"; // Redirigir si no está autenticado
+        return;
+      }
+      const userDoc = await db.collection("userRoles").doc(user.uid).get();
+      if (!userDoc.exists) {
+        auth.signOut();
+        window.location.href = "login.html"; // Redirigir si no tiene rol asignado
+        return;
+      }
+      const userData = userDoc.data();
+      const userRole = userData.rol;
+
+      // Verificar rol
+      if (window.location.pathname.includes("index.html") && userRole !== "admin" && userRole !== "superadmin") {
+        window.location.href = "user.html"; // Redirigir si no es admin ni superadmin
+        return;
+      }
+      if (userRole === "superadmin") {
+        // Mostrar la opción "Registros" en el sidebar
+        const liRegistros = document.getElementById("li-registros");
+        if (liRegistros) {
+          liRegistros.style.display = "block";
         }
-        const userDoc = await db.collection("userRoles").doc(user.uid).get();
-        if (!userDoc.exists) {
-          auth.signOut();
-          window.location.href = "login.html"; // Redirigir si no tiene rol asignado
-          return;
-        }
-        const userData = userDoc.data();
-        const userRole = userData.rol;
-        // Verificar rol
-        if (window.location.pathname.includes("index.html") && userRole !== "admin") {
-          window.location.href = "user.html"; // Redirigir si no es admin
-        } else if (window.location.pathname.includes("user.html") && userRole !== "user") {
-          window.location.href = "index.html"; // Redirigir si no es usuario regular
-        }
-      });
-      // Funciones CRUD para la colección "Empleados"
-      function agregarEmpleado(nombre, rol, color, telegramChatId) {
-        return db.collection('Empleados').add({
-          nombre, rol, color, telegramChatId
-        });
       }
+    });
 
-      function leerEmpleados() {
-        return db.collection("Empleados").get().then((querySnapshot) => {
-          let empleados = [];
-          querySnapshot.forEach((doc) => {
-            empleados.push({ id: doc.id, ...doc.data() });
-          });
-          return empleados;
-        }).catch((error) => {
-          console.error("Error al leer empleados desde Firestore:", error);
-        });
-      }
-
-      function actualizarEmpleado(docId, nuevosDatos) {
-        return db.collection('Empleados').doc(docId).update(nuevosDatos);
-      }
-
-      function eliminarEmpleado(docId) {
-        return db.collection('Empleados').doc(docId).delete();
-      }
-
-      // Funciones para Contactos Adicionales en Firestore
-      function guardarContactoEnFirestore(nombre, telegramChatId) {
-        return db.collection('ContactosAdicionales').doc(nombre).set({
-          nombre, telegramChatId
-        });
-      }
-
-      function cargarContactosDesdeFirestore() {
-        return db.collection("ContactosAdicionales").get().then((querySnapshot) => {
-          let contactos = {};
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            contactos[data.nombre] = data.telegramChatId;
-          });
-          return contactos;
-        }).catch((error) => {
-          console.error("Error al cargar contactos desde Firestore:", error);
-        });
-      }
-
-      function eliminarContactoEnFirestore(nombre) {
-        return db.collection('ContactosAdicionales').doc(nombre).delete();
-      }
-
-      // Función para gestionar empleados en Firestore
-      function guardarEmpleadoEnFirestore(nombre, rol, telegramChatId) {
-        return db.collection('Empleados').doc(nombre).set({
-          nombre, rol, telegramChatId
-        });
-      }
-
-      // Función para guardar la asignación semanal en Firestore
-      function guardarAsignacionEnFirestore(asignacion, semanaIndex, año, mes, fechasSemana) {
-        const asignacionData = {
-          año,
-          mes,
-          semana: semanaIndex + 1,
-          tecnico: asignacion.tecnico,
-          ingeniero: asignacion.ingeniero,
-          planta: asignacion.planta,
-          fechaInicio: fechasSemana[0],
-          fechaFin: fechasSemana[6],
-          fechaAsignacion: new Date().toISOString()
-        };
-
-        return db.collection('AsignacionesSemanales').add(asignacionData)
-          .then(docRef => {
-            console.log("Asignación guardada con ID:", docRef.id);
-          })
-          .catch(error => {
-            console.error("Error al guardar la asignación:", error);
-          });
-      }
-    </script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

@@ -23,7 +23,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
-  <!-- Sidebar -->
+  <!-- Sidebar (No se modifica) -->
   <div id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa" class="logo-sidebar">
@@ -34,13 +34,13 @@
         <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> Señal de Fibra</a></li>
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> Documentos Noc</a></li>
         <li><a href="noc.html" id="calendar-check" class="active"><i data-lucide="calendar-check"></i> Turnos Noc</a></li>
+        
       </ul>
     </nav>
     <button id="logout-btn" class="primary-btn logout-btn">
       <i data-lucide="log-out"></i> Cerrar sesión
     </button>
   </div>
-
   <!-- Contenido Principal -->
   <div id="main-content" class="main-content">
     <header>
@@ -49,11 +49,10 @@
       </button>
       <h1>Documentos NOC</h1>
     </header>
-
     <main>
       <!-- Se agrega la clase "hidden" para ocultar el contenido hasta configurar la vista -->
       <div class="documentos-container hidden">
-        <!-- Sidebar de Subida (solo visible para admin) -->
+        <!-- Panel de Subida (visible solo para admin) -->
         <aside id="upload-section" class="upload-sidebar">
           <div class="card upload-card">
             <div class="card-header">
@@ -69,7 +68,7 @@
                 <label for="file-description">Descripción</label>
                 <textarea id="file-description" rows="2" placeholder="Agrega una descripción..."></textarea>
               </div>
-              <!-- Zona de Drop, con el id "upload-dropzone" -->
+              <!-- Zona de Drop -->
               <div class="file-dropzone" id="upload-dropzone">
                 <div class="dropzone-content">
                   <i data-lucide="folder-plus" class="dropzone-icon"></i>
@@ -88,7 +87,6 @@
             </div>
           </div>
         </aside>
-
         <!-- Sección Principal de Archivos -->
         <section class="files-main">
           <div class="files-header">
@@ -101,21 +99,18 @@
               <input type="text" placeholder="Buscar documentos...">
             </div>
           </div>
-
           <div class="files-grid-container">
             <div id="files-grid" class="files-grid">
-              <!-- Las tarjetas se generarán aquí dinámicamente -->
+              <!-- Las tarjetas se generarán dinámicamente -->
             </div>
           </div>
         </section>
       </div>
     </main>
-
     <footer class="footer">
       <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
     </footer>
   </div>
-
   <!-- Modal para vista previa -->
   <div class="modal" id="preview-modal">
     <div class="modal-content" id="modal-preview-content">
@@ -123,12 +118,9 @@
       <!-- El contenido del modal se cargará dinámicamente -->
     </div>
   </div>
-
   <!-- Scripts -->
   <script type="module" src="./js/firebase.js"></script>
   <script type="module" src="./js/documentos.js"></script>
-  
-  <!-- Inicialización de íconos -->
   <script>
     lucide.createIcons();
   </script>
