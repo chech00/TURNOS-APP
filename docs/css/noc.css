@@ -290,8 +290,8 @@ header h1 {
   text-align: center;
 }
 .employee-card img {
-  width: 160px;
-  height: 160px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   object-fit: cover;
   margin: 0 auto 1.5rem;
