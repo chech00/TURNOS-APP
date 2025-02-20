@@ -1,158 +1,160 @@
-
 :root {
-  --background-gradient-start: #1B1F23; /* Azul grisáceo oscuro, sofisticado y profundo */
-  --background-gradient-end: #23272E; /* Un gris oscuro con matices azulados para suavizar el contraste */
-  --glass-bg: rgba(255, 255, 255, 0.08); /* Vidrio elegante y realista con un efecto más sutil */
-  --glass-border: rgba(255, 255, 255, 0.18); /* Borde refinado y discreto */
+  --font-primary: 'Nunito', sans-serif;
+  --font-secondary: 'Nunito', sans-serif;
   
-  --accent-color: #7796CB; /* Azul pastel elegante y moderno */
-  --hover-color: #5E81AC; /* Azul grisáceo más profundo para efecto hover */
+  --background-gradient-start: #1B1F23;
+  --background-gradient-end: #23272E;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.18);
   
-  --text-color: #E3E6EB; /* Blanco ahumado para mayor comodidad visual */
-  --input-bg: rgba(255, 255, 255, 0.12); /* Fondo de input más integrado y sutil */
-  --input-border: rgba(255, 255, 255, 0.22); /* Borde de input refinado y menos agresivo */
+  --accent-color: #7796CB;
+  --hover-color: #5E81AC;
+  
+  --text-color: #E3E6EB;
+  --input-bg: rgba(255, 255, 255, 0.12);
+  --input-border: rgba(255, 255, 255, 0.22);
 }
 
-  
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, var(--background-gradient-start), var(--background-gradient-end));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-  
-  /* Contenedor principal con efecto glassmorphism */
-  .recover-container {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    padding: 2rem;
-    max-width: 400px;
-    width: 90%;
-    animation: fadeIn 1s ease-in-out;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .recover-content {
-    text-align: center;
-  }
-  
-  .recover-container h2 {
-    color: var(--accent-color);
-    margin-bottom: 1rem;
-    font-size: 1.8rem;
-    font-weight: 600;
-  }
-  
-  .recover-container p {
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
-  }
-  
-  /* Estilos del formulario */
-  .form-group {
-    text-align: left;
-    margin-bottom: 1.5rem;
-  }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-color);
-  }
-  
-  .form-group input {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    font-size: 1rem;
-    border: 1px solid var(--input-border);
-    border-radius: 30px;
-    background: var(--input-bg);
-    color: var(--text-color);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .form-group input:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 8px var(--accent-color);
-  }
-  
-  /* Spinner de carga */
-  .spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid var(--accent-color);
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    display: none;
-    margin: 1rem auto;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
-  /* Botón de envío */
-  button#recover-button {
-    width: 100%;
-    padding: 0.8rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 30px;
-    background: var(--accent-color);
-    color: var(--text-color);
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4);
-  }
-  
-  button#recover-button:hover {
-    background: var(--hover-color);
-    transform: translateY(-2px);
-  }
-  
-  /* Enlace para volver al login */
-  .back-login a {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.3s ease;
-  }
-  
-  .back-login a:hover {
-    text-decoration: underline;
-    color: var(--hover-color);
-  }
-  
-  /* Mensajes de error y éxito */
-  .error-message, .success-message {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  background: linear-gradient(135deg, var(--background-gradient-start), var(--background-gradient-end));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.recover-container {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.recover-content {
+  text-align: center;
+  font-family: var(--font-primary);
+}
+
+.recover-container h2 {
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-weight: 600;
+  font-family: var(--font-primary);
+}
+
+.recover-container p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  font-family: var(--font-primary);
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-primary);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  font-family: var(--font-primary);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--input-border);
+  border-radius: 30px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-family: var(--font-primary);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 8px var(--accent-color);
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid var(--accent-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  display: none;
+  margin: 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+button#recover-button {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 30px;
+  background: var(--accent-color);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4);
+  font-family: var(--font-primary);
+}
+
+button#recover-button:hover {
+  background: var(--hover-color);
+  transform: translateY(-2px);
+}
+
+.back-login a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+  font-family: var(--font-primary);
+}
+
+.back-login a:hover {
+  text-decoration: underline;
+  color: var(--hover-color);
+}
+
+.error-message, .success-message {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  font-family: var(--font-primary);
+  text-align: center;
+}
   
   .error-message.visible, .success-message.visible {
     opacity: 1;

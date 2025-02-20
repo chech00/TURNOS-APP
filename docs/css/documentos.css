@@ -1,8 +1,18 @@
 /* ============================
    REDISEÑO - DOCUMENTOS
-============================= */
+============================== */
 
-/* Oculta el elemento hasta que se configure la vista */
+/* Definición de variables globales para tipografía y otros valores */
+:root {
+  --font-primary: 'Nunito', sans-serif;
+  --font-secondary: 'Nunito', sans-serif;
+  /* Otras variables ya existentes se mantienen: */
+  --color-fondo-principal: #1f2937;
+  --color-fondo-secundario: #111827;
+  /* ... */
+}
+
+/* El resto de tu código se mantiene igual */
 .hidden {
   visibility: hidden;
 }
@@ -31,6 +41,8 @@
   padding: 1.5rem;
   border-bottom: 1px solid #374151;
   text-align: center;
+  /* Usamos la fuente secundaria para encabezados */
+  font-family: var(--font-secondary);
 }
 
 .header-icon {
@@ -54,6 +66,7 @@
   color: #9ca3af;
   font-size: 0.875rem;
   font-weight: 500;
+  font-family: var(--font-primary);
 }
 
 .form-group input,
@@ -64,7 +77,7 @@
   border: 1px solid #374151;
   border-radius: 8px;
   color: #f3f4f6;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-primary);
 }
 
 .form-group textarea {

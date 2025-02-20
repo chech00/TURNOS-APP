@@ -25,7 +25,8 @@ function verificarRolUsuario() {
       .then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
-          usuarioEsAdmin = (userData.rol === "admin");
+          usuarioEsAdmin = (userData.rol === "admin" || userData.rol === "superadmin");
+
         } else {
           usuarioEsAdmin = false;
         }

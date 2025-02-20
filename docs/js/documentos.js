@@ -48,13 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function configureView() {
     const uploadSection = document.getElementById("upload-section");
     const container = document.querySelector(".documentos-container");
-    if (currentUserRole === "admin") {
+    if (currentUserRole === "admin" || currentUserRole === "superadmin") {
       uploadSection.style.display = "block";
       container.style.gridTemplateColumns = "320px 1fr";
     } else {
       uploadSection.style.display = "none";
       container.style.gridTemplateColumns = "1fr";
     }
+    
     // Remover la clase oculta y cargar archivos
     container.classList.remove("hidden");
     loadFiles();

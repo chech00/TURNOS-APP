@@ -1127,6 +1127,7 @@ td.pendiente {
 .sidebar {
   border: none; /* Elimina cualquier borde */
   box-shadow: none; /* Evita sombras innecesarias */
+  font-family: var(--font-secondary); /* Fuente del sidebar */
 }
 
   .sidebar.active {
@@ -1136,4 +1137,8 @@ td.pendiente {
 
 .sidebar .menu-btn {
   display: none;
+}
+.sidebar i {
+  font-size: 18px; /* Tamaño de los íconos */
+  color: #E3E6EB; /* Color del texto */
 }
