@@ -1,3 +1,17 @@
+/* ============================================
+   Reinicio Global y Configuración Base
+============================================ */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* Evita scroll horizontal si algo se sale un poco */
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* =============================
    Variables de Colores (Root)
 ============================= */
@@ -12,12 +26,10 @@
   --color-error: #d77a7a;
   --color-exito: #88C0A6;
   --color-advertencia: #e8c27e;
-
-  
 }
 
 /* =============================
-   Dark Mode Variables (cuando se aplica .dark-mode en body)
+   Dark Mode Variables (cuando se aplica .dark-mode)
 ============================= */
 body.dark-mode {
   --color-fondo-principal: #121212;
@@ -37,21 +49,21 @@ body.dark-mode {
 ============================= */
 body {
   font-family: "Poppins", sans-serif;
-  margin: 0;
-  padding: 0;
   background: var(--color-fondo-principal);
   color: var(--color-texto-principal);
   transition: background 0.3s ease, color 0.3s ease;
 }
 
+/* Contenedor principal con ancho máximo para que no se desborde */
 .container {
-  max-width: 1200px;
-  width: 90%;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 1400px; /* Ajusta este valor a tu gusto */
+  margin: 0 auto;    /* Centra el contenido horizontalmente */
+  padding: 20px;
 }
 
 /* =============================
-   Sidebar y Encabezado
+   Header
 ============================= */
 header {
   background: var(--color-fondo-secundario);
@@ -68,17 +80,16 @@ header h1 {
 }
 
 /* =============================
-   Calendarios
+   Calendario
 ============================= */
 .calendar-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 20px auto;
+  width: 100%; /* Se ajusta al contenedor .container */
+  margin: 20px 0;
   padding: 15px;
   background: var(--color-fondo-secundario);
   border-radius: 10px;
   box-shadow: 0 6px 10px rgba(0,0,0,0.15);
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .calendar {
@@ -149,7 +160,6 @@ header h1 {
 .turnos-section,
 .backup-container {
   flex: 1 1 300px;
-  box-sizing: border-box;
   padding: 10px;
   background: var(--color-fondo-secundario);
   border: 1px solid var(--color-detalle);
@@ -240,7 +250,6 @@ header h1 {
   background-color: var(--color-fondo-secundario);
   border: 1px solid var(--color-detalle);
   border-radius: 8px;
-  box-sizing: border-box;
 }
 .select-meses {
   width: 100%;
@@ -255,6 +264,9 @@ header h1 {
 /* =============================
    Empleados (Employees)
 ============================= */
+.employees {
+  margin-top: 40px;
+}
 .employees h2 {
   font-size: 1.5rem;
   color: var(--color-acento-primario);
@@ -273,12 +285,19 @@ header h1 {
   background: var(--color-acento-secundario);
   border-radius: 4px;
 }
+
+/* 
+   EXACTAMENTE 2 columnas horizontales para las tarjetas de empleados 
+   => 2 tarjetas por fila.
+   Si tienes 6 empleados, verás 3 filas (2, 2, 2).
+*/
 .employee-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: 1fr 1fr; /* 2 columnas fijas */
   gap: 2rem;
-  margin-top: 1.5rem;
 }
+
+/* Tarjeta de cada empleado */
 .employee-card {
   position: relative;
   background: var(--color-fondo-secundario);
@@ -300,7 +319,6 @@ header h1 {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transition: all 0.3s ease;
 }
-
 .employee-card span {
   display: block;
   font-weight: 600;
@@ -385,7 +403,7 @@ header h1 {
   color: var(--color-acento-secundario);
 }
 
-/* Tabla de Horarios */
+/* Tabla de Horarios (en el modal) */
 .tabla-horarios {
   width: 100%;
   border-collapse: collapse;
@@ -434,7 +452,7 @@ header h1 {
   margin: 5px 0;
 }
 
-/* Tabla de Turnos por Empleado */
+/* Tabla de Turnos por Empleado (Estadísticas) */
 .tabla-turnos-empleados {
   width: 100%;
   border-collapse: collapse;
@@ -516,7 +534,12 @@ header h1 {
 /* =============================
    Responsividad
 ============================= */
+/* A menos de 768px, pasamos a 1 columna para las tarjetas de empleados */
 @media (max-width: 768px) {
+  .employee-cards {
+    grid-template-columns: 1fr; /* 1 columna en pantallas pequeñas */
+  }
+
   .calendar th,
   .calendar td {
     font-size: 12px;

@@ -2,15 +2,12 @@
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-
 const supabaseUrl = "https://jmrzvajipfdqvzilqjvq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcnp2YWppcGZkcXZ6aWxxanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3ODU3MTksImV4cCI6MjA1NDM2MTcxOX0.xQZX2i-6wynnRnEKBb_mwbt63S6vvrr10SilIyug5Mg";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-
 const auth = window.auth;
 const db = window.db;
-
 
 let usuarioEsAdmin = false;
 let currentDate = new Date();
@@ -20,9 +17,9 @@ const vacationIcon = `<i data-lucide="tree-palm"></i>`;
 // Lista de feriados y su información
 const feriadosChile = [
   "2025-01-01", "2025-04-18", "2025-04-19", "2025-05-01",
-  "2025-05-21", "2025-06-29","2025-06-29", "2025-07-16", "2025-08-15",
+  "2025-05-21", "2025-06-29", "2025-06-29", "2025-07-16", "2025-08-15",
   "2025-09-18", "2025-09-19", "2025-10-12", "2025-10-31",
-  "2025-11-01", "2025-11-16","2025-12-08","2025-12-14", "2025-12-25"
+  "2025-11-01", "2025-11-16", "2025-12-08", "2025-12-14", "2025-12-25"
 ];
 const feriadosInfo = {
   "2025-01-01": "Año Nuevo",
@@ -63,9 +60,38 @@ const bitacoraEmployees = [
   "Claudio Bustamante"
 ];
 
-// =============================
+// -----------------------------------------------------------------------------
+// FUNCIONES PARA LOCALSTORAGE
+// -----------------------------------------------------------------------------
+
+// Obtiene una clave única para cada mes (ej: "calendar_2025-4")
+function obtenerClaveMes(date) {
+  return `calendar_${date.getFullYear()}-${date.getMonth() + 1}`;
+}
+
+// Guarda en localStorage el estado actual del calendario
+function guardarCalendarioEnLocalStorage() {
+  const key = obtenerClaveMes(currentDate);
+  const datos = obtenerDatosCalendario();
+  localStorage.setItem(key, JSON.stringify(datos));
+  console.log(`Calendario guardado en localStorage con la clave: ${key}`);
+}
+
+// Obtiene los datos actuales del calendario (por ejemplo, HTML de las tablas)
+function obtenerDatosCalendario() {
+  const currentMonthElement = document.getElementById("current-month");
+  const generalTable = document.getElementById("general-calendar");
+  const nocturnoTable = document.getElementById("nocturno-calendar");
+  return {
+    mes: currentMonthElement.textContent,
+    generalHTML: generalTable.outerHTML,
+    nocturnoHTML: nocturnoTable.outerHTML
+  };
+}
+
+// -----------------------------------------------------------------------------
 // 1) FUNCIONES DE CONFIGURACIÓN
-// =============================
+// -----------------------------------------------------------------------------
 function verificarRolUsuario(callback) {
   auth.onAuthStateChanged((user) => {
     if (!user) {
@@ -116,11 +142,10 @@ function configurarLogout() {
   }
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 2) LÓGICA DEL CALENDARIO
-// =============================
+// -----------------------------------------------------------------------------
 function asignarDomingosLibres(year, month, daysInMonth) {
-  
   empleados.forEach((empleado) => {
     empleado.turnos = Array(daysInMonth).fill("");
     if (empleado.nombre === "Sergio Castillo" || empleado.nombre === "Ignacio Aburto") {
@@ -134,7 +159,25 @@ function asignarDomingosLibres(year, month, daysInMonth) {
   });
 }
 
+// Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
+ // si no existen, se construye desde cero.
 function renderCalendar(date) {
+  const key = obtenerClaveMes(date);
+  const storedData = localStorage.getItem(key);
+  if (storedData) {
+    const data = JSON.parse(storedData);
+    document.getElementById("current-month").textContent = data.mes;
+    document.getElementById("general-calendar").outerHTML = data.generalHTML;
+    document.getElementById("nocturno-calendar").outerHTML = data.nocturnoHTML;
+    if (usuarioEsAdmin) { attachAdminCellListeners(); }
+    lucide.createIcons();
+  } else {
+    renderCalendarDesdeCero(date);
+  }
+}
+
+// Función original para construir el calendario cuando no hay datos guardados
+function renderCalendarDesdeCero(date) {
   const currentMonthElement = document.getElementById("current-month");
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -210,7 +253,7 @@ function renderCalendar(date) {
   if (tbodyGeneral) { tbodyGeneral.innerHTML = generalHTML; }
   else { console.error("No se encontró el tbody de la tabla general"); }
 
-  // Construir el calendario nocturno (similar, no modificado en esta parte)
+  // Construir el calendario nocturno
   let nocturnoHTML = "";
   const cristianTurnos = [];
   for (let day = 1; day <= daysInMonth; day++) {
@@ -222,7 +265,7 @@ function renderCalendar(date) {
     else if (dayOfWeek === 6) { cristianTurnos[day - 1] = "L"; }
     else { cristianTurnos[day - 1] = "N"; }
   }
-  nocturnoHTML += `<tr><td class="text-left p-2">Cristian Oyarzun</td>`;
+  nocturnoHTML += `<tr><td class="text-left p-2">Cristian Oyarzo</td>`;
   for (let day = 1; day <= daysInMonth; day++) {
     const turno = cristianTurnos[day - 1];
     let turnoClass = "";
@@ -256,6 +299,9 @@ function renderCalendar(date) {
 
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
   lucide.createIcons();
+
+  // Una vez renderizado el calendario, lo guardamos en localStorage
+  guardarCalendarioEnLocalStorage();
 }
 
 function todosLosDiasRellenos() {
@@ -266,9 +312,9 @@ function todosLosDiasRellenos() {
   return true;
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 3) Eventos de Admin
-// =============================
+// -----------------------------------------------------------------------------
 let isSelecting = false;
 function adminMousedown(e) {
   if (e.button === 0) {
@@ -306,9 +352,9 @@ function attachAdminCellListeners() {
   document.addEventListener("mouseup", adminMouseup);
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 4) MODALES, GUARDAR Y CARGAR CALENDARIO
-// =============================
+// -----------------------------------------------------------------------------
 const btnGuardar   = document.getElementById("btnGuardar");
 const btnCargar    = document.getElementById("btnCargar");
 const btnEliminar  = document.getElementById("btnEliminar");
@@ -326,17 +372,6 @@ const modalEstadisticas    = document.getElementById("modalEstadisticas");
 const cerrarEstadisticas   = document.getElementById("cerrarEstadisticas");
 const estadisticasContenido = document.getElementById("estadisticas-contenido");
 
-function obtenerDatosCalendario() {
-  const currentMonthElement = document.getElementById("current-month");
-  const generalTable = document.getElementById("general-calendar");
-  const nocturnoTable = document.getElementById("nocturno-calendar");
-  return {
-    mes: currentMonthElement.textContent,
-    generalHTML: generalTable.outerHTML,
-    nocturnoHTML: nocturnoTable.outerHTML
-  };
-}
-
 function cargarListaCalendarios() {
   db.collection("calendarios").get()
     .then((querySnapshot) => {
@@ -351,9 +386,9 @@ function cargarListaCalendarios() {
     .catch((error) => { console.error("Error al cargar calendarios:", error); });
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 5) CARGAR FOTOS DE EMPLEADOS DESDE FIRESTORE
-// =============================
+// -----------------------------------------------------------------------------
 function cargarFotosEmpleados() {
   const employeeCards = document.querySelectorAll(".employee-card");
   employeeCards.forEach(card => {
@@ -372,9 +407,9 @@ function cargarFotosEmpleados() {
   });
 }
 
-// =============================
-//  FUNCIÓN PARA CALCULAR ESTADÍSTICAS
-// =============================
+// -----------------------------------------------------------------------------
+// FUNCIÓN PARA CALCULAR ESTADÍSTICAS
+// -----------------------------------------------------------------------------
 function calcularEstadisticas() {
   const celdas = document.querySelectorAll("#general-calendar .calendar-day");
   const conteoTurnos = {};
@@ -436,9 +471,9 @@ function mostrarEstadisticas() {
   document.getElementById("modalEstadisticas").style.display = "block";
 }
 
-// =============================
-//  GRÁFICOS CON CHART.JS
-// =============================
+// -----------------------------------------------------------------------------
+// GRÁFICOS CON CHART.JS
+// -----------------------------------------------------------------------------
 let chartBarras;
 let chartPastel;
 let chartLineas;
@@ -492,11 +527,9 @@ function generarGraficoLineas(datos) {
   });
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // Funciones de aprendizaje (modelo de Markov)
-// =============================
-
-// Actualiza la transición en la colección "patronesTurnosMarkov"
+// -----------------------------------------------------------------------------
 async function actualizarTransicion(employee, turnoAnterior, turnoActual) {
   const docRef = db.collection("patronesTurnosMarkov").doc(employee);
   try {
@@ -521,7 +554,6 @@ async function obtenerMatrizTransiciones(employee) {
   return {};
 }
 
-
 function elegirSiguienteTurnoMarkov(matrix, turnoAnterior, turnosDisponibles) {
   if (!matrix[turnoAnterior] || Object.keys(matrix[turnoAnterior]).length === 0) {
     return turnosDisponibles[Math.floor(Math.random() * turnosDisponibles.length)];
@@ -537,9 +569,9 @@ function elegirSiguienteTurnoMarkov(matrix, turnoAnterior, turnosDisponibles) {
   return turnosDisponibles[0];
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 7) SUSCRIPCIÓN EN TIEMPO REAL AL CALENDARIO
-// =============================
+// -----------------------------------------------------------------------------
 let unsubscribeCalendar = null;
 function subscribeCalendar() {
   const monthId = document.getElementById("current-month").textContent.trim();
@@ -561,9 +593,9 @@ function subscribeCalendar() {
     });
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 8) ACTUALIZACIÓN EN TIEMPO REAL (debounce)
-// =============================
+// -----------------------------------------------------------------------------
 let updateTimeout;
 function scheduleFirestoreUpdate() {
   clearTimeout(updateTimeout);
@@ -573,11 +605,13 @@ function scheduleFirestoreUpdate() {
       .then(() => { console.log("Actualización en tiempo real guardada."); })
       .catch((error) => { console.error("Error al actualizar:", error); });
   }, 1000);
+  // También se guarda en localStorage
+  guardarCalendarioEnLocalStorage();
 }
 
-// =============================
+// -----------------------------------------------------------------------------
 // 9) EVENTO PRINCIPAL (DOMContentLoaded)
-// =============================
+// -----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", function () {
   configurarSidebar();
   configurarLogout();
@@ -587,20 +621,18 @@ document.addEventListener("DOMContentLoaded", function () {
       document.querySelectorAll(".admin-only").forEach(el => { el.classList.remove("admin-only"); });
     }
 
-    // Botón de Auto-Asignar Turnos con aprendizaje y reglas adicionales
     const btnAutoAsignar = document.getElementById("btnAutoAsignar");
     if (btnAutoAsignar) {
       btnAutoAsignar.addEventListener("click", async function () {
         if (!usuarioEsAdmin) return;
         Swal.fire({
           title: "Analizando turnos...",
-          text: "Funcion en Beta, puede contener errores, Esto puede tardar unos segundos.",
+          text: "Función en Beta, puede contener errores. Esto puede tardar unos segundos.",
           showConfirmButton: false,
           allowOutsideClick: false,
           willOpen: () => { Swal.showLoading(); }
         });
         try {
-          // Mapeo de colores (según tus botones y horarios)
           const turnoColorMapping = {
             "M0": "#648c9b",
             "M0A": "#7b69a5",
@@ -619,13 +651,11 @@ document.addEventListener("DOMContentLoaded", function () {
           const currentMonth = document.getElementById("current-month").textContent.trim();
           console.log("Mes actual detectado:", currentMonth);
 
-          // Recuperar historial (opcional, para información complementaria)
           const snapshot = await db.collection("calendarios").get();
           let historialTurnos = {};
           snapshot.forEach((doc) => { historialTurnos[doc.id] = doc.data(); });
           console.log("Historial de turnos:", historialTurnos);
 
-          // Inicializar asignación para el mes actual
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth();
           const lastDay = new Date(year, month + 1, 0);
@@ -634,16 +664,13 @@ document.addEventListener("DOMContentLoaded", function () {
           const filas = tabla.querySelectorAll("tr");
           let empleadosAsignados = {};
 
-          // Para cada empleado, asignar turnos usando modelo Markov
           for (let fila of filas) {
             const empleado = fila.querySelector("td").textContent.trim();
             empleadosAsignados[empleado] = new Array(daysInMonth).fill("");
-            // Obtener matriz de transición para este empleado
             let matriz = await obtenerMatrizTransiciones(empleado);
             for (let day = 1; day <= daysInMonth; day++) {
               const dateObj = new Date(year, month, day);
               if (dateObj.getDay() === 0) {
-                // Domingo: para Sergio e Ignacio forzamos "DL"; para los demás, "L" (cumpliendo la regla de domingos libres)
                 empleadosAsignados[empleado][day - 1] = (empleado === "Sergio Castillo" || empleado === "Ignacio Aburto") ? "DL" : "L";
               } else {
                 if (day > 1) {
@@ -651,7 +678,6 @@ document.addEventListener("DOMContentLoaded", function () {
                   let turnoElegido = elegirSiguienteTurnoMarkov(matriz, turnoAnterior, turnosDisponibles);
                   empleadosAsignados[empleado][day - 1] = turnoElegido;
                 } else {
-                  // Para el primer día, asignar aleatoriamente
                   empleadosAsignados[empleado][day - 1] = turnosDisponibles[Math.floor(Math.random() * turnosDisponibles.length)];
                 }
               }
@@ -659,13 +685,10 @@ document.addEventListener("DOMContentLoaded", function () {
           }
           console.log("Asignación inicial:", empleadosAsignados);
 
-          // Regla adicional 1: Solo un turno M1 o M1B por semana para cada empleado
-          // Iteramos por cada empleado y segmentamos la semana (lunes a domingo)
           for (let empleado in empleadosAsignados) {
             let asignacion = empleadosAsignados[empleado];
             let weekStart = 0;
             while (weekStart < asignacion.length) {
-              // Determinar fin de semana: recorremos hasta el domingo o fin del mes
               let weekEnd = weekStart;
               while (weekEnd < asignacion.length) {
                 let dia = weekEnd + 1;
@@ -673,20 +696,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (fecha.getDay() === 0) { weekEnd++; break; }
                 weekEnd++;
               }
-              // Contar M1 y M1B en esta semana
               let countM1 = 0, countM1B = 0;
               for (let i = weekStart; i < weekEnd; i++) {
                 let turno = asignacion[i];
                 if (turno === "M1") countM1++;
                 if (turno === "M1B") countM1B++;
               }
-              // Si hay más de una ocurrencia en total, reajustamos (dejamos la primera y reasignamos el resto)
               let total = countM1 + countM1B;
               if (total > 1) {
                 let extra = total - 1;
                 for (let i = weekStart; i < weekEnd && extra > 0; i++) {
                   if (asignacion[i] === "M1" || asignacion[i] === "M1B") {
-                    // Reasignar el turno: elegir aleatoriamente de turnosDisponibles sin M1 y M1B
                     let alternativas = turnosDisponibles.filter(t => t !== "M1" && t !== "M1B");
                     asignacion[i] = alternativas[Math.floor(Math.random() * alternativas.length)];
                     extra--;
@@ -697,10 +717,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
 
-          // (La regla de tener al menos 2 domingos libres para empleados que no sean Sergio o Ignacio ya se fuerza asignando "L" en domingos)
           console.log("Asignación final tras reglas adicionales:", empleadosAsignados);
 
-          // Aplicar asignación al calendario visual y asignar colores
           filas.forEach((fila) => {
             const empleado = fila.querySelector("td").textContent.trim();
             const botones = fila.querySelectorAll("td button.calendar-day");
@@ -714,7 +732,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
           });
 
-          // Actualizar el modelo de Markov: para cada empleado, por cada par de días consecutivos (a excepción de los forzados)
           for (let empleado in empleadosAsignados) {
             for (let day = 2; day <= daysInMonth; day++) {
               let turnoAnterior = empleadosAsignados[empleado][day - 2];
@@ -725,6 +742,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
           Swal.fire("Éxito", "Turnos asignados y el modelo actualizado.", "success");
+          guardarCalendarioEnLocalStorage();
         } catch (error) {
           console.error("Error en autoasignación:", error);
           Swal.fire("Error", "No se pudieron asignar los turnos.", "error");
@@ -736,16 +754,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const nextMonthButton = document.getElementById("next-month");
     const todayButton     = document.getElementById("today");
     prevMonthButton.addEventListener("click", function () {
+      guardarCalendarioEnLocalStorage();
       currentDate.setMonth(currentDate.getMonth() - 1);
       renderCalendar(currentDate);
       subscribeCalendar();
     });
     nextMonthButton.addEventListener("click", function () {
+      guardarCalendarioEnLocalStorage();
       currentDate.setMonth(currentDate.getMonth() + 1);
       renderCalendar(currentDate);
       subscribeCalendar();
     });
     todayButton.addEventListener("click", function () {
+      guardarCalendarioEnLocalStorage();
       currentDate = new Date();
       renderCalendar(currentDate);
       subscribeCalendar();
@@ -756,9 +777,6 @@ document.addEventListener("DOMContentLoaded", function () {
     cargarListaCalendarios();
     cargarFotosEmpleados();
 
-    // ================================
-    // Asignación manual de turnos (botones) – Actualización en tiempo real
-    // ================================
     const turnosButtons = document.querySelectorAll(".turnos-buttons button");
     turnosButtons.forEach((button) => {
       button.addEventListener("click", function () {
@@ -781,6 +799,7 @@ document.addEventListener("DOMContentLoaded", function () {
           lucide.createIcons();
           selectedDays = [];
           scheduleFirestoreUpdate();
+          guardarCalendarioEnLocalStorage();
         } else {
           Swal.fire({
             icon: "warning",
@@ -791,9 +810,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
-    // ================================
-    // Guardar Calendario (acción manual)
-    // ================================
     if (btnGuardar) {
       btnGuardar.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
@@ -805,7 +821,9 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           return;
         }
-        const datos = obtenerDatosCalendario();
+        guardarCalendarioEnLocalStorage();
+        const key = obtenerClaveMes(currentDate);
+        const datos = JSON.parse(localStorage.getItem(key));
         const docRef = db.collection("calendarios").doc(datos.mes);
         docRef.get().then((doc) => {
           if (doc.exists) {
@@ -836,9 +854,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // ================================
-    // Cargar Calendario
-    // ================================
     if (btnCargar) {
       btnCargar.addEventListener("click", function () {
         const mesSeleccionado = selectMeses.value;
@@ -871,9 +886,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // ================================
-    // Eliminar Calendario
-    // ================================
     if (btnEliminar) {
       btnEliminar.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
@@ -908,15 +920,11 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // Cerrar modal de calendario
     if (cerrarModal) {
       cerrarModal.addEventListener("click", function () { modal.style.display = "none"; });
     }
     window.addEventListener("click", function (e) { if (e.target === modal) { modal.style.display = "none"; } });
 
-    // ================================
-    // Modal de Horarios
-    // ================================
     if (btnVerHorarios) {
       btnVerHorarios.addEventListener("click", function () { modalHorarios.style.display = "block"; });
     }
@@ -925,9 +933,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     window.addEventListener("click", function (e) { if (e.target === modalHorarios) { modalHorarios.style.display = "none"; } });
 
-    // ================================
-    // Modal de Estadísticas
-    // ================================
     if (btnVerEstadisticas) {
       btnVerEstadisticas.addEventListener("click", function () { mostrarEstadisticas(); });
     }
@@ -936,9 +941,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     window.addEventListener("click", function (e) { if (e.target === modalEstadisticas) { modalEstadisticas.style.display = "none"; } });
 
-    // ================================
-    // Subida de fotos (Admin)
-    // ================================
     if (usuarioEsAdmin) {
       const uploadButtons = document.querySelectorAll(".upload-photo-btn");
       uploadButtons.forEach(button => {
