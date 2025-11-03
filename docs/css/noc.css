@@ -188,7 +188,7 @@ header h1 {
 }
 .turnos-buttons {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr); /* ahora son 7 por fila incluyendo el botón N */
   gap: 10px;
   width: 100%;
   max-width: 550px;
@@ -216,6 +216,15 @@ header h1 {
   box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3), inset -2px -2px 5px rgba(255,255,255,0.05);
 }
 
+/* NUEVO: botón de turno Nochero */
+.btn-turno[data-turno="N"] {
+  background-color: #cccccc;
+  color: #333;
+}
+
+/* =============================
+   Botones Backup
+============================= */
 .backup-controls {
   display: flex;
   flex-wrap: wrap;
@@ -286,18 +295,14 @@ header h1 {
   border-radius: 4px;
 }
 
-/* 
-   EXACTAMENTE 2 columnas horizontales para las tarjetas de empleados 
-   => 2 tarjetas por fila.
-   Si tienes 6 empleados, verás 3 filas (2, 2, 2).
-*/
+/* EXACTAMENTE 2 columnas horizontales */
 .employee-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 columnas fijas */
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
 }
 
-/* Tarjeta de cada empleado */
+/* Tarjeta de empleado */
 .employee-card {
   position: relative;
   background: var(--color-fondo-secundario);
@@ -327,7 +332,7 @@ header h1 {
   padding-bottom: 0.5rem;
 }
 
-/* Botón para cambiar foto */
+/* Botón subir foto */
 .upload-photo-btn {
   margin-top: 8px;
   padding: 4px 8px;
@@ -392,12 +397,8 @@ header h1 {
   cursor: pointer;
   transition: color 0.3s ease;
 }
-.close {
-  font-size: 28px;
-}
-.close-horarios {
-  font-size: 24px;
-}
+.close { font-size: 28px; }
+.close-horarios { font-size: 24px; }
 .close:hover,
 .close-horarios:hover {
   color: var(--color-acento-secundario);
@@ -427,7 +428,7 @@ header h1 {
 }
 
 /* =============================
-   Estadísticas y Dashboard de Sugerencias
+   Estadísticas y Dashboard
 ============================= */
 .stats-cards {
   display: flex;
@@ -452,7 +453,7 @@ header h1 {
   margin: 5px 0;
 }
 
-/* Tabla de Turnos por Empleado (Estadísticas) */
+/* Tabla Turnos Empleados */
 .tabla-turnos-empleados {
   width: 100%;
   border-collapse: collapse;
@@ -474,7 +475,7 @@ header h1 {
   color: var(--color-texto-principal);
 }
 
-/* Gráficos de Estadísticas */
+/* Gráficos */
 .charts-container {
   display: flex;
   flex-direction: column;
@@ -490,7 +491,7 @@ header h1 {
 }
 
 /* =============================
-   Navegación de Meses en Calendario
+   Navegación de Meses
 ============================= */
 .calendar-header {
   display: flex;
@@ -505,14 +506,14 @@ header h1 {
 }
 
 /* =============================
-   Elementos Admin (ocultos para usuarios no-admin)
+   Admin-only
 ============================= */
 .admin-only {
   display: none !important;
 }
 
 /* =============================
-   Botón para Cambiar Tema (Dark Mode)
+   Botón modo oscuro
 ============================= */
 .theme-toggle {
   position: fixed;
@@ -534,12 +535,8 @@ header h1 {
 /* =============================
    Responsividad
 ============================= */
-/* A menos de 768px, pasamos a 1 columna para las tarjetas de empleados */
 @media (max-width: 768px) {
-  .employee-cards {
-    grid-template-columns: 1fr; /* 1 columna en pantallas pequeñas */
-  }
-
+  .employee-cards { grid-template-columns: 1fr; }
   .calendar th,
   .calendar td {
     font-size: 12px;
@@ -551,9 +548,7 @@ header h1 {
     width: 50px;
     height: 35px;
   }
-  .calendar-container {
-    max-height: 600px;
-  }
+  .calendar-container { max-height: 600px; }
   .turnos-backup {
     flex-direction: column;
     align-items: center;
