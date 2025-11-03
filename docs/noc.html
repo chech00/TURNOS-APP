@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Turnos Noc - Calendario de Turnos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="./css/user.css">
+  <link rel="stylesheet" href="./css/noc.css"/>
+</head>
+<body>
+ 
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" 
+           alt="Logo de la Empresa" class="logo-sidebar">
+    </div>
+    <nav class="sidebar-menu">
+      <ul>
+        <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> Turnos</a></li>
+        <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> Señal de Fibra</a></li>
+        <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> Documentos Noc</a></li>
+        <li><a href="noc.html" id="calendar-check" class="active"><i data-lucide="calendar-check"></i> Turnos Noc</a></li>
+        
+      </ul>
+    </nav>
+    <button id="logout-btn" class="primary-btn logout-btn">
+      <i data-lucide="log-out"></i> Cerrar sesión
+    </button>
+  </div>
+
+  <!-- Contenedor Principal -->
+  <div id="main-content" class="main-content">
+    <header>
+      <div class="container header-container">
+        <button id="menu-toggle" class="menu-btn">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <h1>Turnos Noc</h1>
+        <button class="theme-toggle">🌓</button>
+
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+       
+        <!-- Sección Calendario General con encabezado personalizado -->
+        <section id="general-calendar-container" class="calendar-container">
+          <div class="calendar-header">
+          
+            <div class="month-navigator">
+              <button id="prev-month" class="btn-icon">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <span id="current-month" class="text-xl">Mes y Año</span>
+              <button id="next-month" class="btn-icon">
+                <i data-lucide="chevron-right"></i>
+              </button>
+              <button id="today" class="btn-icon">
+                <i data-lucide="calendar-day"></i> Hoy
+              </button>
+            </div>
+          </div>
+          <table id="general-calendar" class="calendar">
+            <thead>
+              <tr>
+                <th class="text-left">Empleado</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Calendario Nocturno -->
+        <section id="nocturno-calendar-container" class="calendar-container">
+          <h2>Calendario Nocturno - Cristian Oyarzo</h2>
+          <table id="nocturno-calendar" class="calendar">
+            <thead>
+              <tr>
+                <th class="text-left">Empleado</th>
+              </tr>
+            </thead>
+            <tbody id="calendario-nocturno">
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Sección Turnos y Backup -->
+        <section class="turnos-backup">
+          <div class="turnos-section admin-only">
+            <h2>Turnos</h2>
+            <div class="assignment-container">
+              <div class="turnos-buttons">
+                <button data-turno="M0"  class="btn-turno" data-color="#a8d8ea" style="background-color: #648c9b;">M0</button>
+                <button data-turno="M0A" class="btn-turno" data-color="#aa96da" style="background-color: #7b69a5;">M0A</button>
+                <button data-turno="M1"  class="btn-turno" data-color="#c7f0d2" style="background-color: #557a5f;">M1</button>
+                <button data-turno="M1A" class="btn-turno" data-color="#ffd3b6" style="background-color: #c49f87;">M1A</button>
+                <button data-turno="M1B" class="btn-turno" data-color="#ffaaa5" style="background-color: #ffaaa5;">M1B</button>
+                <button data-turno="M2"  class="btn-turno" data-color="#ffcc99" style="background-color: #ffcc99;">M2</button>
+                <button data-turno="M2A" class="btn-turno" data-color="#d4a5a5" style="background-color: #d4a5a5;">M2A</button>
+                <button data-turno="M2B" class="btn-turno" data-color="#b5e7a0" style="background-color: #b5e7a0;">M2B</button>
+                <button data-turno="M3"  class="btn-turno" data-color="#f9d5e5" style="background-color: #996a7f;">M3</button>
+                <button data-turno="V"   class="btn-turno" data-color="#88C0A6" style="background-color: #88C0A6;">V</button>
+                <button data-turno="L"   class="btn-turno" data-color="#8FBCBB" style="background-color: #8FBCBB;">L</button>
+                <button data-turno="DL"  class="btn-turno" data-color="#D77A7A" style="background-color: #D77A7A;">DL</button>
+                <!-- NUEVO: botón Nochero (N) con el mismo color que se usa en el calendario nocturno -->
+                <button data-turno="N"   class="btn-turno" data-color="#cccccc" style="background-color: #cccccc;">N</button>
+              </div>
+            </div>
+          </div>
+        
+          <div class="backup-container">
+            <h2>Backup</h2>
+            <div class="backup-controls">
+              <button id="btnGuardar" class="btn-guardar admin-only">Guardar Calendario</button>
+              <button id="btnEliminar" class="btn-cargar admin-only" style="background-color: #d77a7a;">Eliminar</button>
+              <button id="btnCargar" class="btn-cargar">Cargar Calendario</button>
+              <button id="btnVerHorarios" class="btn-horarios">Ver Horarios de Turnos</button>
+              <button id="btnVerEstadisticas" class="btn-horarios admin-only">Ver Estadísticas</button>
+              <button id="btnVerSugerencias" class="btn-horarios admin-only">Ver Sugerencias</button>
+              <button id="btnAutoAsignar" class="btn-cargar admin-only" style="background-color: #7796cb;">
+                Auto-Asignar Turnos
+              </button>
+              
+<!-- Modal para Sugerencias -->
+<div id="modalSugerencias" class="modal-horarios">
+  <div class="modal-horarios-content">
+    <span id="cerrarSugerencias" class="close-horarios">&times;</span>
+    <h2>Sugerencias de Optimización</h2>
+    <ul id="listaSugerencias"></ul>
+  </div>
+</div>
+
+                    
+              <!-- Modal para Estadísticas Mejoradas -->
+<div id="modalEstadisticas" class="modal-horarios">
+  <div class="modal-horarios-content">
+    <span id="cerrarEstadisticas" class="close-horarios">&times;</span>
+    <h2>Turnos - Estadísticas</h2>
+
+    <!-- Tarjetas de Métricas -->
+    <div class="stats-cards">
+      <div class="stats-card">
+        <h3>Total Turnos</h3>
+        <p id="total-turnos">0</p>
+      </div>
+      <div class="stats-card">
+        <h3>Turno más usado</h3>
+        <p id="turno-mas-usado">-</p>
+      </div>
+      <div class="stats-card">
+        <h3>Turno menos usado</h3>
+        <p id="turno-menos-usado">-</p>
+      </div>
+    </div>
+
+    <!-- Tabla de Turnos por Empleado -->
+    <h3>Distribución de Turnos por Empleado</h3>
+    <table class="tabla-turnos-empleados">
+      <thead>
+        <tr>
+          <th>Empleado</th>
+          <th>Turno más asignado</th>
+          <th>Turno menos asignado</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-turnos-empleados">
+        <!-- Se llenará dinámicamente con JS -->
+      </tbody>
+    </table>
+
+    <!-- Contenedor de Gráficos -->
+    <div class="charts-container">
+      <h3>Distribución de Turnos</h3>
+      <canvas id="graficoTurnos"></canvas>
+
+      <h3>Carga de Trabajo por Empleado</h3>
+      <canvas id="graficoEmpleados"></canvas>
+
+      <h3>Tendencias de Asignación de Turnos</h3>
+      <canvas id="graficoTendencias"></canvas>
+    </div>
+  </div>
+</div>   
+            </div>
+            <div class="dropdown-container">
+              <select id="mesesGuardados" class="select-meses">
+                <option value="">-- Seleccione un mes guardado --</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sección Empleados -->
+        <section class="employees">
+          <h2>Equipo Noc</h2>
+          <div class="employee-cards">
+            <div class="employee-card">
+              <img src="https://via.placeholder.com/120" alt="Sergio Castillo" class="employee-photo"/>
+              <span>Sergio Castillo</span>
+              <input type="file" accept="image/*" class="photo-input" style="display: none;">
+              <button class="upload-photo-btn admin-only">Cambiar foto</button>
+            </div>
+            <div class="employee-card">
+              <img src="https://via.placeholder.com/120" alt="Ignacio Aburto" class="employee-photo"/>
+              <span>Ignacio Aburto</span>
+              <input type="file" accept="image/*" class="photo-input" style="display: none;">
+              <button class="upload-photo-btn admin-only">Cambiar foto</button>
+            </div>
+            <div class="employee-card">
+              <img src="https://via.placeholder.com/120" alt="Claudio Bustamante" class="employee-photo"/>
+              <span>Claudio Bustamante</span>
+              <input type="file" accept="image/*" class="photo-input" style="display: none;">
+              <button class="upload-photo-btn admin-only">Cambiar foto</button>
+            </div>
+            <div class="employee-card">
+              <img src="https://via.placeholder.com/120" alt="Julio Oliva" class="employee-photo"/>
+              <span>Julio Oliva</span>
+              <input type="file" accept="image/*" class="photo-input" style="display: none;">
+              <button class="upload-photo-btn admin-only">Cambiar foto</button>
+            </div>
+            <div class="employee-card">
+              <img src="https://via.placeholder.com/120" alt="Gabriel Trujillo" class="employee-photo"/>
+              <span>Gabriel Trujillo</span>
+              <input type="file" accept="image/*" class="photo-input" style="display: none;">
+              <button class="upload-photo-btn admin-only">Cambiar foto</button>
+            </div>
+            <div class="employee-card">
+              <img src="https://via.placeholder.com/120" alt="Cristian Oyarzo" class="employee-photo"/>
+              <span>Cristian Oyarzo</span>
+              <input type="file" accept="image/*" class="photo-input" style="display: none;">
+              <button class="upload-photo-btn admin-only">Cambiar foto</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    
+    <footer>
+      <div class="container">
+        <p>PatagoniaIP SPA - Todos los derechos reservados</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal Calendario Guardado -->
+  <div id="modalCalendario" class="modal">
+    <div class="modal-content">
+      <span id="cerrarModal" class="close">&times;</span>
+      <h2>Calendario Guardado</h2>
+      <div id="contenidoModal"></div>
+    </div>
+  </div>
+
+  <!-- Modal Horarios -->
+  <div id="modalHorarios" class="modal-horarios">
+    <div class="modal-horarios-content">
+      <span id="cerrarHorarios" class="close-horarios">&times;</span>
+      <h2>Horarios de Turnos</h2>
+      <table class="tabla-horarios">
+        <thead>
+          <tr>
+            <th>Turnos</th>
+            <th>Horarios</th>
+            <th>Días Libres</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>M0</td>
+            <td>09:00hrs - 19:00hrs</td>
+            <td>Martes, Jueves</td>
+          </tr>
+          <tr>
+            <td>M0A</td>
+            <td>09:00hrs - 19:00hrs</td>
+            <td>Miércoles, Domingo</td>
+          </tr>
+          <tr>
+            <td>M1</td>
+            <td>08:30hrs - 17:30hrs<br>Sábado 8:30hrs - 13:30hrs</td>
+            <td>Domingo</td>
+          </tr>
+          <tr>
+            <td>M1A</td>
+            <td>08:30hrs - 18:30hrs</td>
+            <td>Sábado, Domingo</td>
+          </tr>
+          <tr>
+            <td>M1B</td>
+            <td>7:00hrs - 17:00hrs</td>
+            <td>Sábado, Domingo</td>
+          </tr>
+          <tr>
+            <td>M2</td>
+            <td>11:00hrs - 20:00hrs<br>Sábado 13:00hrs - 18:00hrs</td>
+            <td>Domingo</td>
+          </tr>
+          <tr>
+            <td>M2A</td>
+            <td>10:00hrs - 20:00hrs</td>
+            <td>Sábado, Domingo</td>
+          </tr>
+          <tr>
+            <td>M2B</td>
+            <td>10:00hrs - 20:00hrs</td>
+            <td>Miércoles, Domingo</td>
+          </tr>
+          <tr>
+            <td>M3</td>
+            <td>11:00hrs - 21:00hrs</td>
+            <td>Martes, Jueves</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal para Estadísticas -->
+  <div id="modalEstadisticas" class="modal-horarios">
+    <div class="modal-horarios-content">
+      <span id="cerrarEstadisticas" class="close-horarios">&times;</span>
+      <h2>Estadísticas</h2>
+      <div id="estadisticas-contenido"></div>
+    </div>
+  </div>
+  
+
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/noc.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
