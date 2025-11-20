@@ -17,10 +17,11 @@ const vacationIcon = `<i data-lucide="tree-palm"></i>`;
 // Lista de feriados y su información
 const feriadosChile = [
   "2025-01-01", "2025-04-18", "2025-04-19", "2025-05-01",
-  "2025-05-21","2025-06-20", "2025-06-29", "2025-06-29", "2025-07-16", "2025-08-15",
+  "2025-05-21", "2025-06-20", "2025-06-29", "2025-06-29", "2025-07-16", "2025-08-15",
   "2025-09-18", "2025-09-19", "2025-10-12", "2025-10-31",
   "2025-11-01", "2025-11-16", "2025-12-08", "2025-12-14", "2025-12-25"
 ];
+
 const feriadosInfo = {
   "2025-01-01": "Año Nuevo",
   "2025-04-18": "Viernes Santo",
@@ -69,24 +70,27 @@ function obtenerClaveMes(date) {
   return `calendar_${date.getFullYear()}-${date.getMonth() + 1}`;
 }
 
+// Obtiene los datos actuales del calendario (HTML de las tablas)
+function obtenerDatosCalendario() {
+  const currentMonthElement = document.getElementById("current-month");
+  const generalTable = document.getElementById("general-calendar");
+  const nocturnoTable = document.getElementById("nocturno-calendar");
+  const feriadosTable = document.getElementById("feriados-calendar");
+
+  return {
+    mes: currentMonthElement.textContent,
+    generalHTML: generalTable ? generalTable.outerHTML : "",
+    nocturnoHTML: nocturnoTable ? nocturnoTable.outerHTML : "",
+    feriadosHTML: feriadosTable ? feriadosTable.outerHTML : ""
+  };
+}
+
 // Guarda en localStorage el estado actual del calendario
 function guardarCalendarioEnLocalStorage() {
   const key = obtenerClaveMes(currentDate);
   const datos = obtenerDatosCalendario();
   localStorage.setItem(key, JSON.stringify(datos));
   console.log(`Calendario guardado en localStorage con la clave: ${key}`);
-}
-
-// Obtiene los datos actuales del calendario (por ejemplo, HTML de las tablas)
-function obtenerDatosCalendario() {
-  const currentMonthElement = document.getElementById("current-month");
-  const generalTable = document.getElementById("general-calendar");
-  const nocturnoTable = document.getElementById("nocturno-calendar");
-  return {
-    mes: currentMonthElement.textContent,
-    generalHTML: generalTable.outerHTML,
-    nocturnoHTML: nocturnoTable.outerHTML
-  };
 }
 
 // -----------------------------------------------------------------------------
@@ -160,35 +164,62 @@ function asignarDomingosLibres(year, month, daysInMonth) {
 }
 
 // Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
- // si no existen, se construye desde cero.
+// si no existen o están incompletos, se construye desde cero.
 function renderCalendar(date) {
   const key = obtenerClaveMes(date);
   const storedData = localStorage.getItem(key);
+
   if (storedData) {
-    const data = JSON.parse(storedData);
-    document.getElementById("current-month").textContent = data.mes;
-    document.getElementById("general-calendar").outerHTML = data.generalHTML;
-    document.getElementById("nocturno-calendar").outerHTML = data.nocturnoHTML;
-    if (usuarioEsAdmin) { attachAdminCellListeners(); }
-    lucide.createIcons();
-  } else {
-    renderCalendarDesdeCero(date);
+    try {
+      const data = JSON.parse(storedData);
+
+      // Si no tiene el tercer calendario todavía, regeneramos desde cero
+      if (!data.generalHTML || !data.nocturnoHTML || !data.feriadosHTML) {
+        renderCalendarDesdeCero(date);
+        return;
+      }
+
+      document.getElementById("current-month").textContent = data.mes;
+
+      const general = document.getElementById("general-calendar");
+      const nocturno = document.getElementById("nocturno-calendar");
+      const feriados = document.getElementById("feriados-calendar");
+
+      if (general && data.generalHTML) general.outerHTML = data.generalHTML;
+      if (nocturno && data.nocturnoHTML) nocturno.outerHTML = data.nocturnoHTML;
+      if (feriados && data.feriadosHTML) feriados.outerHTML = data.feriadosHTML;
+
+      if (usuarioEsAdmin) { attachAdminCellListeners(); }
+      lucide.createIcons();
+      return;
+    } catch (e) {
+      console.error("Error leyendo localStorage, se renderiza desde cero:", e);
+    }
   }
+
+  renderCalendarDesdeCero(date);
 }
 
-// Función original para construir el calendario cuando no hay datos guardados
+// Construye el calendario cuando no hay datos guardados
 function renderCalendarDesdeCero(date) {
   const currentMonthElement = document.getElementById("current-month");
+
   const year = date.getFullYear();
   const month = date.getMonth();
+
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
-  currentMonthElement.textContent = `${firstDay.toLocaleString("default", { month: "long" })} ${year}`;
+
+  currentMonthElement.textContent = `${firstDay.toLocaleString("default", {
+    month: "long"
+  })} ${year}`;
 
   const tablaGeneral = document.getElementById("general-calendar");
   const tablaNocturno = document.getElementById("nocturno-calendar");
+  const tablaFeriados = document.getElementById("feriados-calendar");
 
+  // ---------- CABECERAS (GENERAL, NOCTURNO Y FERIADOS) ----------
   function generarCabecera(tabla) {
     let headerHTML = '<tr><th class="text-left p-2">Empleado</th>';
     for (let day = 1; day <= daysInMonth; day++) {
@@ -197,35 +228,54 @@ function renderCalendarDesdeCero(date) {
       headerHTML += `<th><div>${dayName}</div><div>${day}</div></th>`;
     }
     headerHTML += "</tr>";
+
     if (tabla && tabla.querySelector("thead")) {
       tabla.querySelector("thead").innerHTML = headerHTML;
     } else {
       console.error("No se encontró la cabecera de la tabla");
     }
   }
+
   generarCabecera(tablaGeneral);
   generarCabecera(tablaNocturno);
+  generarCabecera(tablaFeriados);
 
+  // ---------- DOMINGOS LIBRES PARA GENERAL ----------
   asignarDomingosLibres(year, month, daysInMonth);
 
-  // Construir el HTML del calendario general
+  // ---------- CUERPO CALENDARIO GENERAL ----------
   let generalHTML = "";
   empleados.forEach((empleado) => {
     generalHTML += `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+        day
+      ).padStart(2, "0")}`;
       const esFeriado = feriadosChile.includes(dateStr);
       const turno = empleado.turnos[day - 1] || "";
+
       let displayTurno = turno;
-      if (esFeriado && turno === "" && (empleado.nombre === "Sergio Castillo" || empleado.nombre === "Ignacio Aburto")) {
+
+      // Si es feriado y el turno está vacío, marcamos "F" solo para Sergio/Ignacio
+      if (
+        esFeriado &&
+        turno === "" &&
+        (empleado.nombre === "Sergio Castillo" ||
+          empleado.nombre === "Ignacio Aburto")
+      ) {
         displayTurno = "F";
       }
+
       const extraClass = turno === "DL" ? "domingo-libre" : "";
       const claseFeriado = displayTurno === "F" ? "feriado" : "";
       const cellContent = turno === "V" ? vacationIcon : displayTurno;
+
       generalHTML += `
         <td>
-          <button data-date="${dateStr}" data-empleado="${empleado.nombre}" data-day="${day}"
+          <button
+            data-date="${dateStr}"
+            data-empleado="${empleado.nombre}"
+            data-day="${day}"
             class="calendar-day w-full h-full ${extraClass} ${claseFeriado}"
             ${turno === "V" ? 'title="Vacaciones"' : ""}
           >
@@ -236,11 +286,13 @@ function renderCalendarDesdeCero(date) {
     }
     generalHTML += `</tr>`;
   });
-  
-  // Fila de bitácora
+
+  // ---------- FILA BITÁCORA ----------
   const totalCols = daysInMonth + 1;
-  const bitacoraIndex = ((month - 1) + bitacoraEmployees.length) % bitacoraEmployees.length;
+  const bitacoraIndex =
+    ((month - 1) + bitacoraEmployees.length) % bitacoraEmployees.length;
   const bitacoraEmpleado = bitacoraEmployees[bitacoraIndex];
+
   generalHTML += `
     <tr>
       <td class="bitacora-row" style="white-space:nowrap;">Encargado de Bitácora</td>
@@ -249,30 +301,48 @@ function renderCalendarDesdeCero(date) {
       </td>
     </tr>
   `;
-  const tbodyGeneral = tablaGeneral.querySelector("tbody");
-  if (tbodyGeneral) { tbodyGeneral.innerHTML = generalHTML; }
-  else { console.error("No se encontró el tbody de la tabla general"); }
 
-  // Construir el calendario nocturno
+  const tbodyGeneral = tablaGeneral.querySelector("tbody");
+  if (tbodyGeneral) {
+    tbodyGeneral.innerHTML = generalHTML;
+  } else {
+    console.error("No se encontró el tbody de la tabla general");
+  }
+
+  // ---------- CALENDARIO NOCTURNO (CRISTIAN) ----------
   let nocturnoHTML = "";
   const cristianTurnos = [];
+
   for (let day = 1; day <= daysInMonth; day++) {
     const fecha = new Date(year, month, day);
-    const esFeriado = feriadosChile.includes(`${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+    const esFeriado = feriadosChile.includes(dateStr);
     const dayOfWeek = fecha.getDay();
-    if (esFeriado) { cristianTurnos[day - 1] = "F"; }
-    else if (dayOfWeek === 0) { cristianTurnos[day - 1] = "DL"; }
-    else if (dayOfWeek === 6) { cristianTurnos[day - 1] = "L"; }
-    else { cristianTurnos[day - 1] = "N"; }
+
+    if (esFeriado) {
+      cristianTurnos[day - 1] = "F";
+    } else if (dayOfWeek === 0) {
+      cristianTurnos[day - 1] = "DL";
+    } else if (dayOfWeek === 6) {
+      cristianTurnos[day - 1] = "L";
+    } else {
+      cristianTurnos[day - 1] = "N";
+    }
   }
+
   nocturnoHTML += `<tr><td class="text-left p-2">Cristian Oyarzo</td>`;
   for (let day = 1; day <= daysInMonth; day++) {
     const turno = cristianTurnos[day - 1];
     let turnoClass = "";
-    if (turno === "DL") { turnoClass = "domingo-libre"; }
-    else if (turno === "L") { turnoClass = "dia-libre"; }
-    else if (turno === "N") { turnoClass = "nocturno"; }
+
+    if (turno === "DL") turnoClass = "domingo-libre";
+    else if (turno === "L") turnoClass = "dia-libre";
+    else if (turno === "N") turnoClass = "nocturno";
+
     const claseFeriado = turno === "F" ? "feriado" : "";
+
     nocturnoHTML += `
       <td>
         <button class="calendar-day w-full h-full ${turnoClass} ${claseFeriado}">
@@ -282,11 +352,58 @@ function renderCalendarDesdeCero(date) {
     `;
   }
   nocturnoHTML += `</tr>`;
-  const tbodyNocturno = tablaNocturno.querySelector("tbody");
-  if (tbodyNocturno) { tbodyNocturno.innerHTML = nocturnoHTML; }
-  else { console.error("No se encontró el tbody de la tabla nocturna"); }
 
-  // Agregar títulos a feriados
+  const tbodyNocturno = tablaNocturno.querySelector("tbody");
+  if (tbodyNocturno) {
+    tbodyNocturno.innerHTML = nocturnoHTML;
+  } else {
+    console.error("No se encontró el tbody de la tabla nocturna");
+  }
+
+  // ---------- CALENDARIO FERIADOS / FINES DE SEMANA ----------
+  // SOLO UNA FILA: "Turno Nocturno"
+  let feriadosHTML = `<tr><td class="text-left p-2">Turno Nocturno</td>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const fecha = new Date(year, month, day);
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+    const dayOfWeek = fecha.getDay(); // 0=domingo, 6=sábado
+    const esFeriado = feriadosChile.includes(dateStr);
+
+    let clasesExtra = "";
+    if (esFeriado) {
+      clasesExtra += " feriado";
+    } else if (dayOfWeek === 0) {
+      clasesExtra += " domingo-libre";
+    } else if (dayOfWeek === 6) {
+      clasesExtra += " dia-libre";
+    }
+
+    // Celdas vacías al inicio; luego asignas S / I / N desde los botones
+    feriadosHTML += `
+      <td>
+        <button
+          data-date="${dateStr}"
+          data-empleado="Turno Nocturno"
+          data-day="${day}"
+          class="calendar-day w-full h-full ${clasesExtra}">
+        </button>
+      </td>
+    `;
+  }
+
+  feriadosHTML += `</tr>`;
+
+  const tbodyFeriados = tablaFeriados.querySelector("tbody");
+  if (tbodyFeriados) {
+    tbodyFeriados.innerHTML = feriadosHTML;
+  } else {
+    console.error("No se encontró el tbody de la tabla de feriados");
+  }
+
+  // ---------- TÍTULOS A FERIADOS (SOLO SI LA CELDA TIENE "F") ----------
   document.querySelectorAll(".calendar-day").forEach((btn) => {
     if (btn.textContent.trim() === "F") {
       const dateStr = btn.getAttribute("data-date");
@@ -300,14 +417,19 @@ function renderCalendarDesdeCero(date) {
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
   lucide.createIcons();
 
-  // Una vez renderizado el calendario, lo guardamos en localStorage
+  // Guardar en localStorage una vez renderizado todo
   guardarCalendarioEnLocalStorage();
 }
 
 function todosLosDiasRellenos() {
-  const dayButtons = document.querySelectorAll("#general-calendar .calendar-day, #nocturno-calendar .calendar-day");
+  // Ahora validamos los 3 calendarios: general, nocturno y feriados
+  const dayButtons = document.querySelectorAll(
+    "#general-calendar .calendar-day, #nocturno-calendar .calendar-day, #feriados-calendar .calendar-day"
+  );
   for (let btn of dayButtons) {
-    if (btn.innerHTML.trim() === "") { return false; }
+    if (btn.innerHTML.trim() === "") {
+      return false;
+    }
   }
   return true;
 }
@@ -316,6 +438,7 @@ function todosLosDiasRellenos() {
 // 3) Eventos de Admin
 // -----------------------------------------------------------------------------
 let isSelecting = false;
+
 function adminMousedown(e) {
   if (e.button === 0) {
     isSelecting = true;
@@ -325,6 +448,7 @@ function adminMousedown(e) {
     }
   }
 }
+
 function adminMouseover(e) {
   if (usuarioEsAdmin && isSelecting) {
     if (!this.classList.contains("selected")) {
@@ -333,18 +457,25 @@ function adminMouseover(e) {
     }
   }
 }
+
 function adminContextmenu(e) {
   e.preventDefault();
   this.textContent = "";
+  this.innerHTML = ""; // por si tenía el icono de vacaciones
   this.removeAttribute("style");
   this.className = "calendar-day w-full h-full";
-  selectedDays = selectedDays.filter(el => el !== this);
+  this.removeAttribute("title");
+  selectedDays = selectedDays.filter((el) => el !== this);
 }
+
 function adminMouseup(e) {
-  if (usuarioEsAdmin) { isSelecting = false; }
+  if (usuarioEsAdmin) {
+    isSelecting = false;
+  }
 }
+
 function attachAdminCellListeners() {
-  document.querySelectorAll(".calendar-day").forEach(cell => {
+  document.querySelectorAll(".calendar-day").forEach((cell) => {
     cell.addEventListener("mousedown", adminMousedown);
     cell.addEventListener("mouseover", adminMouseover);
     cell.addEventListener("contextmenu", adminContextmenu);
@@ -355,27 +486,29 @@ function attachAdminCellListeners() {
 // -----------------------------------------------------------------------------
 // 4) MODALES, GUARDAR Y CARGAR CALENDARIO
 // -----------------------------------------------------------------------------
-const btnGuardar   = document.getElementById("btnGuardar");
-const btnCargar    = document.getElementById("btnCargar");
-const btnEliminar  = document.getElementById("btnEliminar");
-const selectMeses  = document.getElementById("mesesGuardados");
-const modal        = document.getElementById("modalCalendario");
+const btnGuardar = document.getElementById("btnGuardar");
+const btnCargar = document.getElementById("btnCargar");
+const btnEliminar = document.getElementById("btnEliminar");
+const selectMeses = document.getElementById("mesesGuardados");
+const modal = document.getElementById("modalCalendario");
 const modalContent = document.getElementById("contenidoModal");
-const cerrarModal  = document.getElementById("cerrarModal");
+const cerrarModal = document.getElementById("cerrarModal");
 
-const btnVerHorarios  = document.getElementById("btnVerHorarios");
-const modalHorarios   = document.getElementById("modalHorarios");
-const cerrarHorarios  = document.getElementById("cerrarHorarios");
+const btnVerHorarios = document.getElementById("btnVerHorarios");
+const modalHorarios = document.getElementById("modalHorarios");
+const cerrarHorarios = document.getElementById("cerrarHorarios");
 
-const btnVerEstadisticas   = document.getElementById("btnVerEstadisticas");
-const modalEstadisticas    = document.getElementById("modalEstadisticas");
-const cerrarEstadisticas   = document.getElementById("cerrarEstadisticas");
+const btnVerEstadisticas = document.getElementById("btnVerEstadisticas");
+const modalEstadisticas = document.getElementById("modalEstadisticas");
+const cerrarEstadisticas = document.getElementById("cerrarEstadisticas");
 const estadisticasContenido = document.getElementById("estadisticas-contenido");
 
 function cargarListaCalendarios() {
-  db.collection("calendarios").get()
+  db.collection("calendarios")
+    .get()
     .then((querySnapshot) => {
-      selectMeses.innerHTML = '<option value="">-- Seleccione un mes guardado --</option>';
+      selectMeses.innerHTML =
+        '<option value="">-- Seleccione un mes guardado --</option>';
       querySnapshot.forEach((doc) => {
         const option = document.createElement("option");
         option.value = doc.id;
@@ -383,7 +516,9 @@ function cargarListaCalendarios() {
         selectMeses.appendChild(option);
       });
     })
-    .catch((error) => { console.error("Error al cargar calendarios:", error); });
+    .catch((error) => {
+      console.error("Error al cargar calendarios:", error);
+    });
 }
 
 // -----------------------------------------------------------------------------
@@ -391,153 +526,228 @@ function cargarListaCalendarios() {
 // -----------------------------------------------------------------------------
 function cargarFotosEmpleados() {
   const employeeCards = document.querySelectorAll(".employee-card");
-  employeeCards.forEach(card => {
+  employeeCards.forEach((card) => {
     const nameSpan = card.querySelector("span");
     const imgElement = card.querySelector(".employee-photo");
     if (!nameSpan || !imgElement) return;
+
     const employeeName = nameSpan.textContent.trim();
-    db.collection("empleados").doc(employeeName).get()
-      .then(doc => {
+    db.collection("empleados")
+      .doc(employeeName)
+      .get()
+      .then((doc) => {
         if (doc.exists) {
           const data = doc.data();
-          if (data.photoURL) { imgElement.src = data.photoURL; }
+          if (data.photoURL) {
+            imgElement.src = data.photoURL;
+          }
         }
       })
-      .catch(err => { console.error("Error al leer la foto de Firestore:", err); });
+      .catch((err) => {
+        console.error("Error al leer la foto de Firestore:", err);
+      });
   });
 }
 
 // -----------------------------------------------------------------------------
-// FUNCIÓN PARA CALCULAR ESTADÍSTICAS
+// 6) FUNCIÓN PARA CALCULAR ESTADÍSTICAS
 // -----------------------------------------------------------------------------
 function calcularEstadisticas() {
+  // Solo tomamos el calendario general para las estadísticas
   const celdas = document.querySelectorAll("#general-calendar .calendar-day");
   const conteoTurnos = {};
+
   celdas.forEach((celda) => {
     const turno = celda.textContent.trim();
-    if (turno) { conteoTurnos[turno] = (conteoTurnos[turno] || 0) + 1; }
+    if (turno) {
+      conteoTurnos[turno] = (conteoTurnos[turno] || 0) + 1;
+    }
   });
+
   return conteoTurnos;
 }
 
 function calcularTurnosPorEmpleado() {
   const empleadosTurnos = {};
-  document.querySelectorAll("#general-calendar tbody tr").forEach(row => {
-    const empleado = row.querySelector("td")?.textContent.trim();
-    if (!empleado) return;
-    empleadosTurnos[empleado] = empleadosTurnos[empleado] || {};
-    row.querySelectorAll("td button.calendar-day").forEach(btn => {
-      const turno = btn.textContent.trim();
-      if (turno) { empleadosTurnos[empleado][turno] = (empleadosTurnos[empleado][turno] || 0) + 1; }
+  document
+    .querySelectorAll("#general-calendar tbody tr")
+    .forEach((row) => {
+      const empleado = row.querySelector("td")?.textContent.trim();
+      if (!empleado || empleado === "Encargado de Bitácora") return;
+
+      empleadosTurnos[empleado] = empleadosTurnos[empleado] || {};
+
+      row.querySelectorAll("td button.calendar-day").forEach((btn) => {
+        const turno = btn.textContent.trim();
+        if (turno) {
+          empleadosTurnos[empleado][turno] =
+            (empleadosTurnos[empleado][turno] || 0) + 1;
+        }
+      });
     });
-  });
-  return Object.entries(empleadosTurnos).map(([empleado, turnos]) => {
-    let turnoMasAsignado = "-";
-    let turnoMenosAsignado = "-";
-    let maxTurnos = 0;
-    let minTurnos = Infinity;
-    Object.entries(turnos).forEach(([turno, cantidad]) => {
-      if (cantidad > maxTurnos) { maxTurnos = cantidad; turnoMasAsignado = turno; }
-      if (cantidad < minTurnos) { minTurnos = cantidad; turnoMenosAsignado = turno; }
-    });
-    return { empleado, turnoMasAsignado, turnoMenosAsignado };
-  });
+
+  return Object.entries(empleadosTurnos).map(
+    ([empleado, turnos]) => {
+      let turnoMasAsignado = "-";
+      let turnoMenosAsignado = "-";
+      let maxTurnos = 0;
+      let minTurnos = Infinity;
+
+      Object.entries(turnos).forEach(([turno, cantidad]) => {
+        if (cantidad > maxTurnos) {
+          maxTurnos = cantidad;
+          turnoMasAsignado = turno;
+        }
+        if (cantidad < minTurnos) {
+          minTurnos = cantidad;
+          turnoMenosAsignado = turno;
+        }
+      });
+
+      return { empleado, turnoMasAsignado, turnoMenosAsignado };
+    }
+  );
 }
 
 function mostrarEstadisticas() {
   const conteoTurnos = calcularEstadisticas();
   const empleadosTurnos = calcularTurnosPorEmpleado();
+
   let turnoMasUsado = "-";
   let turnoMenosUsado = "-";
-  let maxCount = 0, minCount = Infinity;
+  let maxCount = 0,
+    minCount = Infinity;
+
   Object.entries(conteoTurnos).forEach(([turno, cantidad]) => {
-    if (cantidad > maxCount) { maxCount = cantidad; turnoMasUsado = turno; }
-    if (cantidad < minCount) { minCount = cantidad; turnoMenosUsado = turno; }
+    if (cantidad > maxCount) {
+      maxCount = cantidad;
+      turnoMasUsado = turno;
+    }
+    if (cantidad < minCount) {
+      minCount = cantidad;
+      turnoMenosUsado = turno;
+    }
   });
-  document.getElementById("total-turnos").textContent = Object.values(conteoTurnos).reduce((a, b) => a + b, 0);
+
+  document.getElementById("total-turnos").textContent = Object.values(
+    conteoTurnos
+  ).reduce((a, b) => a + b, 0);
+
   document.getElementById("turno-mas-usado").textContent = turnoMasUsado;
   document.getElementById("turno-menos-usado").textContent = turnoMenosUsado;
+
   const tablaEmpleados = document.getElementById("tabla-turnos-empleados");
-  tablaEmpleados.innerHTML = empleadosTurnos.map(({ empleado, turnoMasAsignado, turnoMenosAsignado }) => `
+  tablaEmpleados.innerHTML = empleadosTurnos
+    .map(
+      ({ empleado, turnoMasAsignado, turnoMenosAsignado }) => `
     <tr>
       <td>${empleado}</td>
       <td>${turnoMasAsignado}</td>
       <td>${turnoMenosAsignado}</td>
     </tr>
-  `).join("");
+  `
+    )
+    .join("");
+
   generarGraficoBarras(conteoTurnos);
   generarGraficoPastel(empleadosTurnos);
   generarGraficoLineas(conteoTurnos);
-  document.getElementById("modalEstadisticas").style.display = "block";
+
+  modalEstadisticas.style.display = "block";
 }
 
 // -----------------------------------------------------------------------------
-// GRÁFICOS CON CHART.JS
+// 7) GRÁFICOS CON CHART.JS
 // -----------------------------------------------------------------------------
 let chartBarras;
 let chartPastel;
 let chartLineas;
+
 function generarGraficoBarras(datos) {
   const ctx = document.getElementById("graficoTurnos").getContext("2d");
-  if (chartBarras) { chartBarras.destroy(); }
+  if (chartBarras) {
+    chartBarras.destroy();
+  }
   chartBarras = new Chart(ctx, {
     type: "bar",
     data: {
       labels: Object.keys(datos),
-      datasets: [{
-        label: "Frecuencia de Turnos",
-        data: Object.values(datos),
-        backgroundColor: "#7796cb"
-      }]
+      datasets: [
+        {
+          label: "Frecuencia de Turnos",
+          data: Object.values(datos),
+          backgroundColor: "#7796cb"
+        }
+      ]
     },
     options: { responsive: true }
   });
 }
-function generarGraficoPastel(datos) {
+
+function generarGraficoPastel(empleadosTurnos) {
   const ctx = document.getElementById("graficoEmpleados").getContext("2d");
-  if (chartPastel) { chartPastel.destroy(); }
+  if (chartPastel) {
+    chartPastel.destroy();
+  }
+
+  const labels = empleadosTurnos.map((e) => e.empleado);
+  // Para simplificar, damos peso uniforme (si quisieras podrías sumar turnos por empleado)
+  const data = empleadosTurnos.map(() => 1);
+
   chartPastel = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: Object.keys(datos),
-      datasets: [{
-        label: "Turnos por empleado",
-        data: Object.values(datos),
-        backgroundColor: ["#8FBCBB", "#88C0A6", "#D77A7A", "#7796cb"]
-      }]
+      labels,
+      datasets: [
+        {
+          label: "Turnos por empleado",
+          data,
+          backgroundColor: ["#8FBCBB", "#88C0A6", "#D77A7A", "#7796cb", "#b5e7a0", "#ffcc99"]
+        }
+      ]
     },
     options: { responsive: true }
   });
 }
+
 function generarGraficoLineas(datos) {
   const ctx = document.getElementById("graficoTendencias").getContext("2d");
-  if (chartLineas) { chartLineas.destroy(); }
+  if (chartLineas) {
+    chartLineas.destroy();
+  }
   chartLineas = new Chart(ctx, {
     type: "line",
     data: {
       labels: Object.keys(datos),
-      datasets: [{
-        label: "Tendencia de Turnos",
-        data: Object.values(datos),
-        borderColor: "#7796cb",
-        fill: false
-      }]
+      datasets: [
+        {
+          label: "Tendencia de Turnos",
+          data: Object.values(datos),
+          borderColor: "#7796cb",
+          fill: false
+        }
+      ]
     },
     options: { responsive: true }
   });
 }
 
 // -----------------------------------------------------------------------------
-// Funciones de aprendizaje (modelo de Markov)
+// 8) Funciones de aprendizaje (modelo de Markov)
 // -----------------------------------------------------------------------------
 async function actualizarTransicion(employee, turnoAnterior, turnoActual) {
   const docRef = db.collection("patronesTurnosMarkov").doc(employee);
   try {
     const doc = await docRef.get();
     let datos = {};
-    if (doc.exists) { datos = doc.data(); }
-    if (!datos[turnoAnterior]) { datos[turnoAnterior] = {}; }
-    datos[turnoAnterior][turnoActual] = (datos[turnoAnterior][turnoActual] || 0) + 1;
+    if (doc.exists) {
+      datos = doc.data();
+    }
+    if (!datos[turnoAnterior]) {
+      datos[turnoAnterior] = {};
+    }
+    datos[turnoAnterior][turnoActual] =
+      (datos[turnoAnterior][turnoActual] || 0) + 1;
     await docRef.set(datos, { merge: true });
   } catch (error) {
     console.error(`Error actualizando transición para ${employee}:`, error);
@@ -546,8 +756,13 @@ async function actualizarTransicion(employee, turnoAnterior, turnoActual) {
 
 async function obtenerMatrizTransiciones(employee) {
   try {
-    const doc = await db.collection("patronesTurnosMarkov").doc(employee).get();
-    if (doc.exists) { return doc.data(); }
+    const doc = await db
+      .collection("patronesTurnosMarkov")
+      .doc(employee)
+      .get();
+    if (doc.exists) {
+      return doc.data();
+    }
   } catch (error) {
     console.error(`Error obteniendo matriz para ${employee}:`, error);
   }
@@ -564,226 +779,382 @@ function elegirSiguienteTurnoMarkov(matrix, turnoAnterior, turnosDisponibles) {
   let acumulado = 0;
   for (let turno of turnosDisponibles) {
     acumulado += contadores[turno] || 0;
-    if (rand <= acumulado) { return turno; }
+    if (rand <= acumulado) {
+      return turno;
+    }
   }
   return turnosDisponibles[0];
 }
 
 // -----------------------------------------------------------------------------
-// 7) SUSCRIPCIÓN EN TIEMPO REAL AL CALENDARIO
+// 9) SUSCRIPCIÓN EN TIEMPO REAL AL CALENDARIO
 // -----------------------------------------------------------------------------
 let unsubscribeCalendar = null;
+
 function subscribeCalendar() {
   const monthId = document.getElementById("current-month").textContent.trim();
-  if (unsubscribeCalendar) { unsubscribeCalendar(); }
-  unsubscribeCalendar = db.collection("calendarios").doc(monthId)
+
+  if (unsubscribeCalendar) {
+    unsubscribeCalendar();
+  }
+
+  unsubscribeCalendar = db
+    .collection("calendarios")
+    .doc(monthId)
     .onSnapshot((doc) => {
       if (doc.exists) {
         const data = doc.data();
         const generalContainer = document.getElementById("general-calendar");
         const nocturnoContainer = document.getElementById("nocturno-calendar");
-        generalContainer.outerHTML = data.generalHTML;
-        nocturnoContainer.outerHTML = data.nocturnoHTML;
+        const feriadosContainer = document.getElementById("feriados-calendar");
+
+        if (generalContainer && data.generalHTML) {
+          generalContainer.outerHTML = data.generalHTML;
+        }
+        if (nocturnoContainer && data.nocturnoHTML) {
+          nocturnoContainer.outerHTML = data.nocturnoHTML;
+        }
+        if (feriadosContainer && data.feriadosHTML) {
+          feriadosContainer.outerHTML = data.feriadosHTML;
+        }
+
         lucide.createIcons();
-        if (usuarioEsAdmin) { attachAdminCellListeners(); }
+        if (usuarioEsAdmin) {
+          attachAdminCellListeners();
+        }
       } else {
+        // Si no existe documento en Firestore, renderizamos desde local / cero
         renderCalendar(currentDate);
-        if (usuarioEsAdmin) { attachAdminCellListeners(); }
+        if (usuarioEsAdmin) {
+          attachAdminCellListeners();
+        }
       }
     });
 }
 
 // -----------------------------------------------------------------------------
-// 8) ACTUALIZACIÓN EN TIEMPO REAL (debounce)
+// 10) ACTUALIZACIÓN EN TIEMPO REAL (debounce)
 // -----------------------------------------------------------------------------
 let updateTimeout;
+
 function scheduleFirestoreUpdate() {
   clearTimeout(updateTimeout);
   updateTimeout = setTimeout(() => {
     const datos = obtenerDatosCalendario();
-    db.collection("calendarios").doc(datos.mes).set(datos)
-      .then(() => { console.log("Actualización en tiempo real guardada."); })
-      .catch((error) => { console.error("Error al actualizar:", error); });
+    db.collection("calendarios")
+      .doc(datos.mes)
+      .set(datos)
+      .then(() => {
+        console.log("Actualización en tiempo real guardada.");
+      })
+      .catch((error) => {
+        console.error("Error al actualizar:", error);
+      });
   }, 1000);
+
   // También se guarda en localStorage
   guardarCalendarioEnLocalStorage();
 }
 
 // -----------------------------------------------------------------------------
-// 9) EVENTO PRINCIPAL (DOMContentLoaded)
+// 11) EVENTO PRINCIPAL (DOMContentLoaded)
 // -----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", function () {
   configurarSidebar();
   configurarLogout();
-  verificarRolUsuario(function(isAdmin) {
+
+  verificarRolUsuario(function (isAdmin) {
     usuarioEsAdmin = isAdmin;
+
+    // Mostrar elementos solo para admin
     if (usuarioEsAdmin) {
-      document.querySelectorAll(".admin-only").forEach(el => { el.classList.remove("admin-only"); });
+      document.querySelectorAll(".admin-only").forEach((el) => {
+        el.classList.remove("admin-only");
+      });
     }
 
+    // Botón Auto-Asignar (solo admin)
     const btnAutoAsignar = document.getElementById("btnAutoAsignar");
     if (btnAutoAsignar) {
       btnAutoAsignar.addEventListener("click", async function () {
         if (!usuarioEsAdmin) return;
+
         Swal.fire({
           title: "Analizando turnos...",
           text: "Función en Beta, puede contener errores. Esto puede tardar unos segundos.",
           showConfirmButton: false,
           allowOutsideClick: false,
-          willOpen: () => { Swal.showLoading(); }
+          willOpen: () => {
+            Swal.showLoading();
+          }
         });
+
         try {
           const turnoColorMapping = {
-            "M0": "#648c9b",
-            "M0A": "#7b69a5",
-            "M1": "#557a5f",
-            "M1A": "#c49f87",
-            "M1B": "#ffaaa5",
-            "M2": "#ffcc99",
-            "M2A": "#d4a5a5",
-            "M2B": "#b5e7a0",
-            "M3": "#996a7f",
-            "V": "#88C0A6",
-            "L": "#8FBCBB",
-            "DL": "#D77A7A"
+            // Turnos normales
+            M0: "#648c9b",
+            M0A: "#7b69a5",
+            M1: "#557a5f",
+            M1A: "#c49f87",
+            M1B: "#ffaaa5",
+            M2: "#ffcc99",
+            M2A: "#d4a5a5",
+            M2B: "#b5e7a0",
+            M3: "#996a7f",
+            V: "#88C0A6",
+            L: "#8FBCBB",
+            DL: "#D77A7A",
+            N: "#cccccc",
+            // Turnos especiales feriados/fines de semana
+            S: "#4A90E2",
+            I: "#2C3E50"
           };
-          const turnosDisponibles = ["M0", "M0A", "M1", "M1A", "M1B", "M2", "M2A", "M2B", "M3", "V"];
-          const currentMonth = document.getElementById("current-month").textContent.trim();
+
+          const turnosDisponibles = [
+            "M0",
+            "M0A",
+            "M1",
+            "M1A",
+            "M1B",
+            "M2",
+            "M2A",
+            "M2B",
+            "M3",
+            "V"
+          ];
+
+          const currentMonth = document
+            .getElementById("current-month")
+            .textContent.trim();
           console.log("Mes actual detectado:", currentMonth);
 
           const snapshot = await db.collection("calendarios").get();
           let historialTurnos = {};
-          snapshot.forEach((doc) => { historialTurnos[doc.id] = doc.data(); });
+          snapshot.forEach((doc) => {
+            historialTurnos[doc.id] = doc.data();
+          });
           console.log("Historial de turnos:", historialTurnos);
 
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth();
           const lastDay = new Date(year, month + 1, 0);
           const daysInMonth = lastDay.getDate();
-          const tabla = document.getElementById("general-calendar").querySelector("tbody");
+
+          const tabla = document
+            .getElementById("general-calendar")
+            .querySelector("tbody");
           const filas = tabla.querySelectorAll("tr");
+
           let empleadosAsignados = {};
 
+          // Asignación inicial por empleado usando Markov
           for (let fila of filas) {
-            const empleado = fila.querySelector("td").textContent.trim();
+            const firstCell = fila.querySelector("td");
+            if (!firstCell) continue;
+
+            const empleado = firstCell.textContent.trim();
+            if (empleado === "Encargado de Bitácora") continue;
+
             empleadosAsignados[empleado] = new Array(daysInMonth).fill("");
+
             let matriz = await obtenerMatrizTransiciones(empleado);
+
             for (let day = 1; day <= daysInMonth; day++) {
               const dateObj = new Date(year, month, day);
+
+              // Domingo: DL para Sergio/Ignacio, L para el resto
               if (dateObj.getDay() === 0) {
-                empleadosAsignados[empleado][day - 1] = (empleado === "Sergio Castillo" || empleado === "Ignacio Aburto") ? "DL" : "L";
+                empleadosAsignados[empleado][day - 1] =
+                  empleado === "Sergio Castillo" ||
+                    empleado === "Ignacio Aburto"
+                    ? "DL"
+                    : "L";
               } else {
                 if (day > 1) {
                   let turnoAnterior = empleadosAsignados[empleado][day - 2];
-                  let turnoElegido = elegirSiguienteTurnoMarkov(matriz, turnoAnterior, turnosDisponibles);
+                  let turnoElegido = elegirSiguienteTurnoMarkov(
+                    matriz,
+                    turnoAnterior,
+                    turnosDisponibles
+                  );
                   empleadosAsignados[empleado][day - 1] = turnoElegido;
                 } else {
-                  empleadosAsignados[empleado][day - 1] = turnosDisponibles[Math.floor(Math.random() * turnosDisponibles.length)];
+                  empleadosAsignados[empleado][day - 1] =
+                    turnosDisponibles[
+                    Math.floor(Math.random() * turnosDisponibles.length)
+                    ];
                 }
               }
             }
           }
+
           console.log("Asignación inicial:", empleadosAsignados);
 
+          // Reglas adicionales para M1 / M1B: no más de 1 por semana
           for (let empleado in empleadosAsignados) {
             let asignacion = empleadosAsignados[empleado];
             let weekStart = 0;
+
             while (weekStart < asignacion.length) {
               let weekEnd = weekStart;
               while (weekEnd < asignacion.length) {
                 let dia = weekEnd + 1;
                 let fecha = new Date(year, month, dia);
-                if (fecha.getDay() === 0) { weekEnd++; break; }
+                if (fecha.getDay() === 0) {
+                  weekEnd++;
+                  break;
+                }
                 weekEnd++;
               }
-              let countM1 = 0, countM1B = 0;
+
+              let countM1 = 0,
+                countM1B = 0;
               for (let i = weekStart; i < weekEnd; i++) {
                 let turno = asignacion[i];
                 if (turno === "M1") countM1++;
                 if (turno === "M1B") countM1B++;
               }
+
               let total = countM1 + countM1B;
               if (total > 1) {
                 let extra = total - 1;
                 for (let i = weekStart; i < weekEnd && extra > 0; i++) {
                   if (asignacion[i] === "M1" || asignacion[i] === "M1B") {
-                    let alternativas = turnosDisponibles.filter(t => t !== "M1" && t !== "M1B");
-                    asignacion[i] = alternativas[Math.floor(Math.random() * alternativas.length)];
+                    let alternativas = turnosDisponibles.filter(
+                      (t) => t !== "M1" && t !== "M1B"
+                    );
+                    asignacion[i] =
+                      alternativas[
+                      Math.floor(Math.random() * alternativas.length)
+                      ];
                     extra--;
                   }
                 }
               }
+
               weekStart = weekEnd;
             }
           }
 
-          console.log("Asignación final tras reglas adicionales:", empleadosAsignados);
+          console.log(
+            "Asignación final tras reglas adicionales:",
+            empleadosAsignados
+          );
 
+          // Pintar en el calendario general
           filas.forEach((fila) => {
-            const empleado = fila.querySelector("td").textContent.trim();
+            const firstCell = fila.querySelector("td");
+            if (!firstCell) return;
+            const empleado = firstCell.textContent.trim();
+            if (empleado === "Encargado de Bitácora") return;
+
             const botones = fila.querySelectorAll("td button.calendar-day");
             botones.forEach((boton, index) => {
-              if (empleadosAsignados[empleado][index] !== "") {
-                let turno = empleadosAsignados[empleado][index];
-                if (turno === "V") { boton.innerHTML = vacationIcon; }
-                else { boton.textContent = turno; }
-                boton.style.backgroundColor = turnoColorMapping[turno] || "#7796cb";
+              const turnoAsignado = empleadosAsignados[empleado][index];
+              if (turnoAsignado && turnoAsignado !== "") {
+                if (turnoAsignado === "V") {
+                  boton.innerHTML = vacationIcon;
+                  boton.setAttribute("title", "Vacaciones");
+                } else {
+                  boton.textContent = turnoAsignado;
+                  boton.removeAttribute("title");
+                }
+                boton.style.backgroundColor =
+                  turnoColorMapping[turnoAsignado] || "#7796cb";
               }
             });
           });
 
+          // Actualizar modelo de Markov con lo recién asignado
           for (let empleado in empleadosAsignados) {
+            let asignacion = empleadosAsignados[empleado];
             for (let day = 2; day <= daysInMonth; day++) {
-              let turnoAnterior = empleadosAsignados[empleado][day - 2];
-              let turnoActual = empleadosAsignados[empleado][day - 1];
-              if (turnoActual !== "DL" && turnoActual !== "L" && turnoActual !== "F") {
-                await actualizarTransicion(empleado, turnoAnterior, turnoActual);
+              let turnoAnterior = asignacion[day - 2];
+              let turnoActual = asignacion[day - 1];
+              if (
+                turnoActual !== "DL" &&
+                turnoActual !== "L" &&
+                turnoActual !== "F"
+              ) {
+                await actualizarTransicion(
+                  empleado,
+                  turnoAnterior,
+                  turnoActual
+                );
               }
             }
           }
-          Swal.fire("Éxito", "Turnos asignados y el modelo actualizado.", "success");
+
+          Swal.fire(
+            "Éxito",
+            "Turnos asignados y el modelo actualizado.",
+            "success"
+          );
+
           guardarCalendarioEnLocalStorage();
+          scheduleFirestoreUpdate();
         } catch (error) {
           console.error("Error en autoasignación:", error);
-          Swal.fire("Error", "No se pudieron asignar los turnos.", "error");
+          Swal.fire(
+            "Error",
+            "No se pudieron asignar los turnos.",
+            "error"
+          );
         }
       });
     }
 
+    // Navegación de meses
     const prevMonthButton = document.getElementById("prev-month");
     const nextMonthButton = document.getElementById("next-month");
-    const todayButton     = document.getElementById("today");
-    prevMonthButton.addEventListener("click", function () {
-      guardarCalendarioEnLocalStorage();
-      currentDate.setMonth(currentDate.getMonth() - 1);
-      renderCalendar(currentDate);
-      subscribeCalendar();
-    });
-    nextMonthButton.addEventListener("click", function () {
-      guardarCalendarioEnLocalStorage();
-      currentDate.setMonth(currentDate.getMonth() + 1);
-      renderCalendar(currentDate);
-      subscribeCalendar();
-    });
-    todayButton.addEventListener("click", function () {
-      guardarCalendarioEnLocalStorage();
-      currentDate = new Date();
-      renderCalendar(currentDate);
-      subscribeCalendar();
-    });
+    const todayButton = document.getElementById("today");
 
+    if (prevMonthButton) {
+      prevMonthButton.addEventListener("click", function () {
+        guardarCalendarioEnLocalStorage();
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar(currentDate);
+        subscribeCalendar();
+      });
+    }
+
+    if (nextMonthButton) {
+      nextMonthButton.addEventListener("click", function () {
+        guardarCalendarioEnLocalStorage();
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar(currentDate);
+        subscribeCalendar();
+      });
+    }
+
+    if (todayButton) {
+      todayButton.addEventListener("click", function () {
+        guardarCalendarioEnLocalStorage();
+        currentDate = new Date();
+        renderCalendar(currentDate);
+        subscribeCalendar();
+      });
+    }
+
+    // Render inicial + suscripción + datos auxiliares
     renderCalendar(currentDate);
     subscribeCalendar();
     cargarListaCalendarios();
     cargarFotosEmpleados();
 
-    const turnosButtons = document.querySelectorAll(".turnos-buttons button");
+    // -----------------------------------------------------------------
+    // Botones de turnos (TODOS los botones .btn-turno)
+    // -----------------------------------------------------------------
+    const turnosButtons = document.querySelectorAll(".btn-turno");
+
     turnosButtons.forEach((button) => {
       button.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
+
         if (selectedDays.length > 0) {
           const turno = this.getAttribute("data-turno");
           const color = this.getAttribute("data-color");
+
           selectedDays.forEach((dayBtn) => {
             if (turno === "V") {
               dayBtn.innerHTML = vacationIcon;
@@ -791,15 +1162,16 @@ document.addEventListener("DOMContentLoaded", function () {
               dayBtn.setAttribute("title", "Vacaciones");
             } else {
               dayBtn.textContent = turno;
+              dayBtn.innerHTML = dayBtn.textContent; // por si había icono antes
               dayBtn.style.backgroundColor = color;
               dayBtn.removeAttribute("title");
             }
             dayBtn.classList.remove("selected");
           });
+
           lucide.createIcons();
           selectedDays = [];
           scheduleFirestoreUpdate();
-          guardarCalendarioEnLocalStorage();
         } else {
           Swal.fire({
             icon: "warning",
@@ -810,50 +1182,87 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
+    // -----------------------------------------------------------------
+    // Botón Guardar calendario en Firestore
+    // -----------------------------------------------------------------
     if (btnGuardar) {
       btnGuardar.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
+
         if (!todosLosDiasRellenos()) {
           Swal.fire({
             icon: "error",
             title: "Datos incompletos",
-            text: "Debes rellenar todos los días en ambos calendarios antes de guardar."
+            text: "Debes rellenar todos los días en los calendarios antes de guardar."
           });
           return;
         }
+
         guardarCalendarioEnLocalStorage();
+
         const key = obtenerClaveMes(currentDate);
         const datos = JSON.parse(localStorage.getItem(key));
         const docRef = db.collection("calendarios").doc(datos.mes);
-        docRef.get().then((doc) => {
-          if (doc.exists) {
-            Swal.fire({
-              icon: "question",
-              title: "Ya existe un calendario",
-              text: `¿Sobrescribir el calendario de ${datos.mes}?`,
-              showCancelButton: true,
-              confirmButtonText: "Sí, sobrescribir",
-              cancelButtonText: "No"
-            }).then((result) => {
-              if (result.isConfirmed) {
-                docRef.set(datos).then(() => {
-                  Swal.fire("Sobrescrito", "Calendario sobrescrito exitosamente.", "success");
+
+        docRef
+          .get()
+          .then((doc) => {
+            if (doc.exists) {
+              Swal.fire({
+                icon: "question",
+                title: "Ya existe un calendario",
+                text: `¿Sobrescribir el calendario de ${datos.mes}?`,
+                showCancelButton: true,
+                confirmButtonText: "Sí, sobrescribir",
+                cancelButtonText: "No"
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  docRef
+                    .set(datos)
+                    .then(() => {
+                      Swal.fire(
+                        "Sobrescrito",
+                        "Calendario sobrescrito exitosamente.",
+                        "success"
+                      );
+                      cargarListaCalendarios();
+                    })
+                    .catch((error) => {
+                      console.error("Error al sobrescribir:", error);
+                    });
+                } else {
+                  Swal.fire(
+                    "Cancelado",
+                    "No se sobrescribió el calendario.",
+                    "info"
+                  );
+                }
+              });
+            } else {
+              docRef
+                .set(datos)
+                .then(() => {
+                  Swal.fire({
+                    icon: "success",
+                    title: "Calendario guardado",
+                    text: "Calendario guardado exitosamente."
+                  });
                   cargarListaCalendarios();
-                }).catch((error) => { console.error("Error al sobrescribir:", error); });
-              } else {
-                Swal.fire("Cancelado", "No se sobrescribió el calendario.", "info");
-              }
-            });
-          } else {
-            docRef.set(datos).then(() => {
-              Swal.fire({ icon: "success", title: "Calendario guardado", text: "Calendario guardado exitosamente." });
-              cargarListaCalendarios();
-            }).catch((error) => { console.error("Error al guardar:", error); });
-          }
-        }).catch((error) => { console.error("Error al validar existencia:", error); });
+                })
+                .catch((error) => {
+                  console.error("Error al guardar:", error);
+                });
+            }
+          })
+          .catch((error) => {
+            console.error("Error al validar existencia:", error);
+          });
       });
     }
 
+    // -----------------------------------------------------------------
+    // Botón Cargar (vista previa en modal)
+    // -----------------------------------------------------------------
     if (btnCargar) {
       btnCargar.addEventListener("click", function () {
         const mesSeleccionado = selectMeses.value;
@@ -865,13 +1274,17 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           return;
         }
-        db.collection("calendarios").doc(mesSeleccionado).get()
+
+        db.collection("calendarios")
+          .doc(mesSeleccionado)
+          .get()
           .then((doc) => {
             if (doc.exists) {
               const datos = doc.data();
               modalContent.innerHTML = `
-                <h3>Calendario General</h3>${datos.generalHTML}
-                <h3>Calendario Nocturno</h3>${datos.nocturnoHTML}
+                <h3>Calendario General</h3>${datos.generalHTML || ""}
+                <h3>Calendario Nocturno</h3>${datos.nocturnoHTML || ""}
+                <h3>Calendario Feriados/Fines de Semana</h3>${datos.feriadosHTML || ""}
               `;
               modal.style.display = "block";
             } else {
@@ -882,13 +1295,19 @@ document.addEventListener("DOMContentLoaded", function () {
               });
             }
           })
-          .catch((error) => { console.error("Error al cargar el calendario:", error); });
+          .catch((error) => {
+            console.error("Error al cargar el calendario:", error);
+          });
       });
     }
 
+    // -----------------------------------------------------------------
+    // Botón Eliminar calendario
+    // -----------------------------------------------------------------
     if (btnEliminar) {
       btnEliminar.addEventListener("click", function () {
         if (!usuarioEsAdmin) return;
+
         const mesSeleccionado = selectMeses.value;
         if (!mesSeleccionado) {
           Swal.fire({
@@ -898,6 +1317,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
           return;
         }
+
         Swal.fire({
           icon: "warning",
           title: "¿Eliminar Calendario?",
@@ -907,104 +1327,225 @@ document.addEventListener("DOMContentLoaded", function () {
           cancelButtonText: "No"
         }).then((result) => {
           if (result.isConfirmed) {
-            db.collection("calendarios").doc(mesSeleccionado).delete()
+            db.collection("calendarios")
+              .doc(mesSeleccionado)
+              .delete()
               .then(() => {
-                Swal.fire("Eliminado", `El calendario de "${mesSeleccionado}" fue eliminado.`, "success");
+                Swal.fire(
+                  "Eliminado",
+                  `El calendario de "${mesSeleccionado}" fue eliminado.`,
+                  "success"
+                );
                 cargarListaCalendarios();
               })
-              .catch((error) => { console.error("Error al eliminar calendario:", error); });
+              .catch((error) => {
+                console.error("Error al eliminar calendario:", error);
+              });
           } else {
-            Swal.fire("Cancelado", "No se eliminó el calendario.", "info");
+            Swal.fire(
+              "Cancelado", "No se eliminó el calendario.", "info"
+            );
           }
         });
       });
     }
 
+    // Cierre de modal de vista previa
     if (cerrarModal) {
-      cerrarModal.addEventListener("click", function () { modal.style.display = "none"; });
+      cerrarModal.addEventListener("click", function () {
+        modal.style.display = "none";
+      });
     }
-    window.addEventListener("click", function (e) { if (e.target === modal) { modal.style.display = "none"; } });
+    window.addEventListener("click", function (e) {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
 
+    // Modal Horarios
     if (btnVerHorarios) {
-      btnVerHorarios.addEventListener("click", function () { modalHorarios.style.display = "block"; });
+      btnVerHorarios.addEventListener("click", function () {
+        modalHorarios.style.display = "block";
+      });
     }
     if (cerrarHorarios) {
-      cerrarHorarios.addEventListener("click", function () { modalHorarios.style.display = "none"; });
+      cerrarHorarios.addEventListener("click", function () {
+        modalHorarios.style.display = "none";
+      });
     }
-    window.addEventListener("click", function (e) { if (e.target === modalHorarios) { modalHorarios.style.display = "none"; } });
+    window.addEventListener("click", function (e) {
+      if (e.target === modalHorarios) {
+        modalHorarios.style.display = "none";
+      }
+    });
 
+    // Modal Estadísticas
     if (btnVerEstadisticas) {
-      btnVerEstadisticas.addEventListener("click", function () { mostrarEstadisticas(); });
+      btnVerEstadisticas.addEventListener("click", function () {
+        mostrarEstadisticas();
+      });
     }
     if (cerrarEstadisticas) {
-      cerrarEstadisticas.addEventListener("click", function () { modalEstadisticas.style.display = "none"; });
+      cerrarEstadisticas.addEventListener("click", function () {
+        modalEstadisticas.style.display = "none";
+      });
     }
-    window.addEventListener("click", function (e) { if (e.target === modalEstadisticas) { modalEstadisticas.style.display = "none"; } });
+    window.addEventListener("click", function (e) {
+      if (e.target === modalEstadisticas) {
+        modalEstadisticas.style.display = "none";
+      }
+    });
 
+    // Subida de fotos (solo admin)
     if (usuarioEsAdmin) {
       const uploadButtons = document.querySelectorAll(".upload-photo-btn");
-      uploadButtons.forEach(button => {
+      uploadButtons.forEach((button) => {
         button.addEventListener("click", () => {
           const employeeCard = button.closest(".employee-card");
-          if (!employeeCard) { console.error("No se encontró la tarjeta del empleado."); return; }
+          if (!employeeCard) {
+            console.error("No se encontró la tarjeta del empleado.");
+            return;
+          }
           const photoInput = employeeCard.querySelector(".photo-input");
-          if (!photoInput) { console.error("No se encontró el input file."); return; }
+          if (!photoInput) {
+            console.error("No se encontró el input file.");
+            return;
+          }
           photoInput.click();
         });
       });
+
       const photoInputs = document.querySelectorAll(".photo-input");
-      photoInputs.forEach(input => {
-        input.addEventListener("change", async function() {
+      photoInputs.forEach((input) => {
+        input.addEventListener("change", async function () {
           if (this.files && this.files[0]) {
             const file = this.files[0];
             const employeeCard = this.closest(".employee-card");
-            if (!employeeCard) { console.error("No se encontró la tarjeta del empleado."); return; }
+            if (!employeeCard) {
+              console.error("No se encontró la tarjeta del empleado.");
+              return;
+            }
             const employeeNameElement = employeeCard.querySelector("span");
-            const employeeName = employeeNameElement ? employeeNameElement.textContent.trim() : "Empleado";
+            const employeeName = employeeNameElement
+              ? employeeNameElement.textContent.trim()
+              : "Empleado";
+
             const fileName = `${employeeName}_${Date.now()}_${file.name}`;
-            const { data, error } = await supabase.storage.from("documentos-noc").upload(fileName, file, { upsert: true });
-            if (error) { console.error("Error al subir foto:", error); return; }
+
+            const { data, error } = await supabase.storage
+              .from("documentos-noc")
+              .upload(fileName, file, { upsert: true });
+
+            if (error) {
+              console.error("Error al subir foto:", error);
+              return;
+            }
+
             const pathUploaded = data.path || fileName;
-            const { data: urlData, error: urlError } = supabase.storage.from("documentos-noc").getPublicUrl(pathUploaded);
-            if (urlError) { console.error("Error al obtener URL:", urlError); return; }
-            if (!urlData) { console.error("No se recibió URL pública."); return; }
+            const { data: urlData, error: urlError } = supabase.storage
+              .from("documentos-noc")
+              .getPublicUrl(pathUploaded);
+
+            if (urlError) {
+              console.error("Error al obtener URL:", urlError);
+              return;
+            }
+            if (!urlData) {
+              console.error("No se recibió URL pública.");
+              return;
+            }
+
             const finalURL = `${urlData.publicUrl}?ts=${Date.now()}`;
             const imgElement = employeeCard.querySelector(".employee-photo");
-            if (imgElement) { imgElement.src = finalURL; }
-            db.collection("empleados").doc(employeeName).set({ photoURL: finalURL }, { merge: true })
-              .then(() => { console.log(`Foto actualizada para ${employeeName}`); })
-              .catch((error) => { console.error("Error guardando URL:", error); });
-          } else { console.warn("No se seleccionó ningún archivo."); }
+            if (imgElement) {
+              imgElement.src = finalURL;
+            }
+
+            db.collection("empleados")
+              .doc(employeeName)
+              .set({ photoURL: finalURL }, { merge: true })
+              .then(() => {
+                console.log(`Foto actualizada para ${employeeName}`);
+              })
+              .catch((error) => {
+                console.error("Error guardando URL:", error);
+              });
+          } else {
+            console.warn("No se seleccionó ningún archivo.");
+          }
         });
+      });
+    }
+
+    // Botón de modo oscuro
+    const themeToggle = document.querySelector(".theme-toggle");
+    if (themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+      });
+    }
+
+    // Botón de sugerencias (solo admin)
+    const btnVerSugerencias = document.getElementById("btnVerSugerencias");
+    const modalSugerencias = document.getElementById("modalSugerencias");
+    const cerrarSugerencias = document.getElementById("cerrarSugerencias");
+    const listaSugerencias = document.getElementById("listaSugerencias");
+
+    if (btnVerSugerencias && modalSugerencias && cerrarSugerencias && listaSugerencias) {
+      btnVerSugerencias.addEventListener("click", () => {
+        if (!usuarioEsAdmin) return;
+        const sugerencias = generarSugerencias();
+        listaSugerencias.innerHTML = sugerencias
+          .map((s) => `<li>${s}</li>`)
+          .join("");
+        modalSugerencias.style.display = "block";
+      });
+
+      cerrarSugerencias.addEventListener("click", () => {
+        modalSugerencias.style.display = "none";
+      });
+
+      window.addEventListener("click", (e) => {
+        if (e.target === modalSugerencias) {
+          modalSugerencias.style.display = "none";
+        }
       });
     }
   });
 });
 
-document.getElementById("btnVerSugerencias").addEventListener("click", () => {
-  const sugerencias = generarSugerencias();
-  const lista = document.getElementById("listaSugerencias");
-  lista.innerHTML = sugerencias.map(s => `<li>${s}</li>`).join("");
-  document.getElementById("modalSugerencias").style.display = "block";
-});
-document.getElementById("cerrarSugerencias").addEventListener("click", () => {
-  document.getElementById("modalSugerencias").style.display = "none";
-});
-document.querySelector('.theme-toggle').addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-});
-
+// -----------------------------------------------------------------------------
+// 12) GENERAR SUGERENCIAS
+// -----------------------------------------------------------------------------
 function generarSugerencias() {
   const conteoTurnos = calcularEstadisticas();
   const totalTurnos = Object.values(conteoTurnos).reduce((a, b) => a + b, 0);
-  const promedio = totalTurnos / Object.keys(conteoTurnos).length;
+  const promedio =
+    Object.keys(conteoTurnos).length > 0
+      ? totalTurnos / Object.keys(conteoTurnos).length
+      : 0;
+
   const sugerencias = [];
+
   for (const [turno, cantidad] of Object.entries(conteoTurnos)) {
+    if (promedio === 0) break;
+
     if (cantidad > promedio * 1.5) {
-      sugerencias.push(`El turno "${turno}" se asigna con mucha frecuencia (${cantidad} veces). Considera re-distribuirlo.`);
+      sugerencias.push(
+        `El turno "${turno}" se asigna con mucha frecuencia (${cantidad} veces). Considera re-distribuirlo.`
+      );
     } else if (cantidad < promedio * 0.5) {
-      sugerencias.push(`El turno "${turno}" tiene pocas asignaciones (${cantidad} veces).`);
+      sugerencias.push(
+        `El turno "${turno}" tiene pocas asignaciones (${cantidad} veces). Podrías equilibrarlo con otros turnos.`
+      );
     }
   }
+
+  if (sugerencias.length === 0) {
+    sugerencias.push(
+      "La distribución de turnos se ve bastante equilibrada en este mes."
+    );
+  }
+
   return sugerencias;
 }
