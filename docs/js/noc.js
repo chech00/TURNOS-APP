@@ -422,10 +422,11 @@ function renderCalendarDesdeCero(date) {
 }
 
 function todosLosDiasRellenos() {
-  // Ahora validamos los 3 calendarios: general, nocturno y feriados
+  // Solo validamos General y Nocturno (NO el calendario de feriados)
   const dayButtons = document.querySelectorAll(
-    "#general-calendar .calendar-day, #nocturno-calendar .calendar-day, #feriados-calendar .calendar-day"
+    "#general-calendar .calendar-day, #nocturno-calendar .calendar-day"
   );
+
   for (let btn of dayButtons) {
     if (btn.innerHTML.trim() === "") {
       return false;
@@ -1549,3 +1550,4 @@ function generarSugerencias() {
 
   return sugerencias;
 }
+
