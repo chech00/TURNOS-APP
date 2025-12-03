@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registros de Inicios de Sesión</title>
+  <!-- Enlaza a tus estilos generales -->
+  <link rel="stylesheet" href="./css/styles.css">
+  <!-- Estilo propio para esta vista -->
+  <link rel="stylesheet" href="./css/registros.css">
+  <!-- Librerías -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo" class="logo-sidebar" />
+    </div>
+    <nav class="sidebar-menu">
+      <ul>
+        <li><a href="index.html"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li><a href="senales.html"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
+        <li><a href="documentos.html"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
+        <li><a href="noc.html"><i data-lucide="calendar-check"></i> <span>Turnos Noc</span></a></li>
+        <!-- Marcamos esta opción como activa en esta página -->
+        <li><a href="registros.html" class="active"><i data-lucide="file-text"></i> <span>Registros</span></a></li>
+      </ul>
+    </nav>
+    <button id="logout-btn" class="primary-btn logout-btn">
+      <i data-lucide="log-out"></i> <span>Cerrar sesión</span>
+    </button>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div id="main-content" class="main-content">
+    <header>
+      <button id="menu-toggle" class="menu-btn">
+        <i data-lucide="panel-left"></i>
+      </button>
+      <h1>Registros de Inicios de Sesión</h1>
+    </header>
+
+    <main>
+      <section class="registros-container glass-container">
+        <div class="table-header">
+          <h2>Historial de Accesos</h2>
+          <div class="table-actions">
+            <!-- Espacio para filtros o botones futuros -->
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table id="tabla-registros" class="tabla-registros">
+            <thead>
+              <tr>
+                <th><i data-lucide="mail"></i> Email</th>
+                <th><i data-lucide="shield"></i> Rol</th>
+                <th><i data-lucide="clock"></i> Fecha/Hora</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Se llenará dinámicamente con JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
+    </footer>
+  </div>
+
+  <!-- Firebase y scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Tu configuración de Firebase -->
+  <script type="module" src="./js/firebase.js"></script>
+
+  <!-- Script principal de la vista de registros -->
+  <script type="module" src="./js/registros.js"></script>
+
+  <script>
+    // Cargar íconos Lucide
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,143 @@
+/* registros.css - Rediseño Corporate Dark */
+
+/* Contenedor principal con Glassmorphism */
+.glass-container {
+  background: rgba(35, 39, 46, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin-top: 3rem;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header de la tabla */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+}
+
+.table-header h2 {
+  color: var(--color-acento-primario);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Tabla Responsiva */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.tabla-registros {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+  color: var(--color-texto-principal);
+}
+
+.tabla-registros thead th {
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  padding: 1rem;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+.tabla-registros thead th i {
+  vertical-align: middle;
+  margin-right: 0.4rem;
+  width: 16px;
+  height: 16px;
+  color: var(--color-acento-primario);
+}
+
+.tabla-registros tbody tr {
+  background: rgba(255, 255, 255, 0.03);
+  transition: all 0.3s ease;
+}
+
+.tabla-registros tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.tabla-registros td {
+  padding: 1rem;
+  font-size: 0.95rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tabla-registros td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--color-acento-primario);
+  font-weight: 500;
+}
+
+.tabla-registros td:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--color-texto-secundario);
+}
+
+/* Scrollbar personalizado para la tabla */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(119, 150, 203, 0.3);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: rgba(119, 150, 203, 0.5);
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .glass-container {
+    padding: 1rem;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .tabla-registros thead {
+    display: none;
+    /* Ocultar headers en móvil si se desea un diseño de tarjetas, o mantener scroll */
+  }
+}

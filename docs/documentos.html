@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos NOC - Gestión Profesional</title>
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/documentos.css?v=5.6">
+
+  <!-- Librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa" class="logo-sidebar">
+    </div>
+    <nav class="sidebar-menu">
+      <ul>
+        <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
+        <li><a href="documentos.html" id="menu-doc" class="active"><i data-lucide="dock"></i> <span>Documentos
+              Noc</span></a></li>
+        <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos Noc</span></a></li>
+        <li id="li-registros" style="display:none;">
+          <a href="registros.html">
+            <i data-lucide="file-text"></i>
+            <span>Registros</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <button id="logout-btn" class="primary-btn logout-btn">
+      <i data-lucide="log-out"></i> <span>Cerrar sesión</span>
+    </button>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div id="main-content" class="main-content">
+    <header>
+      <button id="menu-toggle" class="menu-btn">
+        <i data-lucide="panel-left"></i>
+      </button>
+      <h1>Documentos NOC</h1>
+
+      <!-- Acciones del Header -->
+      <div class="header-actions">
+        <div class="search-box">
+          <i data-lucide="search"></i>
+          <input type="text" id="search-input" placeholder="Buscar documentos...">
+        </div>
+        <button id="open-upload-modal-btn" class="primary-btn" style="display: none;"> <!-- Oculto por defecto -->
+          <i data-lucide="cloud-upload"></i>
+          <span>Subir Nuevo</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="documentos-container">
+        <!-- Grid de Archivos -->
+        <div class="files-grid-container">
+          <div id="files-grid" class="files-grid">
+            <!-- Las tarjetas se generarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
+    </footer>
+  </div>
+
+  <!-- Modal de Subida -->
+  <div class="modal" id="upload-modal">
+    <div class="modal-content upload-modal-content">
+      <div class="modal-header">
+        <h2>Subir Nuevo Documento</h2>
+        <span class="close-modal" id="close-upload-modal">&times;</span>
+      </div>
+      <div class="upload-flow">
+        <div class="form-group">
+          <label for="file-name">Nombre del documento</label>
+          <input type="text" id="file-name" placeholder="Ej: Manual NOC 2024">
+        </div>
+        <div class="form-group">
+          <label for="file-description">Descripción</label>
+          <textarea id="file-description" rows="2" placeholder="Agrega una descripción..."></textarea>
+        </div>
+        <!-- Zona de Drop -->
+        <div class="file-dropzone" id="upload-dropzone">
+          <div class="dropzone-content">
+            <i data-lucide="folder-plus" class="dropzone-icon"></i>
+            <div class="dropzone-text">
+              <p class="drag-text">Arrastra tu archivo aquí</p>
+              <p class="or-text">o</p>
+              <p class="browse-text">Busca en tu dispositivo</p>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="file-input" hidden>
+        <button id="upload-btn" class="primary-btn full-width">
+          <i data-lucide="upload" class="btn-icon"></i>
+          Subir Documento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para vista previa -->
+  <div class="modal" id="preview-modal">
+    <div class="modal-content" id="modal-preview-content">
+      <span class="close-button" id="modal-close">&times;</span>
+      <!-- El contenido del modal se cargará dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/documentos.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

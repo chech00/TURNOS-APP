@@ -1,0 +1,213 @@
+/* Variables globales heredadas de styles.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===========================================
+   Para asegurar que el footer quede abajo:
+   1) html, body al 100% de altura
+   2) body como flex-column
+   3) .main-content con flex: 1
+   =========================================== */
+html,
+body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* La sección principal (main) se expande también */
+main {
+  flex: 1;
+  /* Ocupa el espacio extra para empujar el footer */
+  margin: 2rem auto;
+  /* Reset global negative margin */
+  width: 95%;
+  max-width: 1400px;
+}
+
+/* Footer fijo al final */
+footer {
+  background-color: var(--color-fondo-secundario);
+  /* flex: 1 se maneja en <main> */
+}
+
+/* Contenedor de Fibra */
+.fiber-container h2 {
+  font-family: var(--font-primary);
+  color: var(--color-acento-primario);
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  border-bottom: 1px solid rgba(119, 150, 203, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+/* Contenedor de tarjetas: Nodos, PON, Cajas, etc. */
+.card-container {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+  /* grid responsive */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.card {
+  background: rgba(35, 39, 46, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border-color: var(--color-acento-primario);
+}
+
+.card-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--color-texto-principal);
+}
+
+.card-body {
+  font-size: 0.95rem;
+  color: var(--color-texto-secundario);
+}
+
+/* Ícono de eliminar en la tarjeta */
+.delete-icon {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--color-error);
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  transition: transform 0.2s ease;
+}
+
+.delete-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Formularios dentro de las tarjetas */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: var(--color-acento-primario);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border-radius: 8px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--color-acento-primario);
+  outline: none;
+}
+
+/* Botón general */
+.btn {
+  background: var(--color-acento-primario);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn:hover {
+  background: #5a7cb6;
+  transform: translateY(-2px);
+}
+
+/* Lista para Filamentos */
+.list-container {
+  margin-top: 15px;
+  padding: 0;
+  list-style: none;
+}
+
+.list-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-texto-principal);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.list-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Botón "Volver" */
+.btn-back {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-texto-principal);
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-3px);
+}
+
+.btn-back:active {
+  transform: scale(0.98);
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+
+  .main-content.shift {
+    margin-left: 0;
+  }
+
+  .card-container {
+    grid-template-columns: 1fr;
+  }
+}

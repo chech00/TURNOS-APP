@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <!-- Google Fonts para una tipografía moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/login.css?v=2.0">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <div class="login-container">
+    <!-- Lado izquierdo con imagen -->
+    <div class="login-image"></div>
+
+    <div class="login-content">
+      <div class="logo">
+        <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo">
+      </div>
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <input type="email" id="email" placeholder="Correo Electrónico" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="password" placeholder="Contraseña" required>
+        </div>
+
+        <div class="remember-forgot-container">
+          <div class="remember-me">
+            <input type="checkbox" id="remember-me">
+            <label for="remember-me">Mantener sesión iniciada</label>
+          </div>
+          <a href="recuperar.html" class="forgot-password">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Iniciar Sesión</button>
+        <p id="error-message" class="error-message"></p>
+      </form>
+
+      <!-- Sección de redes sociales -->
+      <div class="social-links">
+        <a href="https://www.instagram.com/patagonia_ip/" target="_blank" aria-label="Instagram">
+          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384031.png" alt="Instagram">
+        </a>
+        <a href="https://www.facebook.com/" target="_blank" aria-label="Facebook">
+          <img src="https://cdn-icons-png.flaticon.com/512/747/747374.png" alt="Facebook">
+        </a>
+        <a href="https://x.com/" target="_blank" aria-label="Twitter">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/X_logo_2023.svg/640px-X_logo_2023.svg.png"
+            alt="Twitter">
+        </a>
+      </div>
+    </div>
+  </div>
+  <!-- Scripts de Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/login.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vista de Usuario</title>
+  <link rel="stylesheet" href="./css/styles.css">
+  <script src="https://unpkg.com/lucide@latest"></script> <!-- Librería de iconos modernos -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa"
+        class="logo-sidebar" />
+    </div>
+
+    <nav class="sidebar-menu">
+      <ul>
+        <li><a href="#" id="menu-turnos" class="active"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
+        <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
+        <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos Noc</span></a></li>
+        <li id="li-registros" style="display:none;">
+          <a href="registros.html">
+            <i data-lucide="file-text"></i>
+            <span>Registros</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <button id="logout-btn" class="primary-btn logout-btn">
+      <i data-lucide="log-out"></i> <span>Cerrar sesión</span>
+    </button>
+  </div>
+  <!-- Contenido Principal -->
+  <div id="main-content" class="main-content">
+    <header>
+      <div class="header-left">
+        <button id="menu-toggle" class="menu-btn">
+          <i data-lucide="panel-left"></i>
+        </button>
+        <h1>Vista Usuario</h1>
+      </div>
+      <div class="header-right">
+        <p id="welcome-message" class="welcome-message">Bienvenido</p>
+      </div>
+    </header>
+
+
+    <main>
+      <!-- Contenedor del calendario -->
+      <section class="calendar-container">
+        <div class="calendar-header">
+          <button id="prev-month" class="primary-btn">&laquo; Mes Anterior</button>
+          <h2 id="calendar-title"></h2>
+          <button id="next-month" class="primary-btn">Mes Siguiente &raquo;</button>
+        </div>
+        <table id="calendar">
+          <thead>
+            <tr>
+              <th>Lunes</th>
+              <th>Martes</th>
+              <th>Miércoles</th>
+              <th>Jueves</th>
+              <th>Viernes</th>
+              <th>Sábado</th>
+              <th>Domingo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- Contenedor de botones para cambiar vistas -->
+      <section id="linear-view" class="linear-container" style="display: none;">
+        <h2 id="linear-title">Agenda de Turnos</h2>
+        <ul id="linear-list"></ul>
+      </section>
+
+      <section class="botones-contenedor">
+        <button id="calendar-view-btn" class="primary-btn">Vista Calendario</button>
+        <button id="linear-view-btn" class="primary-btn">Vista Lineal</button>
+      </section>
+
+      <!-- Sección de búsqueda de turnos -->
+      <section id="search-section" class="search-section">
+        <h2>Buscar Turno</h2>
+        <input type="date" id="search-date" class="search-input">
+        <button id="search-button" class="primary-btn">Buscar</button>
+        <div id="search-result" class="search-result"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script type="module" src="./js/firebase.js"></script>
+    <script type="module" src="./js/script.js"></script>
+    <script type="module" src="./js/user.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const calendarViewBtn = document.getElementById("calendar-view-btn");
+        const linearViewBtn = document.getElementById("linear-view-btn");
+        const searchButton = document.getElementById("search-button");
+
+        // Inicializar vista del usuario (Calendario)
+        // Esta función depende de script.js
+        function inicializarVistaUsuario() {
+          console.log("Inicializando la vista del usuario...");
+
+          let currentMonth = new Date().getMonth();
+          let currentYear = new Date().getFullYear();
+
+          const prevMonthBtn = document.getElementById("prev-month");
+          const nextMonthBtn = document.getElementById("next-month");
+
+          if (prevMonthBtn) {
+            prevMonthBtn.addEventListener("click", () => {
+              currentMonth--;
+              if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+              }
+              if (typeof generarCalendario === 'function') {
+                generarCalendario(currentMonth, currentYear);
+              }
+              if (typeof cargarAsignacionesGuardadas === 'function') {
+                cargarAsignacionesGuardadas(currentMonth, currentYear);
+              }
+            });
+          }
+
+          if (nextMonthBtn) {
+            nextMonthBtn.addEventListener("click", () => {
+              currentMonth++;
+              if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+              }
+              if (typeof generarCalendario === 'function') {
+                generarCalendario(currentMonth, currentYear);
+              }
+              if (typeof cargarAsignacionesGuardadas === 'function') {
+                cargarAsignacionesGuardadas(currentMonth, currentYear);
+              }
+            });
+          }
+
+          try {
+            if (typeof generarCalendario === 'function') {
+              generarCalendario(currentMonth, currentYear);
+            }
+            if (typeof configurarBotonesCalendario === 'function') {
+              configurarBotonesCalendario();
+            }
+
+            if (calendarViewBtn) {
+              calendarViewBtn.addEventListener("click", () => {
+                document.querySelector(".calendar-container").style.display = "block";
+                document.querySelector(".linear-container").style.display = "none";
+              });
+            }
+
+            if (linearViewBtn) {
+              linearViewBtn.addEventListener("click", () => {
+                document.querySelector(".calendar-container").style.display = "none";
+                document.querySelector(".linear-container").style.display = "block";
+                if (typeof generarVistaLineal === 'function') {
+                  generarVistaLineal();
+                }
+              });
+            }
+
+            if (searchButton) {
+              searchButton.addEventListener("click", () => {
+                const searchDate = document.getElementById("search-date").value;
+                if (typeof buscarTurnoPorFecha === 'function') {
+                  buscarTurnoPorFecha(searchDate);
+                }
+              });
+            }
+          } catch (error) {
+            console.error("Error al inicializar la vista del usuario:", error);
+          }
+        }
+
+        // Llamamos a la inicialización del calendario
+        // La autenticación y sidebar ahora se manejan en user.js
+        // Pero necesitamos esperar a que user.js verifique el rol para mostrar el calendario?
+        // user.js ya hace verificarRolUsuario().
+        // Podemos llamar a inicializarVistaUsuario directamente aquí, 
+        // o esperar un evento. Por simplicidad, lo llamamos aquí, 
+        // ya que user.js redirigirá si no es válido.
+        inicializarVistaUsuario();
+      });
+    </script>
+
+</body>
+
+</html>
