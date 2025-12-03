@@ -7,6 +7,7 @@ const db = window.db;
 // Manejo del inicio de sesión
 document.getElementById("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
+  console.log("Iniciando proceso de login v2.1..."); // DEBUG
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -33,7 +34,21 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
     const userData = userDoc.data();
     const userRole = userData.rol;
+    console.log("Datos del usuario:", userData); // DEBUG
     console.log("Rol del usuario:", userRole);
+
+    // --- NUEVO: Verificar si debe cambiar contraseña ---
+    // DEBUG: Alert removido.
+
+    if (userData.mustChangePassword === true) {
+      console.log("El usuario debe cambiar su contraseña (flag activo).");
+      window.location.href = "change-password.html";
+      return; // Detener ejecución aquí
+    } else {
+      console.log("El usuario NO necesita cambiar contraseña (flag:", userData.mustChangePassword, ")");
+    }
+    // --------------------------------------------------
+    // --------------------------------------------------
 
     // 3) Guardar log de inicio de sesión en la colección "loginLogs"
     //    (Lo creas en Firestore con los campos: email, rol, timestamp)
@@ -56,21 +71,31 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
       localStorage.setItem("lastPage", "user.html");
     }
   } catch (error) {
-    console.error("Error en el inicio de sesión:", error.message);
+    console.error("Error en el inicio de sesión:", error);
     errorMessageElement.style.display = "block";
-    switch (error.code) {
+
+    let errorCode = error.code;
+    let errorMessage = error.message;
+
+    // Manejo de errores de API (INVALID_LOGIN_CREDENTIALS)
+    if (errorMessage && errorMessage.includes("INVALID_LOGIN_CREDENTIALS")) {
+      errorCode = 'auth/invalid-login-credentials';
+    }
+
+    switch (errorCode) {
       case "auth/user-not-found":
-        errorMessageElement.textContent = "El correo ingresado no está registrado.";
-        break;
       case "auth/wrong-password":
-        errorMessageElement.textContent = "La contraseña ingresada es incorrecta.";
+      case "auth/invalid-login-credentials":
+        errorMessageElement.textContent = "Usuario o contraseña incorrectos.";
         break;
       case "auth/invalid-email":
         errorMessageElement.textContent = "El formato del correo no es válido.";
         break;
+      case "auth/too-many-requests":
+        errorMessageElement.textContent = "Demasiados intentos fallidos. Intenta más tarde.";
+        break;
       default:
-        errorMessageElement.textContent =
-          "Ocurrió un error inesperado. Por favor, intenta nuevamente.";
+        errorMessageElement.textContent = "Error al iniciar sesión. Verifica tus datos.";
     }
   }
 });

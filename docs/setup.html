@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración del Sistema</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Importamos firebase.js como modulo -->
+    <script type="module" src="js/firebase.js"></script>
+</head>
+
+<body
+    style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: var(--bg-dark);">
+
+    <div class="card" style="padding: 2rem; max-width: 500px; text-align: center;">
+        <h1 style="margin-bottom: 1rem;">Configuración de Seguridad</h1>
+        <p style="margin-bottom: 2rem; color: var(--text-muted);">
+            Haz clic en el botón para obligar a <strong>TODOS</strong> los usuarios a cambiar su contraseña en el
+            próximo inicio de sesión.
+        </p>
+
+        <button id="btn-migrate" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;" disabled>
+            Cargando sistema...
+        </button>
+
+        <div id="status-msg" style="margin-top: 1.5rem; font-weight: bold;"></div>
+
+        <a href="index.html" style="display: block; margin-top: 1rem; color: var(--primary-color);">Volver al Inicio</a>
+    </div>
+
+    <script type="module">
+        // Esperar a que window.auth esté definido por firebase.js
+        const waitForAuth = setInterval(() => {
+            if (window.auth && window.db) {
+                clearInterval(waitForAuth);
+                initApp();
+            }
+        }, 100);
+
+        function initApp() {
+            const db = window.db;
+            const auth = window.auth;
+            const btn = document.getElementById("btn-migrate");
+            const status = document.getElementById("status-msg");
+
+            // Habilitar botón una vez cargado
+            btn.disabled = false;
+            btn.textContent = "Aplicar Cambio de Clave Masivo";
+
+            btn.addEventListener("click", async () => {
+                // Verificar login
+                if (!auth.currentUser) {
+                    status.textContent = "Error: Debes iniciar sesión primero.";
+                    status.style.color = "red";
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = "Procesando...";
+                status.textContent = "Actualizando usuarios...";
+                status.style.color = "var(--text-color)";
+
+                try {
+                    const snapshot = await db.collection("userRoles").get();
+                    const batch = db.batch();
+                    let count = 0;
+
+                    snapshot.forEach(doc => {
+                        const ref = db.collection("userRoles").doc(doc.id);
+                        batch.update(ref, { mustChangePassword: true });
+                        count++;
+                    });
+
+                    await batch.commit();
+
+                    status.textContent = `¡Éxito! Se actualizaron ${count} usuarios.`;
+                    status.style.color = "#2ecc71"; // Green
+                    btn.textContent = "Actualización Completada";
+
+                    alert(`Proceso completado. ${count} usuarios marcados para cambio de clave.`);
+
+                } catch (error) {
+                    console.error(error);
+                    status.textContent = "Error: " + error.message;
+                    status.style.color = "#ff4d4f";
+                    btn.disabled = false;
+                    btn.textContent = "Reintentar";
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

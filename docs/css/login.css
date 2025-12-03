@@ -42,7 +42,8 @@ body::after {
 /* Contenedor Principal Glassmorphism */
 .login-container {
   width: 900px;
-  height: 550px;
+  min-height: 550px;
+  height: auto;
   display: flex;
   border-radius: 24px;
   overflow: hidden;

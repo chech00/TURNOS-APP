@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Diagnóstico de Usuario</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Importamos firebase.js como modulo -->
+    <script type="module" src="js/firebase.js"></script>
+
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+
+        .card {
+            background: #333;
+            padding: 1rem;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        pre {
+            background: #000;
+            padding: 1rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .btn-fix {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+        }
+
+        .btn-refresh {
+            background-color: #3498db;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>Diagnóstico de Usuario</h1>
+        <p>Estado de autenticación: <span id="auth-status">Cargando Firebase...</span></p>
+
+        <h3>Datos en Firestore (Colección: userRoles)</h3>
+        <pre id="firestore-data">Esperando inicialización...</pre>
+
+        <div id="actions" style="display:none;">
+            <button class="btn-fix" id="btn-fix">ACTIVAR CAMBIO DE CLAVE AHORA</button>
+            <button class="btn-refresh" onclick="location.reload()">Refrescar Datos</button>
+        </div>
+
+        <p><a href="login.html" style="color: #3498db;">Volver al Login</a></p>
+    </div>
+
+    <script type="module">
+        // Esperar a que window.auth esté definido por firebase.js
+        const waitForAuth = setInterval(() => {
+            if (window.auth && window.db) {
+                clearInterval(waitForAuth);
+                initApp();
+            }
+        }, 100);
+
+        function initApp() {
+            const auth = window.auth;
+            const db = window.db;
+            const pre = document.getElementById("firestore-data");
+            const authStatus = document.getElementById("auth-status");
+            const actions = document.getElementById("actions");
+            const btnFix = document.getElementById("btn-fix");
+
+            authStatus.textContent = "Verificando sesión...";
+
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    authStatus.textContent = "No has iniciado sesión.";
+                    pre.textContent = "Por favor inicia sesión en login.html primero.";
+                    return;
+                }
+
+                authStatus.textContent = `Logueado como: ${user.email}`;
+
+                try {
+                    const docRef = db.collection("userRoles").doc(user.uid);
+                    const doc = await docRef.get();
+
+                    if (doc.exists) {
+                        const data = doc.data();
+                        pre.textContent = JSON.stringify(data, null, 2);
+                        actions.style.display = "block";
+
+                        if (data.mustChangePassword === true) {
+                            pre.style.border = "2px solid #2ecc71"; // Green
+                            pre.textContent += "\n\n[OK] El flag está ACTIVO. El login debería bloquearte.";
+                        } else {
+                            pre.style.border = "2px solid #e74c3c"; // Red
+                            pre.textContent += "\n\n[ERROR] El flag NO está activo o no existe.";
+                        }
+                    } else {
+                        pre.textContent = "No se encontró documento en 'userRoles' con este UID.";
+                    }
+                } catch (e) {
+                    pre.textContent = "Error leyendo Firestore: " + e.message;
+                }
+            });
+
+            btnFix.addEventListener("click", async () => {
+                const user = auth.currentUser;
+                if (!user) return;
+
+                btnFix.disabled = true;
+                btnFix.textContent = "Actualizando...";
+
+                try {
+                    await db.collection("userRoles").doc(user.uid).update({
+                        mustChangePassword: true
+                    });
+                    alert("¡Flag activado correctamente! Ahora refresca esta página para verificar.");
+                    location.reload();
+                } catch (e) {
+                    alert("Error al actualizar: " + e.message);
+                    btnFix.disabled = false;
+                    btnFix.textContent = "ACTIVAR CAMBIO DE CLAVE AHORA";
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
