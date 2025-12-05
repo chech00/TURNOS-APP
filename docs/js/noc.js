@@ -1,13 +1,32 @@
 "use strict";
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+// import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const supabaseUrl = "https://jmrzvajipfdqvzilqjvq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcnp2YWppcGZkcXZ6aWxxanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3ODU3MTksImV4cCI6MjA1NDM2MTcxOX0.xQZX2i-6wynnRnEKBb_mwbt63S6vvrr10SilIyug5Mg";
-const supabase = createClient(supabaseUrl, supabaseKey);
+let supabase = null;
+/*
+try {
+  supabase = createClient(supabaseUrl, supabaseKey);
+} catch (e) {
+  console.error("Supabase initialization failed:", e);
+}
+*/
 
 const auth = window.auth;
 const db = window.db;
+
+if (!auth || !db) {
+  console.error("Firebase auth/db not initialized.");
+  document.addEventListener("DOMContentLoaded", () => {
+    Swal.fire({
+      icon: "error",
+      title: "Error de Carga",
+      text: "No se pudo conectar con el sistema de autenticación. Por favor, deshabilita extensiones de privacidad/bloqueo de anuncios y recarga la página.",
+      footer: "Detalle técnico: Firebase no inicializado."
+    });
+  });
+}
 
 let usuarioEsAdmin = false;
 let currentDate = new Date();
