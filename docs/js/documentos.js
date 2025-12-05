@@ -34,8 +34,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // URL base de la API
+    // URL base de la API
     const API_BASE_URL = "https://turnos-app-8viu.onrender.com";
     let currentUserRole = "";
+
+    // Optimización: Carga optimista desde caché
+    const cachedRole = localStorage.getItem("userRole");
+    if (cachedRole) {
+        console.log("Aplicando rol desde caché (Documentos):", cachedRole);
+        currentUserRole = cachedRole;
+        if (currentUserRole === "admin" || currentUserRole === "superadmin") {
+            document.body.classList.add("is-admin");
+        }
+        // Llamamos a configureView inmediatamente con el rol caché
+        // Nota: configureView usa 'currentUserRole' global
+        // Necesitamos asegurarnos de que configureView esté definida antes de llamarla?
+        // Está definida más abajo (hoisting funciona para function declarations).
+        configureView();
+    }
 
     // Verificar autenticación y rol del usuario
     firebase.auth().onAuthStateChanged(async (user) => {
@@ -46,10 +62,25 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const userDoc = await firebase.firestore().collection("userRoles").doc(user.uid).get();
             if (userDoc.exists) {
-                currentUserRole = userDoc.data().rol;
+                const newRole = userDoc.data().rol;
+
+                // Actualizar caché si cambió
+                if (newRole !== currentUserRole) {
+                    console.log("Rol actualizado desde Firestore:", newRole);
+                    currentUserRole = newRole;
+                    localStorage.setItem("userRole", newRole);
+
+                    if (currentUserRole === "admin" || currentUserRole === "superadmin") {
+                        document.body.classList.add("is-admin");
+                    } else {
+                        document.body.classList.remove("is-admin");
+                    }
+                    configureView();
+                }
+            } else {
+                // Si no tiene rol, limpiar caché
+                localStorage.removeItem("userRole");
             }
-            console.log("Usuario autenticado. Rol:", currentUserRole);
-            configureView();
         } catch (error) {
             console.error("Error al verificar el rol del usuario:", error);
         }

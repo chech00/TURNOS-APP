@@ -141,3 +141,59 @@
     /* Ocultar headers en móvil si se desea un diseño de tarjetas, o mantener scroll */
   }
 }
+/* Spinner Styles */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-acento-primario);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Card View */
+@media (max-width: 768px) {
+  .tabla-registros, .tabla-registros tbody, .tabla-registros tr, .tabla-registros td {
+    display: block;
+    width: 100%;
+  }
+  .tabla-registros tr {
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .tabla-registros td {
+    text-align: right;
+    padding: 0.5rem 0;
+    position: relative;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tabla-registros td:last-child {
+    border-bottom: none;
+  }
+  .tabla-registros td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+  }
+}

@@ -1,6 +1,13 @@
 const auth = window.auth;
 const db = window.db;
 
+window.onerror = function (msg, url, line, col, error) {
+  console.error("Global Error:", msg, "Line:", line, "Error:", error);
+  alert("Error en script.js: " + msg + " Linea: " + line);
+};
+
+// console.log("Script.js start. DB:", db, "Auth:", auth);
+
 let editingUserId = null; // Si es null, estamos en modo creación; si tiene un valor, en modo edición
 
 // ----------------------
@@ -64,42 +71,72 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+let feriadosCache = null;
+
+async function cargarFeriadosScript() {
+  try {
+    const doc = await db.collection("Config").doc("feriados").get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.lista && Array.isArray(data.lista)) {
+        feriadosCache = data.lista;
+        // console.log("Feriados cargados en script.js desde Firestore");
+        // Si ya se generó el calendario, regenerarlo?
+        // Podríamos llamar a generarCalendario(currentMonth, currentYear) si quisiéramos refrescar.
+      }
+    }
+  } catch (error) {
+    console.error("Error cargando feriados en script.js:", error);
+  }
+}
+
+// Iniciar carga de feriados al cargar el script
+document.addEventListener("DOMContentLoaded", cargarFeriadosScript);
+
 function generarFeriados(year) {
-  const feriadosFijos = [
-    { "fecha": "2025-01-01", "nombre": "Año Nuevo (irrenunciable)" },
-    { "fecha": "2025-04-18", "nombre": "Viernes Santo" },
-    { "fecha": "2025-04-19", "nombre": "Sábado Santo" },
-    { "fecha": "2025-05-01", "nombre": "Día Nacional del Trabajo (irrenunciable)" },
-    { "fecha": "2025-05-21", "nombre": "Día de las Glorias Navales" },
-    { "fecha": "2025-06-20", "nombre": "Día Nacional de los Pueblos Indígenas" },
-    { "fecha": "2025-06-29", "nombre": "San Pedro y San Pablo" },
-    { "fecha": "2025-07-16", "nombre": "Día de la Virgen del Carmen" },
-    { "fecha": "2025-08-15", "nombre": "Asunción de la Virgen" },
-    { "fecha": "2025-09-18", "nombre": "Independencia Nacional (irrenunciable)" },
-    { "fecha": "2025-09-19", "nombre": "Día de las Glorias del Ejército (irrenunciable)" },
-    { "fecha": "2025-10-12", "nombre": "Encuentro de Dos Mundos" },
-    { "fecha": "2025-10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes" },
-    { "fecha": "2025-11-01", "nombre": "Día de Todos los Santos" },
-    { "fecha": "2025-12-08", "nombre": "Inmaculada Concepción" },
-    { "fecha": "2025-12-25", "nombre": "Navidad (irrenunciable)" },
-    // 2026
-    { "fecha": "2026-01-01", "nombre": "Año Nuevo (irrenunciable)" },
-    { "fecha": "2026-04-03", "nombre": "Viernes Santo" },
-    { "fecha": "2026-04-04", "nombre": "Sábado Santo" },
-    { "fecha": "2026-05-01", "nombre": "Día Nacional del Trabajo (irrenunciable)" },
-    { "fecha": "2026-05-21", "nombre": "Día de las Glorias Navales" },
-    { "fecha": "2026-06-20", "nombre": "Día Nacional de los Pueblos Indígenas" },
-    { "fecha": "2026-06-29", "nombre": "San Pedro y San Pablo" },
-    { "fecha": "2026-07-16", "nombre": "Día de la Virgen del Carmen" },
-    { "fecha": "2026-08-15", "nombre": "Asunción de la Virgen" },
-    { "fecha": "2026-09-18", "nombre": "Independencia Nacional (irrenunciable)" },
-    { "fecha": "2026-09-19", "nombre": "Día de las Glorias del Ejército (irrenunciable)" },
-    { "fecha": "2026-10-12", "nombre": "Encuentro de Dos Mundos" },
-    { "fecha": "2026-10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes" },
-    { "fecha": "2026-11-01", "nombre": "Día de Todos los Santos" },
-    { "fecha": "2026-12-08", "nombre": "Inmaculada Concepción" },
-    { "fecha": "2026-12-25", "nombre": "Navidad (irrenunciable)" },
-  ];
+  let feriadosFijos = [];
+
+  if (feriadosCache) {
+    feriadosFijos = feriadosCache;
+  } else {
+    // Fallback hardcoded si no ha cargado aún
+    feriadosFijos = [
+      { "fecha": "2025-01-01", "nombre": "Año Nuevo (irrenunciable)" },
+      { "fecha": "2025-04-18", "nombre": "Viernes Santo" },
+      { "fecha": "2025-04-19", "nombre": "Sábado Santo" },
+      { "fecha": "2025-05-01", "nombre": "Día Nacional del Trabajo (irrenunciable)" },
+      { "fecha": "2025-05-21", "nombre": "Día de las Glorias Navales" },
+      { "fecha": "2025-06-20", "nombre": "Día Nacional de los Pueblos Indígenas" },
+      { "fecha": "2025-06-29", "nombre": "San Pedro y San Pablo" },
+      { "fecha": "2025-07-16", "nombre": "Día de la Virgen del Carmen" },
+      { "fecha": "2025-08-15", "nombre": "Asunción de la Virgen" },
+      { "fecha": "2025-09-18", "nombre": "Independencia Nacional (irrenunciable)" },
+      { "fecha": "2025-09-19", "nombre": "Día de las Glorias del Ejército (irrenunciable)" },
+      { "fecha": "2025-10-12", "nombre": "Encuentro de Dos Mundos" },
+      { "fecha": "2025-10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes" },
+      { "fecha": "2025-11-01", "nombre": "Día de Todos los Santos" },
+      { "fecha": "2025-12-08", "nombre": "Inmaculada Concepción" },
+      { "fecha": "2025-12-25", "nombre": "Navidad (irrenunciable)" },
+      // 2026
+      { "fecha": "2026-01-01", "nombre": "Año Nuevo (irrenunciable)" },
+      { "fecha": "2026-04-03", "nombre": "Viernes Santo" },
+      { "fecha": "2026-04-04", "nombre": "Sábado Santo" },
+      { "fecha": "2026-05-01", "nombre": "Día Nacional del Trabajo (irrenunciable)" },
+      { "fecha": "2026-05-21", "nombre": "Día de las Glorias Navales" },
+      { "fecha": "2026-06-20", "nombre": "Día Nacional de los Pueblos Indígenas" },
+      { "fecha": "2026-06-29", "nombre": "San Pedro y San Pablo" },
+      { "fecha": "2026-07-16", "nombre": "Día de la Virgen del Carmen" },
+      { "fecha": "2026-08-15", "nombre": "Asunción de la Virgen" },
+      { "fecha": "2026-09-18", "nombre": "Independencia Nacional (irrenunciable)" },
+      { "fecha": "2026-09-19", "nombre": "Día de las Glorias del Ejército (irrenunciable)" },
+      { "fecha": "2026-10-12", "nombre": "Encuentro de Dos Mundos" },
+      { "fecha": "2026-10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes" },
+      { "fecha": "2026-11-01", "nombre": "Día de Todos los Santos" },
+      { "fecha": "2026-12-08", "nombre": "Inmaculada Concepción" },
+      { "fecha": "2026-12-25", "nombre": "Navidad (irrenunciable)" }
+    ];
+  }
+
   const feriadosMoviles = obtenerFeriadosMoviles(year);
   return [...feriadosFijos, ...feriadosMoviles];
 }
@@ -120,7 +157,7 @@ window.generarCalendario = function (mes, año) {
     return;
   }
 
-  console.log(`Generando calendario para mes: ${mes}, año: ${año}`);
+  // console.log(`Generando calendario para mes: ${mes}, año: ${año}`);
   calendarBody.innerHTML = "";
   const feriados = generarFeriados(año);
   const primerDiaDelMes = new Date(año, mes, 1).getDay();
@@ -264,9 +301,9 @@ function asignarTurnos() {
 
   // Habilitar edición: se fuerza que el botón "Editar Semanas" se habilite
   const openEditBtn = document.getElementById("open-edit-modal");
-  console.log("Estado del botón 'Editar Semanas' antes:", openEditBtn ? openEditBtn.disabled : "No encontrado");
+  // console.log("Estado del botón 'Editar Semanas' antes:", openEditBtn ? openEditBtn.disabled : "No encontrado");
   if (openEditBtn) openEditBtn.disabled = false;
-  console.log("Estado del botón 'Editar Semanas' después:", openEditBtn ? openEditBtn.disabled : "No encontrado");
+  // console.log("Estado del botón 'Editar Semanas' después:", openEditBtn ? openEditBtn.disabled : "No encontrado");
 }
 
 // ----------------------
@@ -289,7 +326,7 @@ function guardarAsignacionEnFirestore(asignacion, semanaIndex, año, mes, fechas
       fechaFin
     })
     .then(() => {
-      console.log("Asignación guardada en Firestore.");
+      // console.log("Asignación guardada en Firestore.");
     })
     .catch(error => console.error("Error al guardar asignación:", error));
 }
@@ -338,7 +375,7 @@ function cargarAsignacionesGuardadas(mes, año) {
       const openEditBtn = document.getElementById("open-edit-modal");
       if (openEditBtn && Object.keys(asignacionesManual).length > 0) {
         openEditBtn.disabled = false;
-        console.log("✅ Botón 'Editar Semanas' habilitado después de cargar asignaciones guardadas.");
+        // console.log("✅ Botón 'Editar Semanas' habilitado después de cargar asignaciones guardadas.");
       }
     })
     .catch(error => console.error("Error al cargar asignaciones guardadas:", error));
@@ -348,8 +385,8 @@ function cargarAsignacionesGuardadas(mes, año) {
 // 7) NOTIFICACIONES TELEGRAM
 // ----------------------
 function sendEmailNotification(turnosSemana) {
-  console.log("🚀 Enviando notificaciones de Telegram para la asignación automática...");
-  console.log("📊 Datos de turnos:", turnosSemana);
+  // console.log("🚀 Enviando notificaciones de Telegram para la asignación automática...");
+  // console.log("📊 Datos de turnos:", turnosSemana);
   cargarContactosDesdeFirestore()
     .then(contactos => {
       additionalTelegram = contactos;
@@ -777,6 +814,7 @@ document.addEventListener("DOMContentLoaded", () => {
       auth.signOut()
         .then(() => {
           console.log("Sesión cerrada.");
+          localStorage.removeItem("userRole"); // Limpiar rol en caché
           window.location.href = "login.html";
         })
         .catch(error => console.error("Error al cerrar sesión:", error));
@@ -1133,7 +1171,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const role = document.getElementById("new-user-role").value;
 
       if (!email) {
-        alert("Por favor, ingresa un correo electrónico.");
+        Swal.fire("Error", "Por favor, ingresa un correo electrónico.", "error");
         return;
       }
 
@@ -1144,7 +1182,7 @@ document.addEventListener("DOMContentLoaded", () => {
           rol: role
         })
           .then(() => {
-            alert("Usuario actualizado correctamente.");
+            Swal.fire("Éxito", "Usuario actualizado correctamente.", "success");
             createUserBtn.textContent = "Crear Usuario";
             editingUserId = null;
             limpiarFormularioUsuario();
@@ -1152,12 +1190,12 @@ document.addEventListener("DOMContentLoaded", () => {
           })
           .catch(error => {
             console.error("🚨 Error al actualizar usuario:", error);
-            alert("No se pudo actualizar el usuario.");
+            Swal.fire("Error", "No se pudo actualizar el usuario.", "error");
           });
       } else {
         // Crear un nuevo usuario
         if (!password) {
-          alert("Por favor, ingresa una contraseña para el nuevo usuario.");
+          Swal.fire("Error", "Por favor, ingresa una contraseña para el nuevo usuario.", "error");
           return;
         }
 
@@ -1166,15 +1204,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const newUser = userCredential.user;
             await db.collection("userRoles").doc(newUser.uid).set({
               email,
-              rol: role
+              rol: role,
+              mustChangePassword: true
             });
-            alert("Usuario creado exitosamente.");
+            Swal.fire("Éxito", "Usuario creado exitosamente.", "success");
             limpiarFormularioUsuario();
             cargarUsuarios();
           })
           .catch(err => {
             console.error("🚨 Error creando usuario:", err);
-            alert("Error al crear usuario: " + err.message);
+            Swal.fire("Error", "Error al crear usuario: " + err.message, "error");
           });
       }
     });
@@ -1315,7 +1354,7 @@ document.addEventListener("DOMContentLoaded", () => {
     editUserBtn.addEventListener("click", () => {
       const userId = userSelect.value;
       if (!userId) {
-        alert("Selecciona un usuario para editar.");
+        Swal.fire("Atención", "Selecciona un usuario para editar.", "warning");
         return;
       }
       db.collection("userRoles").doc(userId).get()
@@ -1337,13 +1376,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             editingUserId = userId;
           } else {
-            alert("El usuario no existe en la base de datos.");
+            Swal.fire("Error", "El usuario no existe en la base de datos.", "error");
             console.warn("🚨 Documento no encontrado en Firestore.");
           }
         })
         .catch(error => {
           console.error("🚨 Error al obtener datos del usuario:", error);
-          alert("Ocurrió un error al cargar los datos del usuario.");
+          Swal.fire("Error", "Ocurrió un error al cargar los datos del usuario.", "error");
         });
     });
   }
@@ -1352,19 +1391,29 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteUserBtn.addEventListener("click", async () => {
       const userId = userSelect.value;
       if (!userId) {
-        alert("Selecciona un usuario para eliminar.");
+        Swal.fire("Atención", "Selecciona un usuario para eliminar.", "warning");
         return;
       }
-      const confirmar = await customConfirm("¿Estás seguro de eliminar este usuario?");
-      if (!confirmar) return;
+      const result = await Swal.fire({
+        title: "Confirmación",
+        text: "¿Estás seguro de eliminar este usuario?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      });
+
+      if (!result.isConfirmed) return;
       try {
         await db.collection("userRoles").doc(userId).delete();
-        alert("Usuario eliminado correctamente.");
+        Swal.fire("Éxito", "Usuario eliminado correctamente.", "success");
         resetFormUserManagement();
         cargarUsuarios();
       } catch (error) {
         console.error("Error al eliminar usuario:", error);
-        alert("No se pudo eliminar el usuario.");
+        Swal.fire("Error", "No se pudo eliminar el usuario.", "error");
       }
     });
   }
@@ -1384,12 +1433,12 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("edit-user-role").value = userData.rol || "";
             document.getElementById("edit-user-modal").style.display = "flex";
           } else {
-            alert("El usuario no existe.");
+            Swal.fire("Error", "El usuario no existe.", "error");
           }
         })
         .catch(error => {
           console.error("Error al obtener datos del usuario:", error);
-          alert("Ocurrió un error al cargar los datos del usuario.");
+          Swal.fire("Error", "Ocurrió un error al cargar los datos del usuario.", "error");
         });
     });
   }
@@ -1402,20 +1451,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const updatedEmail = document.getElementById("edit-user-email").value.trim();
       const updatedRole = document.getElementById("edit-user-role").value;
       if (!updatedEmail || !updatedRole) {
-        alert("Por favor, completa todos los campos.");
+        Swal.fire("Atención", "Por favor, completa todos los campos.", "warning");
         return;
       }
       db.collection("userRoles")
         .doc(userId)
         .update({ nombre: updatedName, email: updatedEmail, rol: updatedRole })
         .then(() => {
-          alert("Usuario actualizado correctamente.");
+          Swal.fire("Éxito", "Usuario actualizado correctamente.", "success");
           cargarUsuarios();
           document.getElementById("edit-user-modal").style.display = "none";
         })
         .catch(error => {
           console.error("Error al actualizar usuario:", error);
-          alert("Ocurrió un error al actualizar el usuario.");
+          Swal.fire("Error", "Ocurrió un error al actualizar el usuario.", "error");
         });
     });
   }
@@ -1512,7 +1561,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user) {
       const welcomeMessage = document.getElementById("welcome-message");
       if (welcomeMessage) {
-        welcomeMessage.textContent = `¡Bienvenido, ${user.email}!`;
+        welcomeMessage.textContent = user.email;
       }
     } else {
       console.warn("Usuario no autenticado. Redirigiendo al login.");
@@ -1562,181 +1611,128 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.addEventListener("DOMContentLoaded", function () {
+  // -----------------------------------------------------------------------------
+  // OPTIMIZACIÓN DE CARGA Y GESTIÓN DE ROLES
+  // -----------------------------------------------------------------------------
+
+  function applyUserRole(role) {
+    // Mostrar elementos de superadmin
+    // Mostrar/Ocultar elementos de superadmin
+    const liRegistros = document.getElementById("li-registros");
+    if (liRegistros) {
+      liRegistros.style.display = (role === "superadmin") ? "block" : "none";
+    }
+
+    // Mostrar elementos de admin (Gestionar Empleados)
+    if (role === "admin" || role === "superadmin") {
+      document.querySelectorAll(".admin-only").forEach(el => {
+        el.style.display = "block"; // O "flex", según tu CSS. "block" es seguro para <li>
+      });
+    }
+
+    // Redirección si no es admin y está en index.html
+    if ((role !== "admin" && role !== "superadmin") && window.location.pathname.includes("index.html")) {
+      const lastPage = localStorage.getItem("lastPage");
+      window.location.href = lastPage || "user.html";
+    }
+  }
+
+  const initApp = () => {
+    // 1. Inicializar UI básica
     const sidebar = document.getElementById("sidebar");
     const mainContent = document.getElementById("main-content");
     const menuToggleBtns = document.querySelectorAll("#menu-toggle");
 
     menuToggleBtns.forEach(btn => {
       btn.addEventListener("click", () => {
-        sidebar.classList.toggle("active");
-        mainContent.classList.toggle("shift");
+        sidebar.classList.toggle("expanded");
+        if (mainContent) mainContent.classList.toggle("expanded");
       });
     });
 
     lucide.createIcons();
-  });
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const lastPage = localStorage.getItem("lastPage");
+    // 2. Carga Optimista del Rol (Cache)
+    const cachedRole = localStorage.getItem("userRole");
+    if (cachedRole) {
+      console.log("Aplicando rol desde caché:", cachedRole);
+      applyUserRole(cachedRole);
+    }
 
+    // 3. Verificación de Autenticación y Rol (Segundo plano)
     auth.onAuthStateChanged(user => {
       if (user) {
+        const welcomeMessage = document.getElementById("welcome-message");
+        if (welcomeMessage) welcomeMessage.textContent = user.email;
+
         db.collection("userRoles").doc(user.uid).get().then(doc => {
           if (doc.exists) {
             const role = doc.data().rol;
 
-            if (
-              (role !== "admin" && role !== "superadmin") &&
-              window.location.pathname.includes("index.html")
-            ) {
-              window.location.href = lastPage || "user.html";
-            }
-
-            if (role === "superadmin") {
-              const liRegistros = document.getElementById("li-registros");
-              if (liRegistros) {
-                liRegistros.style.display = "block";
-              }
+            // Actualizar caché si cambió
+            if (role !== cachedRole) {
+              console.log("Rol actualizado desde Firestore:", role);
+              localStorage.setItem("userRole", role);
+              applyUserRole(role);
             }
           }
-        });
+        }).catch(err => console.error("Error verificando rol:", err));
+
+      } else {
+        console.warn("Usuario no autenticado. Redirigiendo al login.");
+        window.location.href = "login.html";
       }
     });
-  });
 
-  let inactivityTimer = null;
-  const ONE_MINUTE = 3000 * 1000;
+    // 4. Timer de Inactividad
+    let inactivityTimer = null;
+    const ONE_MINUTE = 3000 * 1000; // 50 minutos (según código original 3000*1000 = 3,000,000ms = 50min)
 
-  function resetInactivityTimer() {
-    if (inactivityTimer) clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-      console.log("Cerrando sesión por inactividad en el frontend");
-      firebase.auth().signOut().then(() => {
-        window.location.href = "login.html";
-      });
-    }, ONE_MINUTE);
-  }
-
-  window.addEventListener("mousemove", resetInactivityTimer);
-  window.addEventListener("keydown", resetInactivityTimer);
-  window.addEventListener("scroll", resetInactivityTimer);
-
-  resetInactivityTimer();
-});
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    const welcomeMessage = document.getElementById("welcome-message");
-    if (welcomeMessage) {
-      welcomeMessage.textContent = `¡Bienvenido, ${user.email}!`;
+    function resetInactivityTimer() {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        console.log("Cerrando sesión por inactividad en el frontend");
+        firebase.auth().signOut().then(() => {
+          window.location.href = "login.html";
+        });
+      }, ONE_MINUTE);
     }
+
+    window.addEventListener("mousemove", resetInactivityTimer);
+    window.addEventListener("keydown", resetInactivityTimer);
+    window.addEventListener("scroll", resetInactivityTimer);
+    resetInactivityTimer();
+
+    // 5. Inicialización de la Vista Turnos (Restaurado)
+    if (document.getElementById("calendar")) {
+      console.log("Inicializando calendario...");
+
+      // 1. Renderizar estructura básica inmediatamente
+      generarCalendario(currentMonth, currentYear);
+
+      // 2. Cargar empleados y luego asignaciones
+      cargarYOrganizarEmpleados().then(() => {
+        console.log("Empleados cargados. Cargando asignaciones...");
+        cargarAsignacionesGuardadas(currentMonth, currentYear);
+        inicializarAutomatizacion();
+      }).catch(err => {
+        console.error("Error cargando empleados:", err);
+        // Intentar cargar asignaciones de todos modos
+        cargarAsignacionesGuardadas(currentMonth, currentYear);
+      });
+
+      // Cargar empleados en selects si existen
+      if (document.getElementById("empleados-select")) {
+        cargarEmpleadosEnSelectGeneral();
+      }
+    }
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
   } else {
-    console.warn("Usuario no autenticado. Redirigiendo al login.");
-    window.location.href = "login.html";
+    initApp();
   }
+
+
 });
-
-function customConfirm(message, title = "Confirmación") {
-  return new Promise(resolve => {
-    const modal = document.getElementById("custom-confirm");
-    const confirmMessage = document.getElementById("confirm-message");
-    const confirmTitle = document.getElementById("confirm-title");
-    const yesBtn = document.getElementById("confirm-yes");
-    const noBtn = document.getElementById("confirm-no");
-    const closeBtn = document.getElementById("close-confirm");
-
-    confirmTitle.textContent = title;
-    confirmMessage.textContent = message;
-    modal.style.display = "flex";
-
-    function cleanUp() {
-      modal.style.display = "none";
-      yesBtn.removeEventListener("click", onYes);
-      noBtn.removeEventListener("click", onNo);
-      closeBtn.removeEventListener("click", onNo);
-    }
-
-    function onYes() {
-      cleanUp();
-      resolve(true);
-    }
-    function onNo() {
-      cleanUp();
-      resolve(false);
-    }
-
-    yesBtn.addEventListener("click", onYes);
-    noBtn.addEventListener("click", onNo);
-    closeBtn.addEventListener("click", onNo);
-  });
-}
-
-document.querySelectorAll('.view-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelector('.active').classList.remove('active', 'fade');
-    document.querySelector(`#${btn.dataset.target}`).classList.add('active', 'fade');
-  });
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  const sidebar = document.getElementById("sidebar");
-  const mainContent = document.getElementById("main-content");
-  const menuToggleBtns = document.querySelectorAll("#menu-toggle");
-
-  menuToggleBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      sidebar.classList.toggle("expanded");
-      mainContent.classList.toggle("expanded");
-    });
-  });
-
-  lucide.createIcons();
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const lastPage = localStorage.getItem("lastPage");
-
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      db.collection("userRoles").doc(user.uid).get().then(doc => {
-        if (doc.exists) {
-          const role = doc.data().rol;
-
-          if (
-            (role !== "admin" && role !== "superadmin") &&
-            window.location.pathname.includes("index.html")
-          ) {
-            window.location.href = lastPage || "user.html";
-          }
-
-          if (role === "superadmin") {
-            const liRegistros = document.getElementById("li-registros");
-            if (liRegistros) {
-              liRegistros.style.display = "block";
-            }
-          }
-        }
-      });
-    }
-  });
-});
-
-let inactivityTimer = null;
-const ONE_MINUTE = 3000 * 1000;
-
-function resetInactivityTimer() {
-  if (inactivityTimer) clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(() => {
-    console.log("Cerrando sesión por inactividad en el frontend");
-    firebase.auth().signOut().then(() => {
-      window.location.href = "login.html";
-    });
-  }, ONE_MINUTE);
-}
-
-window.addEventListener("mousemove", resetInactivityTimer);
-window.addEventListener("keydown", resetInactivityTimer);
-window.addEventListener("scroll", resetInactivityTimer);
-
-resetInactivityTimer();

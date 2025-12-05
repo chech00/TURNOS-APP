@@ -25,15 +25,28 @@ function verificarRolUsuario() {
       .then((doc) => {
         if (doc.exists) {
           const userData = doc.data();
-          usuarioEsAdmin = (userData.rol === "admin" || userData.rol === "superadmin");
+          const role = userData.rol;
+
+          // Guardar en caché
+          localStorage.setItem("userRole", role);
+
+          usuarioEsAdmin = (role === "admin" || role === "superadmin");
+
+          if (usuarioEsAdmin) {
+            document.body.classList.add("is-admin");
+          } else {
+            document.body.classList.remove("is-admin");
+          }
 
           const liRegistros = document.getElementById("li-registros");
-          if (userData.rol === "superadmin" && liRegistros) {
+          if (role === "superadmin" && liRegistros) {
             liRegistros.style.display = "block";
           }
 
         } else {
           usuarioEsAdmin = false;
+          localStorage.removeItem("userRole");
+          document.body.classList.remove("is-admin");
         }
         // Cargar la vista de nodos
         cargarNodos();
@@ -123,9 +136,20 @@ function cargarNodos() {
           const deleteIcon = document.createElement("span");
           deleteIcon.classList.add("delete-icon");
           deleteIcon.innerHTML = "🗑";
-          deleteIcon.onclick = function (e) {
+          deleteIcon.onclick = async function (e) {
             e.stopPropagation();
-            if (confirm("¿Seguro que deseas eliminar este nodo?")) {
+            const result = await Swal.fire({
+              title: "Confirmación",
+              text: "¿Seguro que deseas eliminar este nodo?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sí, eliminar",
+              cancelButtonText: "Cancelar"
+            });
+
+            if (result.isConfirmed) {
               eliminarNodo(nodoId);
             }
           };
@@ -151,14 +175,14 @@ window.cargarNodos = cargarNodos;
 
 function eliminarNodo(nodoId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para eliminar nodos.");
+    Swal.fire("Acceso denegado", "No tienes permiso para eliminar nodos.", "error");
     return;
   }
   db.collection("Nodos")
     .doc(nodoId)
     .delete()
     .then(() => {
-      alert("Nodo eliminado");
+      Swal.fire("Éxito", "Nodo eliminado", "success");
       cargarNodos();
     })
     .catch((error) => {
@@ -208,7 +232,7 @@ window.mostrarVistaPonLetras = mostrarVistaPonLetras;
 
 function crearPonLetra(nodoId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para crear PONs.");
+    Swal.fire("Acceso denegado", "No tienes permiso para crear PONs.", "error");
     return;
   }
   const letter = document.getElementById("pon-letra-dropdown").value;
@@ -219,7 +243,7 @@ function crearPonLetra(nodoId) {
     .get()
     .then((docSnap) => {
       if (docSnap.exists) {
-        alert(`La letra ${letter} ya existe en este nodo.`);
+        Swal.fire("Error", `La letra ${letter} ya existe en este nodo.`, "error");
         return;
       }
       // Si no existe, la creamos
@@ -227,7 +251,7 @@ function crearPonLetra(nodoId) {
         .doc(letter)
         .set({ name: letter })
         .then(() => {
-          alert(`PON ${letter} creado correctamente`);
+          Swal.fire("Éxito", `PON ${letter} creado correctamente`, "success");
           cargarPonLetters(nodoId);
         })
         .catch((err) => {
@@ -266,9 +290,20 @@ function cargarPonLetters(nodoId) {
           const deleteIcon = document.createElement("span");
           deleteIcon.classList.add("delete-icon");
           deleteIcon.innerHTML = "🗑";
-          deleteIcon.onclick = function (e) {
+          deleteIcon.onclick = async function (e) {
             e.stopPropagation();
-            if (confirm(`¿Eliminar la letra ${letter}?`)) {
+            const result = await Swal.fire({
+              title: "Confirmación",
+              text: `¿Eliminar la letra ${letter}?`,
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sí, eliminar",
+              cancelButtonText: "Cancelar"
+            });
+
+            if (result.isConfirmed) {
               eliminarPonLetra(nodoId, letter);
             }
           };
@@ -290,7 +325,7 @@ function cargarPonLetters(nodoId) {
 
 function eliminarPonLetra(nodoId, letter) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para eliminar PONs.");
+    Swal.fire("Acceso denegado", "No tienes permiso para eliminar PONs.", "error");
     return;
   }
   db.collection("Nodos")
@@ -299,7 +334,7 @@ function eliminarPonLetra(nodoId, letter) {
     .doc(letter)
     .delete()
     .then(() => {
-      alert(`Letra ${letter} eliminada`);
+      Swal.fire("Éxito", `Letra ${letter} eliminada`, "success");
       cargarPonLetters(nodoId);
     })
     .catch((error) => {
@@ -354,7 +389,7 @@ window.mostrarVistaPONPorLetra = mostrarVistaPONPorLetra;
  */
 function crearPON(nodoId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para crear PONs.");
+    Swal.fire("Acceso denegado", "No tienes permiso para crear PONs.", "error");
     return;
   }
   const letra = document.getElementById("pon-letra").value;
@@ -373,13 +408,13 @@ function crearPON(nodoId) {
     .get()
     .then((querySnapshot) => {
       if (!querySnapshot.empty) {
-        alert(`El PON ${ponName} ya existe en esta letra.`);
+        Swal.fire("Error", `El PON ${ponName} ya existe en esta letra.`, "error");
         return;
       }
       ponRef
         .add({ name: ponName })
         .then(() => {
-          alert(`PON ${ponName} creado correctamente`);
+          Swal.fire("Éxito", `PON ${ponName} creado correctamente`, "success");
           cargarPONs(nodoId, letra);
         })
         .catch((error) => {
@@ -438,9 +473,20 @@ function cargarPONs(nodoId, letter) {
           const deleteIcon = document.createElement("span");
           deleteIcon.classList.add("delete-icon");
           deleteIcon.innerHTML = "🗑";
-          deleteIcon.onclick = function (e) {
+          deleteIcon.onclick = async function (e) {
             e.stopPropagation();
-            if (confirm(`¿Eliminar el ${item.name}?`)) {
+            const result = await Swal.fire({
+              title: "Confirmación",
+              text: `¿Eliminar el ${item.name}?`,
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sí, eliminar",
+              cancelButtonText: "Cancelar"
+            });
+
+            if (result.isConfirmed) {
               eliminarPON(nodoId, letter, item.docId);
             }
           };
@@ -462,7 +508,7 @@ function cargarPONs(nodoId, letter) {
 
 function eliminarPON(nodoId, letter, ponId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para eliminar PONs.");
+    Swal.fire("Acceso denegado", "No tienes permiso para eliminar PONs.", "error");
     return;
   }
   db.collection("Nodos")
@@ -473,7 +519,7 @@ function eliminarPON(nodoId, letter, ponId) {
     .doc(ponId)
     .delete()
     .then(() => {
-      alert("PON eliminado");
+      Swal.fire("Éxito", "PON eliminado", "success");
       cargarPONs(nodoId, letter);
     })
     .catch((error) => {
@@ -521,7 +567,7 @@ window.mostrarVistaPON = mostrarVistaPON;
 
 function crearCaja(nodoId, letter, ponId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para crear Cajas.");
+    Swal.fire("Acceso denegado", "No tienes permiso para crear Cajas.", "error");
     return;
   }
   const numero = document.getElementById("caja-numero").value;
@@ -541,13 +587,13 @@ function crearCaja(nodoId, letter, ponId) {
     .get()
     .then((querySnapshot) => {
       if (!querySnapshot.empty) {
-        alert(`La ${cajaName} ya existe en este PON.`);
+        Swal.fire("Error", `La ${cajaName} ya existe en este PON.`, "error");
         return;
       }
       cajasRef
         .add({ name: cajaName })
         .then(() => {
-          alert(`Caja ${cajaName} creada correctamente`);
+          Swal.fire("Éxito", `Caja ${cajaName} creada correctamente`, "success");
           cargarCajas(nodoId, letter, ponId);
         })
         .catch((error) => {
@@ -603,9 +649,20 @@ function cargarCajas(nodoId, letter, ponId) {
           const deleteIcon = document.createElement("span");
           deleteIcon.classList.add("delete-icon");
           deleteIcon.innerHTML = "🗑";
-          deleteIcon.onclick = function (e) {
+          deleteIcon.onclick = async function (e) {
             e.stopPropagation();
-            if (confirm("¿Seguro que deseas eliminar esta caja?")) {
+            const result = await Swal.fire({
+              title: "Confirmación",
+              text: "¿Seguro que deseas eliminar esta caja?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sí, eliminar",
+              cancelButtonText: "Cancelar"
+            });
+
+            if (result.isConfirmed) {
               eliminarCaja(nodoId, letter, ponId, item.docId);
             }
           };
@@ -627,7 +684,7 @@ function cargarCajas(nodoId, letter, ponId) {
 
 function eliminarCaja(nodoId, letter, ponId, cajaId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para eliminar Cajas.");
+    Swal.fire("Acceso denegado", "No tienes permiso para eliminar Cajas.", "error");
     return;
   }
   db.collection("Nodos")
@@ -640,7 +697,7 @@ function eliminarCaja(nodoId, letter, ponId, cajaId) {
     .doc(cajaId)
     .delete()
     .then(() => {
-      alert("Caja eliminada");
+      Swal.fire("Éxito", "Caja eliminada", "success");
       cargarCajas(nodoId, letter, ponId);
     })
     .catch((error) => {
@@ -694,14 +751,14 @@ window.mostrarVistaCaja = mostrarVistaCaja;
 
 function crearFilamento(nodoId, letter, ponId, cajaId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para crear Filamentos.");
+    Swal.fire("Acceso denegado", "No tienes permiso para crear Filamentos.", "error");
     return;
   }
   const numero = document.getElementById("filamento-numero").value;
   const senal = document.getElementById("filamento-senal").value.trim();
 
   if (!senal.match(/^-?\d+dBm$/)) {
-    alert("Formato de señal incorrecto. Ejemplo válido: -14dBm");
+    Swal.fire("Error", "Formato de señal incorrecto. Ejemplo válido: -14dBm", "error");
     return;
   }
 
@@ -722,13 +779,13 @@ function crearFilamento(nodoId, letter, ponId, cajaId) {
     .get()
     .then((querySnapshot) => {
       if (!querySnapshot.empty) {
-        alert(`El ${filamentoName} ya existe en esta caja.`);
+        Swal.fire("Error", `El ${filamentoName} ya existe en esta caja.`, "error");
         return;
       }
       filamentosRef
         .add({ name: filamentoName, signal: senal })
         .then(() => {
-          alert(`Filamento ${filamentoName} creado correctamente con señal ${senal}`);
+          Swal.fire("Éxito", `Filamento ${filamentoName} creado correctamente con señal ${senal}`, "success");
           cargarFilamentos(nodoId, letter, ponId, cajaId);
         })
         .catch((error) => {
@@ -768,9 +825,20 @@ function cargarFilamentos(nodoId, letter, ponId, cajaId) {
           const deleteIcon = document.createElement("span");
           deleteIcon.classList.add("delete-icon");
           deleteIcon.innerHTML = "🗑";
-          deleteIcon.onclick = function (e) {
+          deleteIcon.onclick = async function (e) {
             e.stopPropagation();
-            if (confirm("¿Seguro que deseas eliminar este Filamento?")) {
+            const result = await Swal.fire({
+              title: "Confirmación",
+              text: "¿Seguro que deseas eliminar este Filamento?",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sí, eliminar",
+              cancelButtonText: "Cancelar"
+            });
+
+            if (result.isConfirmed) {
               eliminarFilamento(nodoId, letter, ponId, cajaId, filamentoId);
             }
           };
@@ -787,7 +855,7 @@ function cargarFilamentos(nodoId, letter, ponId, cajaId) {
 
 function eliminarFilamento(nodoId, letter, ponId, cajaId, filamentoId) {
   if (!usuarioEsAdmin) {
-    alert("No tienes permiso para eliminar Filamentos.");
+    Swal.fire("Acceso denegado", "No tienes permiso para eliminar Filamentos.", "error");
     return;
   }
   db.collection("Nodos")
@@ -802,7 +870,7 @@ function eliminarFilamento(nodoId, letter, ponId, cajaId, filamentoId) {
     .doc(filamentoId)
     .delete()
     .then(() => {
-      alert("Filamento eliminado");
+      Swal.fire("Éxito", "Filamento eliminado", "success");
       cargarFilamentos(nodoId, letter, ponId, cajaId);
     })
     .catch((error) => {
@@ -833,6 +901,21 @@ function extraerNumeroDeNombre(str) {
    =========================================*/
 document.addEventListener("DOMContentLoaded", function () {
   configurarSidebar();
+
+  // Optimización: Carga optimista desde caché
+  const cachedRole = localStorage.getItem("userRole");
+  if (cachedRole) {
+    console.log("Aplicando rol desde caché (Señales):", cachedRole);
+    if (cachedRole === "admin" || cachedRole === "superadmin") {
+      usuarioEsAdmin = true;
+      document.body.classList.add("is-admin");
+      if (cachedRole === "superadmin") {
+        const liRegistros = document.getElementById("li-registros");
+        if (liRegistros) liRegistros.style.display = "block";
+      }
+    }
+  }
+
   verificarRolUsuario();
   configurarLogout();
 });

@@ -11,9 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="./css/styles.css">
   <link rel="stylesheet" href="./css/noc.css" />
 </head>
@@ -31,6 +29,12 @@
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
         <li><a href="noc.html" id="calendar-check" class="active"><i data-lucide="calendar-check"></i> <span>Turnos
               Noc</span></a></li>
+        <li id="li-empleados" class="admin-only">
+          <a href="gestion_empleados.html">
+            <i data-lucide="users"></i>
+            <span>Gestionar Empleados</span>
+          </a>
+        </li>
         <li id="li-registros" style="display:none;">
           <a href="registros.html">
             <i data-lucide="file-text"></i>
@@ -360,9 +364,7 @@
     </main>
 
     <footer>
-      <div class="container">
-        <p>PatagoniaIP SPA - Todos los derechos reservados</p>
-      </div>
+      <p>PatagoniaIP SPA - Todos los derechos reservados</p>
     </footer>
   </div>
 

@@ -23,18 +23,7 @@ body {
 /* =============================
    Variables de Colores (Root)
 ================================ */
-:root {
-  --color-fondo-principal: #1b1f23;
-  --color-fondo-secundario: #23272e;
-  --color-texto-principal: #e3e6eb;
-  --color-texto-secundario: #a1a9b5;
-  --color-acento-primario: #7796cb;
-  --color-acento-secundario: #8fbcbb;
-  --color-detalle: #c3d0e8;
-  --color-error: #d77a7a;
-  --color-exito: #88C0A6;
-  --color-advertencia: #e8c27e;
-}
+/* :root variables inherited from styles.css */
 
 /* =============================
    Dark Mode Variables (cuando se aplica .dark-mode)
@@ -74,18 +63,23 @@ body {
    Header
 ================================ */
 header {
-  background: var(--color-fondo-secundario);
+  background: linear-gradient(180deg, var(--color-fondo-secundario) 0%, rgba(30, 30, 46, 0.95) 100%);
   color: var(--color-texto-principal);
   padding: 1rem 2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 header h1 {
   font-size: 1.8rem;
   font-weight: 600;
+}
+
+main {
+  margin-top: 2rem;
 }
 
 /* =============================
@@ -756,7 +750,6 @@ header h1 {
 }
 
 .employee-role {
-  font-size: 0.9rem;
   color: var(--color-texto-secundario);
   margin-bottom: 1rem;
   font-weight: 500;
@@ -791,7 +784,6 @@ header h1 {
   background: rgba(35, 39, 46, 1);
 }
 
-
 /* Sticky Calendar Header */
 .calendar-header {
   position: sticky;
@@ -810,102 +802,17 @@ header h1 {
 body.is-admin .turnos-backup {
   display: grid;
   grid-template-columns: 1fr 1fr;
-}
-
-@media (max-width: 900px) {
-  body.is-admin .turnos-backup {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Custom Scrollbar for Calendar */
-.calendar-container::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-}
-
-.calendar-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-.calendar-container::-webkit-scrollbar-thumb {
-  background: var(--color-acento-primario);
-  border-radius: 4px;
-}
-
-.calendar-container::-webkit-scrollbar-thumb:hover {
-  background: var(--color-acento-secundario);
+  gap: 1.5rem;
 }
 
 /* =========================================
-   SWEETALERT2 OVERRIDES (Dark Theme)
-   ========================================= */
-div:where(.swal2-container) div:where(.swal2-popup) {
-  background: var(--color-fondo-secundario) !important;
-  color: var(--color-texto-principal) !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-}
-
-div:where(.swal2-container) h2:where(.swal2-title) {
-  color: var(--color-texto-principal) !important;
-  font-family: var(--font-secondary) !important;
-}
-
-div:where(.swal2-container) .swal2-html-container {
-  color: var(--color-texto-secundario) !important;
-  font-family: var(--font-secondary) !important;
-}
-
-div:where(.swal2-icon) {
-  border-color: var(--color-texto-secundario) !important;
-}
-
-div:where(.swal2-icon).swal2-warning {
-  border-color: var(--color-advertencia) !important;
-  color: var(--color-advertencia) !important;
-}
-
-div:where(.swal2-icon).swal2-error {
-  border-color: var(--color-error) !important;
-  color: var(--color-error) !important;
-}
-
-div:where(.swal2-icon).swal2-success {
-  border-color: var(--color-exito) !important;
-  color: var(--color-exito) !important;
-}
-
-div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
-  background-color: var(--color-acento-primario) !important;
-  color: #fff !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-}
-
-div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm:focus {
-  box-shadow: 0 0 0 3px rgba(119, 150, 203, 0.3) !important;
-}
-
-div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
-  background-color: var(--color-error) !important;
-  color: #fff !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* =========================================
-   Overtime Cards Redesign
+   OVERTIME CARDS
    ========================================= */
 .overtime-cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .overtime-card {
@@ -1004,4 +911,61 @@ div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
   width: 1px;
   height: 30px;
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure admin-only is hidden by default */
+.admin-only {
+  display: none !important;
+}
+
+/* Show only when body has is-admin class */
+body.is-admin .admin-only {
+  display: block !important;
+}
+
+/* =========================================
+   IMPROVED MODAL STYLES (Horarios)
+   ========================================= */
+.modal-horarios-content {
+  max-width: 800px !important;
+  /* Restrict width for better proportion */
+}
+
+.tabla-horarios {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tabla-horarios th,
+.tabla-horarios td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tabla-horarios th {
+  background: rgba(119, 150, 203, 0.1);
+  /* Tinted header */
+  color: var(--color-acento-primario);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.tabla-horarios td {
+  color: var(--color-texto-principal);
+  font-size: 0.95rem;
+}
+
+.tabla-horarios tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-horarios tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
 }

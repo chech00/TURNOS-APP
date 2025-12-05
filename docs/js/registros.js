@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    document.body.classList.add("is-admin");
+
     // 2. Cargar logs de inicios de sesión
     cargarRegistrosDeLogins();
   });
@@ -66,11 +68,20 @@ async function cargarRegistrosDeLogins() {
     const tablaBody = document.querySelector("#tabla-registros tbody");
     if (!tablaBody) return;
 
+    const loader = document.getElementById("table-loader");
+    const tabla = document.getElementById("tabla-registros");
+
+    if (loader) loader.style.display = "flex";
+    if (tabla) tabla.style.display = "none";
+
     // Consulta a Firestore: loginLogs, ordenado por timestamp descendente
     const snapshot = await db.collection("loginLogs")
       .orderBy("timestamp", "desc")
       .limit(50) // por ejemplo, últimos 50 registros
       .get();
+
+    if (loader) loader.style.display = "none";
+    if (tabla) tabla.style.display = "table";
 
     tablaBody.innerHTML = ""; // Limpiar contenido previo
 
@@ -91,11 +102,14 @@ async function cargarRegistrosDeLogins() {
 
       const tdEmail = document.createElement("td");
       tdEmail.textContent = data.email || "Sin email";
+      tdEmail.setAttribute("data-label", "Email");
 
       const tdRol = document.createElement("td");
       tdRol.textContent = data.rol || "N/A";
+      tdRol.setAttribute("data-label", "Rol");
 
       const tdFecha = document.createElement("td");
+      tdFecha.setAttribute("data-label", "Fecha/Hora");
       if (data.timestamp && data.timestamp.toDate) {
         // data.timestamp es un Firestore Timestamp
         const fechaJS = data.timestamp.toDate();

@@ -28,7 +28,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     if (!userDoc.exists) {
       // Si no hay documento de rol, cierra sesión y avisa
       await auth.signOut();
-      alert("No tienes un rol asignado. Contacta al administrador.");
+      Swal.fire("Error", "No tienes un rol asignado. Contacta al administrador.", "error");
       return;
     }
 

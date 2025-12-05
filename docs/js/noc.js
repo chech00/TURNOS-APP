@@ -15,64 +15,183 @@ let selectedDays = [];
 const vacationIcon = `<i data-lucide="tree-palm"></i>`;
 
 // Lista de feriados y su información
-const feriadosChile = [
-  "2025-01-01", "2025-04-18", "2025-04-19", "2025-05-01",
-  "2025-05-21", "2025-06-20", "2025-06-29", "2025-06-29", "2025-07-16", "2025-08-15",
-  "2025-09-18", "2025-09-19", "2025-10-12", "2025-10-31",
-  "2025-11-01", "2025-11-16", "2025-12-08", "2025-12-14", "2025-12-25",
+// Lista de feriados y su información (Dinámica)
+let feriadosChile = [];
+let feriadosInfo = {};
+
+// Feriados por defecto para inicialización (Backup)
+const FERIADOS_DEFAULT = [
+  { fecha: "2025-01-01", nombre: "Año Nuevo" },
+  { fecha: "2025-04-18", nombre: "Viernes Santo" },
+  { fecha: "2025-04-19", nombre: "Sábado Santo" },
+  { fecha: "2025-05-01", nombre: "Día del Trabajador" },
+  { fecha: "2025-05-21", nombre: "Glorias Navales" },
+  { fecha: "2025-06-20", nombre: "Dia Nacional de los Pueblos Indigenas" },
+  { fecha: "2025-06-29", nombre: "San Pedro y San Pablo" },
+  { fecha: "2025-07-16", nombre: "Virgen del Carmen" },
+  { fecha: "2025-08-15", nombre: "Asunción de la Virgen" },
+  { fecha: "2025-09-18", nombre: "Fiestas Patrias" },
+  { fecha: "2025-09-19", nombre: "Glorias del Ejército" },
+  { fecha: "2025-10-12", nombre: "Encuentro de Dos Mundos" },
+  { fecha: "2025-10-31", nombre: "Día Iglesias Evangélicas" },
+  { fecha: "2025-11-01", nombre: "Día de Todos los Santos" },
+  { fecha: "2025-11-16", nombre: "Elecciones Presidenciales y Parlamentarias Irrenunciable" },
+  { fecha: "2025-12-08", nombre: "Inmaculada Concepción" },
+  { fecha: "2025-12-14", nombre: "Elecciones Presidenciales (Segunda Vuelta) Irrenunciable" },
+  { fecha: "2025-12-25", nombre: "Navidad" },
   // 2026
-  "2026-01-01", "2026-04-03", "2026-04-04", "2026-05-01",
-  "2026-05-21", "2026-06-20", "2026-06-29", "2026-07-16", "2026-08-15",
-  "2026-09-18", "2026-09-19", "2026-10-12", "2026-10-31",
-  "2026-11-01", "2026-12-08", "2026-12-25"
+  { fecha: "2026-01-01", nombre: "Año Nuevo" },
+  { fecha: "2026-04-03", nombre: "Viernes Santo" },
+  { fecha: "2026-04-04", nombre: "Sábado Santo" },
+  { fecha: "2026-05-01", nombre: "Día del Trabajador" },
+  { fecha: "2026-05-21", nombre: "Glorias Navales" },
+  { fecha: "2026-06-20", nombre: "Día Nacional de los Pueblos Indígenas" },
+  { fecha: "2026-06-29", nombre: "San Pedro y San Pablo" },
+  { fecha: "2026-07-16", nombre: "Virgen del Carmen" },
+  { fecha: "2026-08-15", nombre: "Asunción de la Virgen" },
+  { fecha: "2026-09-18", nombre: "Fiestas Patrias" },
+  { fecha: "2026-09-19", nombre: "Glorias del Ejército" },
+  { fecha: "2026-10-12", nombre: "Encuentro de Dos Mundos" },
+  { fecha: "2026-10-31", nombre: "Día Iglesias Evangélicas" },
+  { fecha: "2026-11-01", nombre: "Día de Todos los Santos" },
+  { fecha: "2026-12-08", nombre: "Inmaculada Concepción" },
+  { fecha: "2026-12-25", nombre: "Navidad" },
+  // 2027
+  { fecha: "2027-01-01", nombre: "Año Nuevo" },
+  { fecha: "2027-03-26", nombre: "Viernes Santo" },
+  { fecha: "2027-03-27", nombre: "Sábado Santo" },
+  { fecha: "2027-05-01", nombre: "Día del Trabajador" },
+  { fecha: "2027-05-21", nombre: "Glorias Navales" },
+  { fecha: "2027-06-20", nombre: "Día Nacional de los Pueblos Indígenas" },
+  { fecha: "2027-06-29", nombre: "San Pedro y San Pablo" },
+  { fecha: "2027-07-16", nombre: "Virgen del Carmen" },
+  { fecha: "2027-08-15", nombre: "Asunción de la Virgen" },
+  { fecha: "2027-09-18", nombre: "Fiestas Patrias" },
+  { fecha: "2027-09-19", nombre: "Glorias del Ejército" },
+  { fecha: "2027-10-12", nombre: "Encuentro de Dos Mundos" },
+  { fecha: "2027-10-31", nombre: "Día Iglesias Evangélicas" },
+  { fecha: "2027-11-01", nombre: "Día de Todos los Santos" },
+  { fecha: "2027-12-08", nombre: "Inmaculada Concepción" },
+  { fecha: "2027-12-25", nombre: "Navidad" }
 ];
 
-const feriadosInfo = {
-  "2025-01-01": "Año Nuevo",
-  "2025-04-18": "Viernes Santo",
-  "2025-04-19": "Sábado Santo",
-  "2025-05-01": "Día del Trabajador",
-  "2025-05-21": "Glorias Navales",
-  "2025-06-20": "Dia Nacional de los Pueblos Indigenas",
-  "2025-06-29": "San Pedro y San Pablo",
-  "2025-07-16": "Virgen del Carmen",
-  "2025-08-15": "Asunción de la Virgen",
-  "2025-09-18": "Fiestas Patrias",
-  "2025-09-19": "Glorias del Ejército",
-  "2025-10-12": "Encuentro de Dos Mundos",
-  "2025-10-31": "Día Iglesias Evangélicas",
-  "2025-11-01": "Día de Todos los Santos",
-  "2025-11-16": "Elecciones Presidenciales y Parlamentarias Irrenunciable",
-  "2025-12-08": "Inmaculada Concepción",
-  "2025-12-14": "Elecciones Presidenciales (Segunda Vuelta) Irrenunciable",
-  "2025-12-25": "Navidad",
-  // 2026
-  "2026-01-01": "Año Nuevo",
-  "2026-04-03": "Viernes Santo",
-  "2026-04-04": "Sábado Santo",
-  "2026-05-01": "Día del Trabajador",
-  "2026-05-21": "Glorias Navales",
-  "2026-06-20": "Día Nacional de los Pueblos Indígenas",
-  "2026-06-29": "San Pedro y San Pablo",
-  "2026-07-16": "Virgen del Carmen",
-  "2026-08-15": "Asunción de la Virgen",
-  "2026-09-18": "Fiestas Patrias",
-  "2026-09-19": "Glorias del Ejército",
-  "2026-10-12": "Encuentro de Dos Mundos",
-  "2026-10-31": "Día Iglesias Evangélicas",
-  "2026-11-01": "Día de Todos los Santos",
-  "2026-12-08": "Inmaculada Concepción",
-  "2026-12-25": "Navidad"
+async function cargarFeriados() {
+  try {
+    const doc = await db.collection("Config").doc("feriados").get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.lista && Array.isArray(data.lista)) {
+        let listaFirestore = data.lista;
+
+        // Verificar si faltan feriados nuevos (ej. 2027) y agregarlos
+        let huboCambios = false;
+        const fechasExistentes = new Set(listaFirestore.map(f => f.fecha));
+
+        FERIADOS_DEFAULT.forEach(def => {
+          if (!fechasExistentes.has(def.fecha)) {
+            listaFirestore.push(def);
+            fechasExistentes.add(def.fecha);
+            huboCambios = true;
+          }
+        });
+
+        if (huboCambios) {
+          console.log("Actualizando feriados en Firestore con nuevos años...");
+          // Ordenar por fecha
+          listaFirestore.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+          await db.collection("Config").doc("feriados").set({ lista: listaFirestore });
+        }
+
+        // Procesar lista final
+        feriadosChile = listaFirestore.map(f => f.fecha);
+        feriadosInfo = {};
+        listaFirestore.forEach(f => {
+          feriadosInfo[f.fecha] = f.nombre;
+        });
+        console.log("Feriados cargados (y actualizados) desde Firestore");
+        return;
+      }
+    }
+
+    // Si no existen, subirlos (Migración inicial)
+    console.log("Inicializando feriados en Firestore...");
+    await db.collection("Config").doc("feriados").set({ lista: FERIADOS_DEFAULT });
+
+    // Usar defaults
+    feriadosChile = FERIADOS_DEFAULT.map(f => f.fecha);
+    feriadosInfo = {};
+    FERIADOS_DEFAULT.forEach(f => {
+      feriadosInfo[f.fecha] = f.nombre;
+    });
+
+  } catch (error) {
+    console.error("Error cargando feriados:", error);
+    // Fallback a defaults en memoria
+    feriadosChile = FERIADOS_DEFAULT.map(f => f.fecha);
+    feriadosInfo = {};
+    FERIADOS_DEFAULT.forEach(f => {
+      feriadosInfo[f.fecha] = f.nombre;
+    });
+  }
+}
+
+// Lista de empleados - se carga desde Firestore
+let empleados = [];
+
+async function cargarEmpleadosDeFirestore() {
+  try {
+    const doc = await db.collection("Config").doc("empleados_noc").get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.lista && Array.isArray(data.lista)) {
+        // Mapear al formato que usa noc.js (nombre, turnos: [])
+        // Nota: noc.js parece usar 'turnos' en memoria, pero si queremos persistencia de turnos
+        // eso es otra historia. Aquí solo estamos cargando la LISTA de nombres base.
+        // Si noc.js guarda turnos en otra colección, esto está bien.
+        // Asumimos que 'empleados' en noc.js es la estructura base para renderizar.
+        return data.lista.map(e => ({ nombre: e.nombre, turnos: [] }));
+      }
+    }
+  } catch (error) {
+    console.error("Error al cargar empleados de Firestore:", error);
+  }
+
+  // Valores por defecto si falla
+  return [
+    { nombre: "Sergio Castillo", turnos: [] },
+    { nombre: "Ignacio Aburto", turnos: [] },
+    { nombre: "Claudio Bustamante", turnos: [] },
+    { nombre: "Julio Oliva", turnos: [] },
+    { nombre: "Gabriel Trujillo", turnos: [] }
+  ];
+}
+
+// Inicializar carga
+// Inicializar carga
+Promise.all([cargarEmpleadosDeFirestore(), cargarFeriados()]).then(([lista]) => {
+  empleados = lista;
+  // console.log("Datos iniciales cargados (Empleados y Feriados)");
+  // Disparar evento personalizado
+  document.dispatchEvent(new CustomEvent('datosCargados'));
+
+  // Iniciar calendario si el DOM está listo, o esperar
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof renderCalendar === 'function') renderCalendar();
+    });
+  } else {
+    if (typeof renderCalendar === 'function') renderCalendar();
+  }
+});
+
+// Escuchar cambios de empleados desde otras pestañas
+const empleadosChannel = new BroadcastChannel("empleados_sync");
+empleadosChannel.onmessage = function (event) {
+  if (event.data && event.data.type === "empleados_updated") {
+    console.log("Empleados actualizados - recargando página");
+    location.reload();
+  }
 };
-
-// Lista de empleados y su objeto de turnos (se actualizará en renderCalendar)
-const empleados = [
-  { nombre: "Sergio Castillo", turnos: [] },
-  { nombre: "Ignacio Aburto", turnos: [] },
-  { nombre: "Claudio Bustamante", turnos: [] },
-  { nombre: "Julio Oliva", turnos: [] },
-  { nombre: "Gabriel Trujillo", turnos: [] }
-];
 
 const bitacoraEmployees = [
   "Sergio Castillo",
@@ -108,12 +227,67 @@ function obtenerDatosCalendario() {
   };
 }
 
-// Guarda en localStorage el estado actual del calendario
+// Guarda en localStorage el estado actual del calendario (Solo datos, no HTML)
 function guardarCalendarioEnLocalStorage() {
   const key = obtenerClaveMes(currentDate);
-  const datos = obtenerDatosCalendario();
+  const currentMonthElement = document.getElementById("current-month");
+
+  const datos = {
+    mes: currentMonthElement.textContent,
+    assignments: {}, // { "Nombre Empleado": { "1": "M", "2": "N" } }
+    nocturno: {},    // { "1": "N" }
+    feriados: {}     // { "1": "F" }
+  };
+
+  // 1. General Calendar
+  const generalTable = document.getElementById("general-calendar");
+  if (generalTable) {
+    generalTable.querySelectorAll("tbody tr").forEach(row => {
+      const nameCell = row.querySelector("td:first-child");
+      if (!nameCell) return;
+      // Limpiar nombre (quitar "(Ex)" si existe)
+      const name = nameCell.textContent.replace(/\s*\(Ex\)\s*$/, "").trim();
+      if (name === "Encargado de Bitácora") return;
+
+      const shifts = {};
+      row.querySelectorAll("button.calendar-day").forEach(btn => {
+        const day = btn.getAttribute("data-day");
+        let shift = btn.textContent.trim();
+        // Detectar vacaciones por el icono
+        if (btn.querySelector('[data-lucide="tree-palm"]') || btn.querySelector('svg.lucide-tree-palm')) {
+          shift = "V";
+        }
+        if (shift) shifts[day] = shift;
+      });
+
+      if (Object.keys(shifts).length > 0) {
+        datos.assignments[name] = shifts;
+      }
+    });
+  }
+
+  // 2. Nocturno Calendar
+  const nocturnoTable = document.getElementById("nocturno-calendar");
+  if (nocturnoTable) {
+    nocturnoTable.querySelectorAll("button.calendar-day").forEach(btn => {
+      const day = btn.getAttribute("data-day");
+      let shift = btn.textContent.trim();
+      if (shift) datos.nocturno[day] = shift;
+    });
+  }
+
+  // 3. Feriados Calendar
+  const feriadosTable = document.getElementById("feriados-calendar");
+  if (feriadosTable) {
+    feriadosTable.querySelectorAll("button.calendar-day").forEach(btn => {
+      const day = btn.getAttribute("data-day");
+      let shift = btn.textContent.trim();
+      if (shift) datos.feriados[day] = shift;
+    });
+  }
+
   localStorage.setItem(key, JSON.stringify(datos));
-  console.log(`Calendario guardado en localStorage con la clave: ${key}`);
+  console.log(`Calendario guardado en localStorage (formato JSON seguro) con la clave: ${key}`);
 }
 
 // -----------------------------------------------------------------------------
@@ -129,8 +303,13 @@ function verificarRolUsuario(callback) {
       .then((doc) => {
         if (doc.exists) {
           const data = doc.data();
-          const isAdmin = data.rol === "admin";
-          const isSuperAdmin = data.rol === "superadmin";
+          const role = data.rol;
+
+          // Guardar en caché para optimización
+          localStorage.setItem("userRole", role);
+
+          const isAdmin = role === "admin";
+          const isSuperAdmin = role === "superadmin";
 
           // Mostrar link de Registros para superadmins
           if (isSuperAdmin) {
@@ -201,9 +380,163 @@ function asignarDomingosLibres(year, month, daysInMonth) {
   });
 }
 
+// Sincroniza la tabla del calendario con la lista actual de empleados
+function sincronizarTablasConEmpleados() {
+  const tablaGeneral = document.getElementById("general-calendar");
+  if (!tablaGeneral) return;
+
+  const tbody = tablaGeneral.querySelector("tbody");
+  if (!tbody) return;
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // 1. Obtener filas existentes mapeadas por nombre
+  const existingRows = {};
+  let bitacoraRowHTML = "";
+
+  tbody.querySelectorAll("tr").forEach(row => {
+    const firstCell = row.querySelector("td");
+    if (firstCell) {
+      const name = firstCell.textContent.trim();
+      if (name === "Encargado de Bitácora") {
+        bitacoraRowHTML = row.outerHTML;
+      } else {
+        existingRows[name] = row.outerHTML;
+      }
+    }
+  });
+
+  // 2. Reconstruir el cuerpo de la tabla
+  let newBodyHTML = "";
+
+  empleados.forEach((empleado, index) => {
+    if (existingRows[empleado.nombre]) {
+      // Si ya existe, usamos la fila guardada (preserva los turnos)
+      newBodyHTML += existingRows[empleado.nombre];
+      delete existingRows[empleado.nombre]; // Lo marcamos como usado
+    } else {
+      // Si es nuevo, generamos una fila vacía
+      let rowHTML = `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const fecha = new Date(year, month, day);
+        const esDomingo = fecha.getDay() === 0;
+        const esFeriado = feriadosChile.includes(dateStr);
+
+        let turno = "";
+        // Asignar DL por defecto solo a empleados privilegiados específicos
+        const esPrivilegiado = empleado.nombre === "Sergio Castillo" || empleado.nombre === "Ignacio Aburto";
+
+        if (esPrivilegiado && esDomingo) {
+          turno = "DL";
+        }
+
+        let extraClass = turno === "DL" ? "domingo-libre" : "";
+        // Solo agregar clase feriado a empleados privilegiados
+        if (esFeriado && esPrivilegiado) extraClass += " feriado";
+
+        rowHTML += `
+          <td>
+            <button
+              data-date="${dateStr}"
+              data-empleado="${empleado.nombre}"
+              data-day="${day}"
+              class="calendar-day w-full h-full ${extraClass}"
+            >
+              ${turno}
+            </button>
+          </td>
+        `;
+      }
+      rowHTML += "</tr>";
+      newBodyHTML += rowHTML;
+    }
+  });
+
+  // B) Luego revisamos las filas sobrantes (empleados eliminados)
+  // Si tienen turnos asignados, LAS MANTENEMOS para no perder historia
+  for (const [nombre, html] of Object.entries(existingRows)) {
+    // Crear una tabla temporal para parsear correctamente el TR
+    const tempTable = document.createElement('table');
+    const tempTbody = document.createElement('tbody');
+    tempTable.appendChild(tempTbody);
+    tempTbody.innerHTML = html;
+
+    const row = tempTbody.querySelector('tr');
+    if (!row) continue;
+
+    const buttons = row.querySelectorAll('button');
+    let tieneTurnos = false;
+
+    buttons.forEach(btn => {
+      const texto = btn.textContent.trim();
+      // Si tiene texto y no es solo "DL" automático (o vacío), consideramos que tiene datos
+      if (texto && texto !== "" && texto !== "DL") {
+        tieneTurnos = true;
+      }
+      // También si tiene icono de vacaciones (aunque el texto sea V)
+      if (btn.querySelector('svg') || btn.querySelector('i')) {
+        tieneTurnos = true;
+      }
+    });
+
+    if (tieneTurnos) {
+      // Marcar visualmente como eliminado
+      const firstCell = row.querySelector('td');
+      if (firstCell) {
+        firstCell.style.color = '#ef4444'; // Rojo suave
+        firstCell.style.fontStyle = 'italic';
+        // Agregar etiqueta si no existe ya
+        if (!firstCell.textContent.includes('(Ex)')) {
+          firstCell.innerHTML += ' <span style="font-size:0.8em; opacity:0.8;" title="Empleado Eliminado">(Ex)</span>';
+        }
+      }
+      newBodyHTML += row.outerHTML;
+    }
+  }
+
+  // 3. Agregar fila de bitácora al final
+  if (bitacoraRowHTML) {
+    newBodyHTML += bitacoraRowHTML;
+  } else {
+    // Si no existía (caso raro), la regeneramos
+    const totalCols = daysInMonth + 1;
+    const bitacoraIndex = ((month - 1) + bitacoraEmployees.length) % bitacoraEmployees.length;
+    const bitacoraEmpleado = bitacoraEmployees[bitacoraIndex];
+    newBodyHTML += `
+      <tr>
+        <td class="bitacora-row" style="white-space:nowrap;">Encargado de Bitácora</td>
+        <td class="bitacora-row" colspan="${totalCols - 1}" style="text-align:center;">
+          ${bitacoraEmpleado}
+        </td>
+      </tr>
+    `;
+  }
+
+  tbody.innerHTML = newBodyHTML;
+}
+
+// Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
+// si no existen o están incompletos, se construye desde cero.
 // Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
 // si no existen o están incompletos, se construye desde cero.
 function renderCalendar(date) {
+  // Limpieza de basura visual
+  const general = document.getElementById("general-calendar");
+  if (general) {
+    let prev = general.previousSibling;
+    while (prev && (prev.nodeType === Node.TEXT_NODE || (prev.nodeType === Node.ELEMENT_NODE && prev.tagName === "BR"))) {
+      const toRemove = prev;
+      prev = prev.previousSibling;
+      toRemove.remove();
+    }
+  }
+
+  // 1. Siempre renderizar base desde cero (asegura estructura limpia y actualizada)
+  renderCalendarDesdeCero(date);
+
   const key = obtenerClaveMes(date);
   const storedData = localStorage.getItem(key);
 
@@ -211,33 +544,194 @@ function renderCalendar(date) {
     try {
       const data = JSON.parse(storedData);
 
-      // Si no tiene el tercer calendario todavía, regeneramos desde cero
-      if (!data.generalHTML || !data.nocturnoHTML || !data.feriadosHTML) {
-        renderCalendarDesdeCero(date);
-        return;
+      // MIGRACIÓN: Si detectamos formato antiguo (HTML), migramos a JSON
+      if (data.generalHTML) {
+        console.log("Detectado formato antiguo. Migrando a JSON seguro...");
+        migrarDatosAntiguos(key, data);
+        return renderCalendar(date); // Re-renderizar con datos migrados
       }
 
-      document.getElementById("current-month").textContent = data.mes;
+      // 2. Aplicar asignaciones guardadas (JSON)
+      if (data.assignments) {
+        aplicarAsignaciones(data.assignments);
+      }
 
-      const general = document.getElementById("general-calendar");
-      const nocturno = document.getElementById("nocturno-calendar");
-      const feriados = document.getElementById("feriados-calendar");
+      // 3. Aplicar nocturno y feriados
+      if (data.nocturno) {
+        aplicarAsignacionesSimples("nocturno-calendar", data.nocturno);
+      }
+      if (data.feriados) {
+        aplicarAsignacionesSimples("feriados-calendar", data.feriados);
+      }
 
-      if (general && data.generalHTML) general.outerHTML = data.generalHTML;
-      if (nocturno && data.nocturnoHTML) nocturno.outerHTML = data.nocturnoHTML;
-      if (feriados && data.feriadosHTML) feriados.outerHTML = data.feriadosHTML;
+      // 4. Restaurar empleados eliminados si tienen historia
+      restaurarEmpleadosEliminados(data.assignments);
 
-      if (usuarioEsAdmin) { attachAdminCellListeners(); }
-      lucide.createIcons();
-      fixShiftTextColors();
-      calcularHorasExtras(date);
-      return;
     } catch (e) {
-      console.error("Error leyendo localStorage, se renderiza desde cero:", e);
+      console.error("Error leyendo localStorage:", e);
     }
   }
 
-  renderCalendarDesdeCero(date);
+  if (usuarioEsAdmin) { attachAdminCellListeners(); }
+  lucide.createIcons();
+  fixShiftTextColors();
+  calcularHorasExtras(date);
+}
+
+// Helper para migrar datos HTML a JSON
+function migrarDatosAntiguos(key, oldData) {
+  const parser = new DOMParser();
+  const newData = {
+    mes: oldData.mes,
+    assignments: {},
+    nocturno: {},
+    feriados: {}
+  };
+
+  // Extraer General
+  if (oldData.generalHTML) {
+    const doc = parser.parseFromString(`<table>${oldData.generalHTML}</table>`, 'text/html');
+    doc.querySelectorAll("tr").forEach(row => {
+      const name = row.querySelector("td")?.textContent.trim();
+      if (name && name !== "Encargado de Bitácora") {
+        const shifts = {};
+        row.querySelectorAll("button").forEach(btn => {
+          const day = btn.getAttribute("data-day");
+          let shift = btn.textContent.trim();
+          if (btn.querySelector('svg') || btn.querySelector('i')) shift = "V";
+          if (shift) shifts[day] = shift;
+        });
+        if (Object.keys(shifts).length > 0) newData.assignments[name] = shifts;
+      }
+    });
+  }
+
+  // Guardar nuevo formato
+  localStorage.setItem(key, JSON.stringify(newData));
+}
+
+// Helper para aplicar asignaciones al DOM
+function aplicarAsignaciones(assignments) {
+  const table = document.getElementById("general-calendar");
+  if (!table) return;
+
+  Object.entries(assignments).forEach(([name, shifts]) => {
+    // Buscar fila del empleado
+    const row = Array.from(table.querySelectorAll("tbody tr")).find(tr =>
+      tr.querySelector("td")?.textContent.trim() === name
+    );
+
+    if (row) {
+      Object.entries(shifts).forEach(([day, shift]) => {
+        const btn = row.querySelector(`button[data-day="${day}"]`);
+        if (btn) {
+          actualizarBotonTurno(btn, shift);
+        }
+      });
+    }
+  });
+}
+
+// Helper para aplicar asignaciones simples (Nocturno/Feriados)
+function aplicarAsignacionesSimples(tableId, shifts) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  Object.entries(shifts).forEach(([day, shift]) => {
+    const btn = table.querySelector(`button[data-day="${day}"]`);
+    if (btn) {
+      actualizarBotonTurno(btn, shift);
+    }
+  });
+}
+
+// Helper para actualizar visualmente un botón
+function actualizarBotonTurno(btn, shift) {
+  btn.textContent = shift === "V" ? "" : shift;
+  if (shift === "V") {
+    btn.innerHTML = '<i data-lucide="tree-palm"></i>';
+  }
+
+  // Reset clases
+  btn.className = "calendar-day w-full h-full";
+
+  // Aplicar clases según turno
+  if (shift === "DL") btn.classList.add("domingo-libre");
+  else if (shift === "F") btn.classList.add("feriado");
+  else if (shift === "N") btn.classList.add("nocturno");
+  else if (shift === "L") btn.classList.add("dia-libre");
+  else if (shift === "V") btn.classList.add("vacaciones"); // Asumiendo que existe o se maneja genérico
+}
+
+// Helper para restaurar empleados eliminados (visualización histórica)
+function restaurarEmpleadosEliminados(assignments) {
+  if (!assignments) return;
+
+  const table = document.getElementById("general-calendar");
+  const tbody = table?.querySelector("tbody");
+  if (!tbody) return;
+
+  const currentNames = Array.from(tbody.querySelectorAll("tr td:first-child")).map(td => td.textContent.trim());
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  Object.keys(assignments).forEach(name => {
+    if (!currentNames.includes(name)) {
+      // Empleado existe en historial pero no en lista actual -> Restaurar fila
+      let rowHTML = `<tr><td class="text-left p-2" style="color:#ef4444; font-style:italic;">${name} <span style="font-size:0.8em; opacity:0.8;">(Ex)</span></td>`;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const shift = assignments[name][day] || "";
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+        let content = shift;
+        if (shift === "V") content = '<i data-lucide="tree-palm"></i>';
+
+        rowHTML += `
+          <td>
+            <button
+              data-date="${dateStr}"
+              data-empleado="${name}"
+              data-day="${day}"
+              class="calendar-day w-full h-full"
+            >
+              ${content}
+            </button>
+          </td>
+        `;
+      }
+      rowHTML += "</tr>";
+
+      // Insertar antes de la fila de bitácora
+      const bitacoraRow = tbody.querySelector("tr:last-child");
+      if (bitacoraRow) {
+        bitacoraRow.insertAdjacentHTML('beforebegin', rowHTML);
+      } else {
+        tbody.insertAdjacentHTML('beforeend', rowHTML);
+      }
+
+      // Aplicar estilos a los botones recién creados
+      const newRow = tbody.querySelector(`tr:nth-last-child(2)`); // La que acabamos de insertar
+      if (newRow) {
+        Object.entries(assignments[name]).forEach(([day, shift]) => {
+          const btn = newRow.querySelector(`button[data-day="${day}"]`);
+          if (btn) actualizarBotonTurno(btn, shift);
+        });
+      }
+    }
+  });
+}
+
+// Función para escapar HTML y prevenir XSS
+function escapeHtml(text) {
+  if (!text) return text;
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // Construye el calendario cuando no hay datos guardados
@@ -286,7 +780,8 @@ function renderCalendarDesdeCero(date) {
   // ---------- CUERPO CALENDARIO GENERAL ----------
   let generalHTML = "";
   empleados.forEach((empleado) => {
-    generalHTML += `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
+    const nombreSeguro = escapeHtml(empleado.nombre);
+    generalHTML += `<tr><td class="text-left p-2">${nombreSeguro}</td>`;
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
         day
@@ -314,7 +809,7 @@ function renderCalendarDesdeCero(date) {
         <td>
           <button
             data-date="${dateStr}"
-            data-empleado="${empleado.nombre}"
+            data-empleado="${nombreSeguro}"
             data-day="${day}"
             class="calendar-day w-full h-full ${extraClass} ${claseFeriado}"
             ${turno === "V" ? 'title="Vacaciones"' : ""}
@@ -478,12 +973,11 @@ function todosLosDiasRellenos() {
 // -----------------------------------------------------------------------------
 // CALCULO DE HORAS EXTRAS
 // -----------------------------------------------------------------------------
-function calcularHorasExtras(date) {
+async function calcularHorasExtras(date) {
   const currentYear = date.getFullYear();
   const currentMonth = date.getMonth(); // 0-indexed
 
   // 1. Obtener datos del mes anterior (para contar del 26 al final)
-  // Restamos 1 al mes. Si es Enero (0), pasará a Diciembre del año anterior automáticamente.
   const prevDate = new Date(currentYear, currentMonth - 1, 1);
   const prevKey = obtenerClaveMes(prevDate);
   const prevDataStr = localStorage.getItem(prevKey);
@@ -491,33 +985,68 @@ function calcularHorasExtras(date) {
   let countSergioPrev = 0;
   let countIgnacioPrev = 0;
 
+  let prevData = null;
+
+  // Intentamos leer de localStorage
   if (prevDataStr) {
     try {
-      const prevData = JSON.parse(prevDataStr);
-      if (prevData.feriadosHTML) {
-        // Parseamos el HTML guardado
-        const parser = new DOMParser();
-        const docPrev = parser.parseFromString(prevData.feriadosHTML, "text/html");
-        // Buscamos los botones en la tabla de feriados
-        const buttonsPrev = docPrev.querySelectorAll("button.calendar-day");
-
-        buttonsPrev.forEach(btn => {
-          const day = parseInt(btn.getAttribute("data-day"), 10);
-          const turno = btn.textContent.trim();
-
-          // Contamos solo del 26 en adelante
-          if (day >= 26) {
-            if (turno === "S") countSergioPrev++;
-            if (turno === "I") countIgnacioPrev++;
-          }
-        });
-      }
+      prevData = JSON.parse(prevDataStr);
     } catch (e) {
-      console.error("Error al leer datos del mes anterior para horas extras:", e);
+      console.error("Error parseando JSON local mes anterior:", e);
+    }
+  }
+
+  // Si no hay datos locales, intentamos leer de Firestore (fallback)
+  if (!prevData) {
+    try {
+      const doc = await db.collection("calendarios").doc(prevKey).get();
+      if (doc.exists) {
+        prevData = doc.data();
+        // Opcional: guardar en localStorage para la próxima
+        // localStorage.setItem(prevKey, JSON.stringify(prevData));
+      }
+    } catch (error) {
+      console.error("Error obteniendo mes anterior de Firestore:", error);
+    }
+  }
+
+  if (prevData) {
+    // Helper para contar en un objeto de turnos { "1": "S", "2": "M" }
+    const contarEnObjeto = (turnos) => {
+      Object.entries(turnos).forEach(([dayStr, turno]) => {
+        const day = parseInt(dayStr, 10);
+        if (day >= 26) {
+          if (turno === "S") countSergioPrev++;
+          if (turno === "I") countIgnacioPrev++;
+        }
+      });
+    };
+
+    // A) JSON Nuevo (prioridad)
+    if (prevData.assignments || prevData.feriados || prevData.nocturno) {
+      // El usuario pidió SOLO contar en el calendario de Feriados
+      if (prevData.feriados) {
+        contarEnObjeto(prevData.feriados);
+      }
+    }
+    // B) Fallback HTML Antiguo
+    else if (prevData.feriadosHTML) {
+      const parser = new DOMParser();
+      const docPrev = parser.parseFromString(prevData.feriadosHTML, "text/html");
+      const buttonsPrev = docPrev.querySelectorAll("button.calendar-day");
+      buttonsPrev.forEach(btn => {
+        const day = parseInt(btn.getAttribute("data-day"), 10);
+        const turno = btn.textContent.trim();
+        if (day >= 26) {
+          if (turno === "S") countSergioPrev++;
+          if (turno === "I") countIgnacioPrev++;
+        }
+      });
     }
   }
 
   // 2. Obtener datos del mes actual (del 1 al 25) del DOM actual
+  // RESTRICCIÓN: Solo buscar en #feriados-calendar
   let countSergioCurr = 0;
   let countIgnacioCurr = 0;
 
@@ -565,21 +1094,22 @@ function adminMousedown(e) {
     }
   }
   // Botón Derecho (2): Borrar (Goma de borrar)
+  // Botón Derecho (2): Borrar (Goma de borrar)
   else if (e.button === 2) {
     isDeselecting = true;
 
-    // Borrar contenido y estilos
+    // 1. Quitar de la selección si estaba (ANTES de borrar clases)
+    if (this.classList.contains("selected")) {
+      this.classList.remove("selected");
+      selectedDays = selectedDays.filter((el) => el !== this);
+    }
+
+    // 2. Borrar contenido y estilos
     this.textContent = "";
     this.innerHTML = "";
     this.removeAttribute("style");
     this.className = "calendar-day w-full h-full";
     this.removeAttribute("title");
-
-    // Quitar de la selección si estaba
-    if (this.classList.contains("selected")) {
-      this.classList.remove("selected");
-      selectedDays = selectedDays.filter((el) => el !== this);
-    }
 
     scheduleFirestoreUpdate();
   }
@@ -593,17 +1123,18 @@ function adminMouseover(e) {
         selectedDays.push(this);
       }
     } else if (isDeselecting) {
-      // Borrar al arrastrar (Goma de borrar)
+      // 1. Quitar de la selección si estaba (ANTES de borrar clases)
+      if (this.classList.contains("selected")) {
+        this.classList.remove("selected");
+        selectedDays = selectedDays.filter((el) => el !== this);
+      }
+
+      // 2. Borrar al arrastrar (Goma de borrar)
       this.textContent = "";
       this.innerHTML = "";
       this.removeAttribute("style");
       this.className = "calendar-day w-full h-full";
       this.removeAttribute("title");
-
-      if (this.classList.contains("selected")) {
-        this.classList.remove("selected");
-        selectedDays = selectedDays.filter((el) => el !== this);
-      }
 
       scheduleFirestoreUpdate();
     }
@@ -957,7 +1488,7 @@ function subscribeCalendar() {
         const nocturnoContainer = document.getElementById("nocturno-calendar");
         const feriadosContainer = document.getElementById("feriados-calendar");
 
-        // 1. Guardar identificadores de celdas seleccionadas
+        // 1. Guardar identificadores de celdas seleccionadas ACTUALMENTE en memoria
         const savedSelection = selectedDays.map(el => ({
           date: el.getAttribute("data-date"),
           empleado: el.getAttribute("data-empleado"),
@@ -974,20 +1505,23 @@ function subscribeCalendar() {
           feriadosContainer.outerHTML = data.feriadosHTML;
         }
 
+        // Sincronizar empleados después de cargar desde Firestore
+        sincronizarTablasConEmpleados();
+
         lucide.createIcons();
         fixShiftTextColors();
         if (usuarioEsAdmin) {
           attachAdminCellListeners();
         }
 
-        // 2. Restaurar selección
+        // Recalcular horas extras tras cargar el DOM
+        calcularHorasExtras(currentDate);
+
+        // 2. Restaurar selección (solo la que estaba activa en esta sesión)
         selectedDays = [];
         if (savedSelection.length > 0) {
           savedSelection.forEach(item => {
-            // Buscar el botón que coincida con los atributos
-            // Nota: data-empleado puede tener espacios, así que usamos selectores de atributos con comillas
             const selector = `button[data-date="${item.date}"][data-day="${item.day}"]`;
-            // Filtramos manualmente por empleado para evitar problemas con selectores complejos si hay caracteres especiales
             const candidates = document.querySelectorAll(selector);
             candidates.forEach(btn => {
               if (btn.getAttribute("data-empleado") === item.empleado) {
@@ -1039,14 +1573,31 @@ document.addEventListener("DOMContentLoaded", function () {
   configurarSidebar();
   configurarLogout();
 
+  // Optimización: Carga optimista del rol desde caché
+  const cachedRole = localStorage.getItem("userRole");
+  if (cachedRole === "admin" || cachedRole === "superadmin") {
+    console.log("Aplicando rol admin desde caché (NOC)");
+    usuarioEsAdmin = true;
+    document.querySelectorAll(".admin-only").forEach((el) => {
+      el.classList.remove("admin-only");
+    });
+    lucide.createIcons();
+    if (cachedRole === "superadmin") {
+      const liRegistros = document.getElementById("li-registros");
+      if (liRegistros) liRegistros.style.display = "block";
+    }
+  }
+
   verificarRolUsuario(function (isAdmin) {
     usuarioEsAdmin = isAdmin;
 
-    // Mostrar elementos solo para admin
+    // Mostrar elementos solo para admin (Confirmación final)
     if (usuarioEsAdmin) {
       document.querySelectorAll(".admin-only").forEach((el) => {
         el.classList.remove("admin-only");
       });
+      // Re-create icons for newly exposed elements
+      lucide.createIcons();
     }
 
     // Botón Auto-Asignar (solo admin)
@@ -1102,14 +1653,14 @@ document.addEventListener("DOMContentLoaded", function () {
           const currentMonth = document
             .getElementById("current-month")
             .textContent.trim();
-          console.log("Mes actual detectado:", currentMonth);
+          // console.log("Mes actual detectado:", currentMonth);
 
           const snapshot = await db.collection("calendarios").get();
           let historialTurnos = {};
           snapshot.forEach((doc) => {
             historialTurnos[doc.id] = doc.data();
           });
-          console.log("Historial de turnos:", historialTurnos);
+          // console.log("Historial de turnos:", historialTurnos);
 
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth();
@@ -1164,7 +1715,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
 
-          console.log("Asignación inicial:", empleadosAsignados);
+          // console.log("Asignación inicial:", empleadosAsignados);
 
           // Reglas adicionales para M1 / M1B: no más de 1 por semana
           for (let empleado in empleadosAsignados) {
@@ -1345,12 +1896,12 @@ document.addEventListener("DOMContentLoaded", function () {
               dayBtn.style.color = "#000";
               dayBtn.removeAttribute("title");
             }
-            // NO quitamos la selección para permitir cambios rápidos
-            // dayBtn.classList.remove("selected");
+            // Quitamos la selección tras asignar
+            dayBtn.classList.remove("selected");
           });
 
           lucide.createIcons();
-          // selectedDays = []; // Mantenemos la selección
+          selectedDays = []; // Limpiamos la selección
           scheduleFirestoreUpdate();
         } else {
           Swal.fire({
@@ -1378,10 +1929,11 @@ document.addEventListener("DOMContentLoaded", function () {
           return;
         }
 
+        // Guardamos en local primero
         guardarCalendarioEnLocalStorage();
 
-        const key = obtenerClaveMes(currentDate);
-        const datos = JSON.parse(localStorage.getItem(key));
+        // Para Firestore, usamos la función que obtiene el HTML completo
+        const datos = obtenerDatosCalendario();
         const docRef = db.collection("calendarios").doc(datos.mes);
 
         docRef

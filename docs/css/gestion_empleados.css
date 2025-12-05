@@ -1,0 +1,280 @@
+/* Gestión de Empleados - Estilos */
+/* Usa las mismas variables de styles.css para mantener consistencia */
+
+.empleados-section {
+    background: var(--color-fondo-secundario);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(119, 150, 203, 0.1);
+}
+
+.empleados-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.empleados-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-texto-principal);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.empleados-header h2 i {
+    color: var(--color-acento-primario);
+}
+
+.empleados-info {
+    background: rgba(119, 150, 203, 0.1);
+    border: 1px solid rgba(119, 150, 203, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.empleados-info p {
+    margin: 0;
+    color: var(--color-texto-secundario);
+    font-size: 0.9rem;
+}
+
+.empleados-info p strong {
+    color: var(--color-acento-primario);
+}
+
+.empleados-info i {
+    color: var(--color-acento-primario);
+    flex-shrink: 0;
+}
+
+.btn-agregar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-acento-primario);
+    color: var(--color-fondo-principal);
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-agregar:hover {
+    background: var(--color-acento-secundario);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(119, 150, 203, 0.3);
+}
+
+.tabla-empleados {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(35, 39, 46, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabla-empleados thead {
+    background: rgba(119, 150, 203, 0.15);
+}
+
+.tabla-empleados th,
+.tabla-empleados td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(119, 150, 203, 0.1);
+}
+
+.tabla-empleados th {
+    color: var(--color-texto-principal);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabla-empleados td {
+    color: var(--color-texto-secundario);
+}
+
+.tabla-empleados tbody tr:hover {
+    background: rgba(119, 150, 203, 0.1);
+}
+
+.tabla-empleados tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.posicion-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--color-acento-primario);
+    color: var(--color-fondo-principal);
+    border-radius: 50%;
+    font-weight: 600;
+}
+
+.posicion-numero.privilegiado {
+    background: linear-gradient(135deg, var(--color-advertencia), var(--color-error));
+}
+
+.privilegios-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.privilegios-badge.activo {
+    background: rgba(136, 192, 166, 0.2);
+    color: var(--color-exito);
+    border: 1px solid rgba(136, 192, 166, 0.3);
+}
+
+.privilegios-badge.inactivo {
+    background: rgba(161, 169, 181, 0.2);
+    color: var(--color-texto-secundario);
+    border: 1px solid rgba(161, 169, 181, 0.3);
+}
+
+.acciones-cell {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-accion.editar {
+    background: rgba(232, 194, 126, 0.2);
+    color: var(--color-advertencia);
+}
+
+.btn-accion.editar:hover {
+    background: rgba(232, 194, 126, 0.4);
+}
+
+.btn-accion.eliminar {
+    background: rgba(215, 122, 122, 0.2);
+    color: var(--color-error);
+}
+
+.btn-accion.eliminar:hover {
+    background: rgba(215, 122, 122, 0.4);
+}
+
+.btn-accion.subir {
+    background: rgba(136, 192, 166, 0.2);
+    color: var(--color-exito);
+}
+
+.btn-accion.subir:hover {
+    background: rgba(136, 192, 166, 0.4);
+}
+
+.btn-accion.bajar {
+    background: rgba(119, 150, 203, 0.2);
+    color: var(--color-acento-primario);
+}
+
+.btn-accion.bajar:hover {
+    background: rgba(119, 150, 203, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .empleados-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tabla-empleados th,
+    .tabla-empleados td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .acciones-cell {
+        flex-wrap: wrap;
+    }
+}
+/* Responsive */
+@media (max-width: 768px) {
+    .empleados-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Mobile Card View */
+    .tabla-empleados, .tabla-empleados tbody, .tabla-empleados tr, .tabla-empleados td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabla-empleados thead {
+        display: none;
+    }
+
+    .tabla-empleados tr {
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tabla-empleados td {
+        text-align: right;
+        padding: 0.5rem 0;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .tabla-empleados td:last-child {
+        border-bottom: none;
+    }
+
+    .tabla-empleados td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--color-texto-secundario);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+
+    .acciones-cell {
+        justify-content: flex-end;
+    }
+}
