@@ -969,3 +969,44 @@ body.is-admin .admin-only {
 .tabla-horarios tr:hover td {
   background: rgba(255, 255, 255, 0.02);
 }
+
+/* =============================
+   Estilos de Mes Cerrado (Lock)
+   ============================= */
+.locked-mode .calendar-day {
+  pointer-events: none;
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  cursor: not-allowed;
+}
+
+.locked-mode .btn-turno,
+.locked-mode .btn-cargar,
+.locked-mode .btn-guardar,
+.locked-mode .btn-auto-asignar,
+.locked-mode .upload-photo-btn {
+  pointer-events: none;
+  opacity: 0.4;
+  cursor: not-allowed !important;
+}
+
+.locked-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.5);
+  color: #e74c3c;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+}
+
+.locked-indicator i {
+  width: 20px;
+  height: 20px;
+}

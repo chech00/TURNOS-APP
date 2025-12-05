@@ -31,6 +31,7 @@ if (!auth || !db) {
 let usuarioEsAdmin = false;
 let currentDate = new Date();
 let selectedDays = [];
+let isMonthLocked = false; // Estado de bloqueo del mes
 const vacationIcon = `<i data-lucide="tree-palm"></i>`;
 
 // Lista de feriados y su información
@@ -242,7 +243,8 @@ function obtenerDatosCalendario() {
     mes: currentMonthElement.textContent,
     generalHTML: generalTable ? generalTable.outerHTML : "",
     nocturnoHTML: nocturnoTable ? nocturnoTable.outerHTML : "",
-    feriadosHTML: feriadosTable ? feriadosTable.outerHTML : ""
+    feriadosHTML: feriadosTable ? feriadosTable.outerHTML : "",
+    locked: isMonthLocked // Preservar estado
   };
 }
 
@@ -1203,6 +1205,9 @@ const cerrarEstadisticas = document.getElementById("cerrarEstadisticas");
 const estadisticasContenido = document.getElementById("estadisticas-contenido");
 
 function cargarListaCalendarios() {
+  const selectMeses = document.getElementById("selectMeses");
+  if (!selectMeses) return;
+
   db.collection("calendarios")
     .get()
     .then((querySnapshot) => {
@@ -1524,6 +1529,10 @@ function subscribeCalendar() {
           feriadosContainer.outerHTML = data.feriadosHTML;
         }
 
+        // Manejo del estado "locked"
+        isMonthLocked = !!data.locked;
+        updateLockUI();
+
         // Sincronizar empleados después de cargar desde Firestore
         sincronizarTablasConEmpleados();
 
@@ -1566,6 +1575,12 @@ function subscribeCalendar() {
 let updateTimeout;
 
 function scheduleFirestoreUpdate() {
+  // Si el mes está bloqueado, NO guardar nada.
+  if (isMonthLocked) {
+    console.warn("El mes está cerrado. No se guardan cambios.");
+    return;
+  }
+
   clearTimeout(updateTimeout);
   updateTimeout = setTimeout(() => {
     const datos = obtenerDatosCalendario();
@@ -1609,6 +1624,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   verificarRolUsuario(function (isAdmin) {
     usuarioEsAdmin = isAdmin;
+
+    // Actualizar UI de bloqueo tras confirmar rol
+    updateLockUI();
 
     // Mostrar elementos solo para admin (Confirmación final)
     if (usuarioEsAdmin) {
@@ -2016,7 +2034,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // -----------------------------------------------------------------
     if (btnCargar) {
       btnCargar.addEventListener("click", function () {
-        const mesSeleccionado = selectMeses.value;
+        const selectMeses = document.getElementById("selectMeses");
+        const mesSeleccionado = selectMeses ? selectMeses.value : "";
+
         if (!mesSeleccionado) {
           Swal.fire({
             icon: "warning",
@@ -2347,4 +2367,96 @@ function fixShiftTextColors() {
     }
   });
 }
+
+// -----------------------------------------------------------------------------
+// 12) FUNCIONES DE CIERRE DE MES (LOCK)
+// -----------------------------------------------------------------------------
+
+// Función para actualizar la UI según estado de bloqueo
+function updateLockUI() {
+  const lockIndicator = document.getElementById("lockedIndicator");
+  const btnToggleLock = document.getElementById("btnToggleLock");
+
+  // Mostrar botón de candado solo si es superadmin (re-verificar)
+  const cachedRole = localStorage.getItem("userRole");
+  console.log("updateLockUI - Current Role:", cachedRole); // DEBUG: Verificar rol
+  if (cachedRole === "superadmin") {
+    if (btnToggleLock) {
+      btnToggleLock.style.display = "inline-flex";
+      btnToggleLock.innerHTML = isMonthLocked
+        ? `<i data-lucide="unlock"></i> Abrir Mes`
+        : `<i data-lucide="lock"></i> Cerrar Mes`;
+
+      // Estilos dinámicos preservando la clase base 'btn-horarios'
+      btnToggleLock.className = "btn-horarios superadmin-only";
+
+      if (isMonthLocked) {
+        // Mes Cerrado -> Botón azul para desbloquear
+        btnToggleLock.style.backgroundColor = "#7796cb";
+        btnToggleLock.style.color = "#fff";
+      } else {
+        // Mes Abierto -> Botón naranja/amarillo para cerrar
+        btnToggleLock.style.backgroundColor = "#f39c12";
+        btnToggleLock.style.color = "#fff";
+      }
+    }
+  }
+
+  if (isMonthLocked) {
+    document.body.classList.add("locked-mode");
+    if (lockIndicator) lockIndicator.style.display = "flex";
+  } else {
+    document.body.classList.remove("locked-mode");
+    if (lockIndicator) lockIndicator.style.display = "none";
+  }
+
+  lucide.createIcons();
+}
+
+
+
+// Función Toggle Lock (Superadmin)
+async function toggleMonthLock() {
+  const currentMonth = document.getElementById("current-month").textContent.trim();
+
+  // Confirmación
+  const action = isMonthLocked ? "ABRIR" : "CERRAR";
+  const result = await Swal.fire({
+    title: `¿${action} el mes de ${currentMonth}?`,
+    text: isMonthLocked
+      ? "Al abrirlo, los administradores podrán volver a editar los turnos."
+      : "Al cerrarlo, nadie podrá editar turnos hasta que se vuelva a abrir.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: `Sí, ${action}`,
+    cancelButtonText: "Cancelar"
+  });
+
+  if (!result.isConfirmed) return;
+
+  // Actualizar en Firestore
+  // Usamos merge para no borrar datos, solo actualizar el flag
+  try {
+    // IMPORTANTE: Al desbloquear, actualizamos directamante.
+    // Al bloquear, igual. scheduleFirestoreUpdate NO debe ejecutarse si está bloqueado.
+    await db.collection("calendarios").doc(currentMonth).set({
+      locked: !isMonthLocked
+    }, { merge: true });
+
+    Swal.fire("Éxito", `El mes ha sido ${action === "CERRAR" ? "cerrado" : "abierto"}.`, "success");
+    // La UI se actualizará sola gracias a onSnapshot (subscribeCalendar)
+
+  } catch (error) {
+    console.error("Error al cambiar estado de bloqueo:", error);
+    Swal.fire("Error", "No se pudo actualizar el estado del mes.", "error");
+  }
+}
+
+// Listener para el botón de bloqueo
+document.addEventListener("DOMContentLoaded", () => {
+  const btnToggleLock = document.getElementById("btnToggleLock");
+  if (btnToggleLock) {
+    btnToggleLock.addEventListener("click", toggleMonthLock);
+  }
+});
 

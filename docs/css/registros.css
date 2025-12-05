@@ -41,6 +41,59 @@
   margin: 0;
 }
 
+/* Acciones en Header */
+.table-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action i {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-backup {
+  background: var(--color-exito);
+  /* Verde menta */
+  background: linear-gradient(135deg, var(--color-exito), #6fb98e);
+}
+
+.btn-backup:hover {
+  filter: brightness(1.1);
+}
+
+.btn-cleanup {
+  background: var(--color-texto-secundario);
+  /* Gris azulado */
+  background: linear-gradient(135deg, var(--color-texto-secundario), #8b95a3);
+}
+
+.btn-cleanup:hover {
+  filter: brightness(1.1);
+}
+
 /* Tabla Responsiva */
 .table-responsive {
   overflow-x: auto;
@@ -141,6 +194,7 @@
     /* Ocultar headers en móvil si se desea un diseño de tarjetas, o mantener scroll */
   }
 }
+
 /* Spinner Styles */
 .spinner-container {
   display: flex;
@@ -165,10 +219,15 @@
 
 /* Mobile Card View */
 @media (max-width: 768px) {
-  .tabla-registros, .tabla-registros tbody, .tabla-registros tr, .tabla-registros td {
+
+  .tabla-registros,
+  .tabla-registros tbody,
+  .tabla-registros tr,
+  .tabla-registros td {
     display: block;
     width: 100%;
   }
+
   .tabla-registros tr {
     margin-bottom: 1rem;
     background: rgba(255, 255, 255, 0.05);
@@ -176,6 +235,7 @@
     padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
+
   .tabla-registros td {
     text-align: right;
     padding: 0.5rem 0;
@@ -186,9 +246,11 @@
     justify-content: space-between;
     align-items: center;
   }
+
   .tabla-registros td:last-child {
     border-bottom: none;
   }
+
   .tabla-registros td::before {
     content: attr(data-label);
     font-weight: 600;

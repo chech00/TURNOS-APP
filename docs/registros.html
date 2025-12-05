@@ -12,6 +12,8 @@
   <!-- Librerías -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
@@ -55,7 +57,12 @@
         <div class="table-header">
           <h2>Historial de Accesos</h2>
           <div class="table-actions">
-            <!-- Espacio para filtros o botones futuros -->
+            <button id="btnDownloadBackup" class="btn-action btn-backup admin-only" title="Descargar Backup Completo">
+              <i data-lucide="download-cloud"></i> <span>Backup</span>
+            </button>
+            <button id="btnCleanLogs" class="btn-action btn-cleanup admin-only" title="Limpiar Logs Antiguos">
+              <i data-lucide="archive"></i> <span>Limpiar Logs</span>
+            </button>
           </div>
         </div>
 

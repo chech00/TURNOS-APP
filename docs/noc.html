@@ -77,6 +77,9 @@
               </button>
             </div>
           </div>
+          <div id="lockedIndicator" class="locked-indicator" style="display:none;">
+            <i data-lucide="lock"></i> MES CERRADO
+          </div>
           <table id="general-calendar" class="calendar">
             <thead>
               <tr>
@@ -219,150 +222,152 @@
 
           <div class="backup-container">
             <h2>Backup</h2>
-
-            <!-- Dropdown visible para todos -->
-            <div class="dropdown-container">
-              <select id="mesesGuardados" class="select-meses">
-                <option value="">-- Seleccione un mes guardado --</option>
-              </select>
-            </div>
+            <select id="selectMeses" class="select-meses">
+              <option value="">-- Seleccione un mes guardado --</option>
+            </select>
 
             <div class="backup-controls">
-              <!-- Botones visibles para todos -->
-              <button id="btnCargar" class="btn-cargar"><i data-lucide="upload"></i> Cargar Calendario</button>
-              <button id="btnVerHorarios" class="btn-horarios"><i data-lucide="clock"></i> Ver Horarios de
+              <button id="btnCargar" class="btn-cargar admin-only"><i data-lucide="upload"></i> Cargar
+                Calendario</button>
+              <button id="btnVerHorarios" class="btn-horarios admin-only"><i data-lucide="clock"></i> Ver Horarios de
                 Turnos</button>
-
-              <!-- Botones solo para admin/superadmin -->
               <button id="btnGuardar" class="btn-guardar admin-only"><i data-lucide="save"></i> Guardar
                 Calendario</button>
-              <button id="btnEliminar" class="btn-cargar admin-only" style="background-color: #d77a7a;"><i
+              <button id="btnEliminar" class="btn-horarios admin-only" style="background-color: #e74c3c;"><i
                   data-lucide="trash-2"></i> Eliminar</button>
               <button id="btnVerEstadisticas" class="btn-horarios admin-only"><i data-lucide="bar-chart-3"></i> Ver
                 Estadísticas</button>
               <button id="btnVerSugerencias" class="btn-horarios admin-only"><i data-lucide="lightbulb"></i> Ver
                 Sugerencias</button>
-              <button id="btnAutoAsignar" class="btn-cargar admin-only" style="background-color: #7796cb;">
-                <i data-lucide="wand-2"></i> Auto-Asignar Turnos
-              </button>
+            </div>
 
-              <!-- Modal para Sugerencias -->
-              <div id="modalSugerencias" class="modal-horarios">
-                <div class="modal-horarios-content">
-                  <span id="cerrarSugerencias" class="close-horarios">&times;</span>
-                  <h2>Sugerencias de Optimización</h2>
-                  <ul id="listaSugerencias"></ul>
-                </div>
+            <button id="btnAutoAsignar" class="btn-cargar admin-only"
+              style="background-color: #7796cb; width: 100%; margin-top: 10px;">
+              <i data-lucide="wand-2"></i> Auto-Asignar Turnos
+            </button>
+
+            <button id="btnToggleLock" class="btn-horarios superadmin-only"
+              style="display:none; align-items: center; gap: 5px; width: 100%; margin-top: 5px;">
+              <i data-lucide="lock"></i> Cerrar Mes
+            </button>
+
+            <!-- Modal para Sugerencias -->
+            <div id="modalSugerencias" class="modal-horarios">
+              <div class="modal-horarios-content">
+                <span id="cerrarSugerencias" class="close-horarios">&times;</span>
+                <h2>Sugerencias de Optimización</h2>
+                <ul id="listaSugerencias"></ul>
               </div>
+            </div>
 
-              <!-- Modal para Estadísticas Mejoradas -->
-              <div id="modalEstadisticas" class="modal-horarios">
-                <div class="modal-horarios-content">
-                  <span id="cerrarEstadisticas" class="close-horarios">&times;</span>
-                  <h2>Turnos - Estadísticas</h2>
+            <!-- Modal para Estadísticas Mejoradas -->
+            <div id="modalEstadisticas" class="modal-horarios">
+              <div class="modal-horarios-content">
+                <span id="cerrarEstadisticas" class="close-horarios">&times;</span>
+                <h2>Turnos - Estadísticas</h2>
 
-                  <!-- Tarjetas de Métricas -->
-                  <div class="stats-cards">
-                    <div class="stats-card">
-                      <h3>Total Turnos</h3>
-                      <p id="total-turnos">0</p>
-                    </div>
-                    <div class="stats-card">
-                      <h3>Turno más usado</h3>
-                      <p id="turno-mas-usado">-</p>
-                    </div>
-                    <div class="stats-card">
-                      <h3>Turno menos usado</h3>
-                      <p id="turno-menos-usado">-</p>
-                    </div>
+                <!-- Tarjetas de Métricas -->
+                <div class="stats-cards">
+                  <div class="stats-card">
+                    <h3>Total Turnos</h3>
+                    <p id="total-turnos">0</p>
                   </div>
-
-                  <!-- Tabla de Turnos por Empleado -->
-                  <h3>Distribución de Turnos por Empleado</h3>
-                  <table class="tabla-turnos-empleados">
-                    <thead>
-                      <tr>
-                        <th>Empleado</th>
-                        <th>Turno más asignado</th>
-                        <th>Turno menos asignado</th>
-                      </tr>
-                    </thead>
-                    <tbody id="tabla-turnos-empleados">
-                      <!-- Se llenará dinámicamente con JS -->
-                    </tbody>
-                  </table>
-
-                  <!-- Contenedor de Gráficos -->
-                  <div class="charts-container">
-                    <h3>Distribución de Turnos</h3>
-                    <canvas id="graficoTurnos"></canvas>
-
-                    <h3>Carga de Trabajo por Empleado</h3>
-                    <canvas id="graficoEmpleados"></canvas>
-
-                    <h3>Tendencias de Asignación de Turnos</h3>
-                    <canvas id="graficoTendencias"></canvas>
+                  <div class="stats-card">
+                    <h3>Turno más usado</h3>
+                    <p id="turno-mas-usado">-</p>
                   </div>
+                  <div class="stats-card">
+                    <h3>Turno menos usado</h3>
+                    <p id="turno-menos-usado">-</p>
+                  </div>
+                </div>
+
+                <!-- Tabla de Turnos por Empleado -->
+                <h3>Distribución de Turnos por Empleado</h3>
+                <table class="tabla-turnos-empleados">
+                  <thead>
+                    <tr>
+                      <th>Empleado</th>
+                      <th>Turno más asignado</th>
+                      <th>Turno menos asignado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-turnos-empleados">
+                    <!-- Se llenará dinámicamente con JS -->
+                  </tbody>
+                </table>
+
+                <!-- Contenedor de Gráficos -->
+                <div class="charts-container">
+                  <h3>Distribución de Turnos</h3>
+                  <canvas id="graficoTurnos"></canvas>
+
+                  <h3>Carga de Trabajo por Empleado</h3>
+                  <canvas id="graficoEmpleados"></canvas>
+
+                  <h3>Tendencias de Asignación de Turnos</h3>
+                  <canvas id="graficoTendencias"></canvas>
                 </div>
               </div>
             </div>
           </div>
-        </section>
-
-        <!-- Sección Empleados -->
-        <section class="employees">
-          <h2>Equipo Noc</h2>
-          <div class="employee-cards">
-            <div class="employee-card">
-              <img src="https://via.placeholder.com/120" alt="Sergio Castillo" class="employee-photo" />
-              <h3 class="employee-name">Sergio Castillo</h3>
-              <p class="employee-role">Operador NOC</p>
-              <input type="file" accept="image/*" class="photo-input" style="display: none;">
-              <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-            </div>
-            <div class="employee-card">
-              <img src="https://via.placeholder.com/120" alt="Ignacio Aburto" class="employee-photo" />
-              <h3 class="employee-name">Ignacio Aburto</h3>
-              <p class="employee-role">Operador NOC</p>
-              <input type="file" accept="image/*" class="photo-input" style="display: none;">
-              <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-            </div>
-            <div class="employee-card">
-              <img src="https://via.placeholder.com/120" alt="Claudio Bustamante" class="employee-photo" />
-              <h3 class="employee-name">Claudio Bustamante</h3>
-              <p class="employee-role">Operador NOC</p>
-              <input type="file" accept="image/*" class="photo-input" style="display: none;">
-              <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-            </div>
-            <div class="employee-card">
-              <img src="https://via.placeholder.com/120" alt="Julio Oliva" class="employee-photo" />
-              <h3 class="employee-name">Julio Oliva</h3>
-              <p class="employee-role">Operador NOC</p>
-              <input type="file" accept="image/*" class="photo-input" style="display: none;">
-              <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-            </div>
-            <div class="employee-card">
-              <img src="https://via.placeholder.com/120" alt="Gabriel Trujillo" class="employee-photo" />
-              <h3 class="employee-name">Gabriel Trujillo</h3>
-              <p class="employee-role">Operador NOC</p>
-              <input type="file" accept="image/*" class="photo-input" style="display: none;">
-              <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-            </div>
-            <div class="employee-card">
-              <img src="https://via.placeholder.com/120" alt="Cristian Oyarzo" class="employee-photo" />
-              <h3 class="employee-name">Cristian Oyarzo</h3>
-              <p class="employee-role">Operador NOC</p>
-              <input type="file" accept="image/*" class="photo-input" style="display: none;">
-              <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-            </div>
-          </div>
-        </section>
       </div>
-    </main>
+      </section>
 
-    <footer>
-      <p>PatagoniaIP SPA - Todos los derechos reservados</p>
-    </footer>
+      <!-- Sección Empleados -->
+      <section class="employees">
+        <h2>Equipo Noc</h2>
+        <div class="employee-cards">
+          <div class="employee-card">
+            <img src="https://via.placeholder.com/120" alt="Sergio Castillo" class="employee-photo" />
+            <h3 class="employee-name">Sergio Castillo</h3>
+            <p class="employee-role">Operador NOC</p>
+            <input type="file" accept="image/*" class="photo-input" style="display: none;">
+            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
+          </div>
+          <div class="employee-card">
+            <img src="https://via.placeholder.com/120" alt="Ignacio Aburto" class="employee-photo" />
+            <h3 class="employee-name">Ignacio Aburto</h3>
+            <p class="employee-role">Operador NOC</p>
+            <input type="file" accept="image/*" class="photo-input" style="display: none;">
+            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
+          </div>
+          <div class="employee-card">
+            <img src="https://via.placeholder.com/120" alt="Claudio Bustamante" class="employee-photo" />
+            <h3 class="employee-name">Claudio Bustamante</h3>
+            <p class="employee-role">Operador NOC</p>
+            <input type="file" accept="image/*" class="photo-input" style="display: none;">
+            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
+          </div>
+          <div class="employee-card">
+            <img src="https://via.placeholder.com/120" alt="Julio Oliva" class="employee-photo" />
+            <h3 class="employee-name">Julio Oliva</h3>
+            <p class="employee-role">Operador NOC</p>
+            <input type="file" accept="image/*" class="photo-input" style="display: none;">
+            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
+          </div>
+          <div class="employee-card">
+            <img src="https://via.placeholder.com/120" alt="Gabriel Trujillo" class="employee-photo" />
+            <h3 class="employee-name">Gabriel Trujillo</h3>
+            <p class="employee-role">Operador NOC</p>
+            <input type="file" accept="image/*" class="photo-input" style="display: none;">
+            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
+          </div>
+          <div class="employee-card">
+            <img src="https://via.placeholder.com/120" alt="Cristian Oyarzo" class="employee-photo" />
+            <h3 class="employee-name">Cristian Oyarzo</h3>
+            <p class="employee-role">Operador NOC</p>
+            <input type="file" accept="image/*" class="photo-input" style="display: none;">
+            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
+          </div>
+        </div>
+      </section>
+  </div>
+  </main>
+
+  <footer>
+    <p>PatagoniaIP SPA - Todos los derechos reservados</p>
+  </footer>
   </div>
 
   <!-- Modal Calendario Guardado -->
