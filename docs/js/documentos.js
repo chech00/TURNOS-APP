@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             firebase.auth().signOut().then(() => {
+                localStorage.removeItem('userRole');
                 window.location.href = "login.html";
             }).catch(error => {
                 console.error("Error al cerrar sesión:", error);

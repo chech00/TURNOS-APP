@@ -5,9 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asignación de Turnos</title>
-  <link rel="stylesheet" href="./css/styles.css?v=7" />
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./css/styles.css?v=8" />
+  <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script defer src="./js/auto-logout.js"></script>
 </head>
 
 <body>
@@ -63,7 +68,20 @@
         <i data-lucide="panel-left"></i>
       </button>
       <h1>Calendario de Turnos</h1>
-      <p id="welcome-message" class="welcome-message">Bienvenido, [nombre o correo]</p>
+      <!-- Premium User Profile Header -->
+      <div class="user-profile-header">
+        <div class="user-avatar">
+          <i data-lucide="user"></i>
+        </div>
+        <div class="user-details">
+          <span class="user-name" id="user-display-name">Usuario</span>
+          <span class="user-email" id="user-display-email">email@example.com</span>
+        </div>
+        <div class="user-role-badge" id="user-role-badge">
+          <i data-lucide="shield"></i>
+          <span id="user-role-text">Usuario</span>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -266,10 +284,10 @@
 
   </div>
 
-  <!-- Cargar Firebase desde CDN -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Cargar Firebase desde CDN (Deferred) -->
+  <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <!-- Error Handler for Debugging -->
   <script>
@@ -284,70 +302,117 @@
   <script type="module" src="./js/script.js"></script>
 
   <script type="module">
-    // Importar firebase.js solo para que se ejecute y asigne window.auth / window.db
-    import './js/firebase.js';
+    // Modulo de incialización optimizado
+    import { auth, db } from './js/firebase.js';
 
-    // Función para iniciar la verificación una vez que window.auth esté disponible
-    function initAuthCheck() {
-      // Intentar obtener auth y db de window o del global firebase
-      const authInstance = window.auth || (window.firebase ? firebase.auth() : null);
-      const dbInstance = window.db || (window.firebase ? firebase.firestore() : null);
-
-      if (!authInstance || !dbInstance) {
-        console.log("Auth/DB no disponibles aún, reintentando...");
-        setTimeout(initAuthCheck, 100);
-        return;
+    function startApp() {
+      // 1. Optimización: Chequeo inmediato de caché para mostrar UI instantáneamente
+      const cachedRole = localStorage.getItem('userRole');
+      if (cachedRole === 'admin' || cachedRole === 'superadmin') {
+        // Mostrar UI inmediatamente basado en caché
+        document.body.classList.add("is-admin");
+        const loader = document.getElementById("page-loader");
+        if (loader) loader.style.display = "none";
+        const sidebar = document.getElementById("sidebar");
+        if (sidebar) sidebar.style.display = "";
+        const mainContent = document.getElementById("main-content");
+        if (mainContent) mainContent.style.display = "";
+        if (cachedRole === "superadmin") {
+          const liRegistros = document.getElementById("li-registros");
+          if (liRegistros) liRegistros.style.display = "block";
+        }
       }
 
-      authInstance.onAuthStateChanged(async (user) => {
+      // 2. Verificación de Seguridad en Segundo Plano
+      auth.onAuthStateChanged(async (user) => {
         if (!user) {
           window.location.href = "login.html";
           return;
         }
 
         try {
-          const userDoc = await dbInstance.collection("userRoles").doc(user.uid).get();
+          const userDoc = await db.collection("userRoles").doc(user.uid).get();
           if (!userDoc.exists) {
-            authInstance.signOut();
+            auth.signOut();
+            localStorage.removeItem('userRole'); // Limpiar caché si ya no existe
             window.location.href = "login.html";
             return;
           }
           const userData = userDoc.data();
           const userRole = userData.rol;
 
-          // Verificar rol
+          // Actualizar caché con el dato fresco
+          localStorage.setItem('userRole', userRole);
+
+          // Verificar rol (Redundante si la caché era correcta, pero vital si cambió)
           if (window.location.pathname.includes("index.html") && userRole !== "admin" && userRole !== "superadmin") {
             window.location.href = "user.html";
             return;
           }
 
-          // Si llegamos aquí, es admin o superadmin. Mostrar contenido.
-          document.body.classList.add("is-admin");
+          // ============================================================
+          // ACTUALIZAR USER PROFILE HEADER
+          // ============================================================
+          const nameElement = document.getElementById('user-display-name');
+          const emailElement = document.getElementById('user-display-email');
+          const roleBadge = document.getElementById('user-role-badge');
+          const roleText = document.getElementById('user-role-text');
 
-          const loader = document.getElementById("page-loader");
-          if (loader) loader.style.display = "none";
+          if (nameElement && emailElement && roleBadge && roleText) {
+            // Nombre: extraer de email si no hay displayName
+            const displayName = user.displayName || user.email.split('@')[0];
+            nameElement.textContent = displayName;
+            emailElement.textContent = user.email;
 
-          const sidebar = document.getElementById("sidebar");
-          if (sidebar) sidebar.style.display = "";
+            // Role badge mapping
+            const roleMap = {
+              'user': { text: 'Usuario', icon: 'user', class: '' },
+              'admin': { text: 'Admin', icon: 'shield-check', class: 'admin' },
+              'superadmin': { text: 'Super Admin', icon: 'crown', class: 'superadmin' }
+            };
 
-          const mainContent = document.getElementById("main-content");
-          if (mainContent) mainContent.style.display = "";
+            const roleInfo = roleMap[userRole] || roleMap['user'];
+            roleText.textContent = roleInfo.text;
+            roleBadge.className = `user-role-badge ${roleInfo.class}`;
 
-          if (userRole === "superadmin") {
-            const liRegistros = document.getElementById("li-registros");
-            if (liRegistros) {
-              liRegistros.style.display = "block";
+            // Update icon
+            const roleIcon = roleBadge.querySelector('i');
+            if (roleIcon) {
+              roleIcon.setAttribute('data-lucide', roleInfo.icon);
+              if (window.lucide) window.lucide.createIcons();
+            }
+
+            console.log('✅ User profile updated:', displayName, '(' + userRole + ')');
+          }
+          // ============================================================
+
+          // Si NO teníamos caché (primera carga) o si la caché estaba desactualizada, actualizar UI ahora
+          if (!cachedRole || cachedRole !== userRole) {
+            document.body.classList.add("is-admin");
+            const loader = document.getElementById("page-loader");
+            if (loader) loader.style.display = "none";
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar) sidebar.style.display = "";
+            const mainContent = document.getElementById("main-content");
+            if (mainContent) mainContent.style.display = "";
+
+            if (userRole === "superadmin") {
+              const liRegistros = document.getElementById("li-registros");
+              if (liRegistros) liRegistros.style.display = "block";
             }
           }
         } catch (error) {
           console.error("Error verificando rol:", error);
-          alert("Error verificando permisos. Intente recargar.");
+          // Si falla la red pero teníamos caché, el usuario puede ver la UI (aunque quizás no guardar cambios)
+          if (!cachedRole) {
+            alert("Error de conexión verificando permisos. Intente recargar.");
+          }
         }
       });
     }
 
-    // Iniciar chequeo
-    initAuthCheck();
+    // Iniciar app
+    startApp();
 
     lucide.createIcons();
   </script>

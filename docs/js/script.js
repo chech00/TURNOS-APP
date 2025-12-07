@@ -1693,6 +1693,7 @@ document.addEventListener("DOMContentLoaded", () => {
       inactivityTimer = setTimeout(() => {
         console.log("Cerrando sesión por inactividad en el frontend");
         firebase.auth().signOut().then(() => {
+          localStorage.removeItem('userRole');
           window.location.href = "login.html";
         });
       }, ONE_MINUTE);

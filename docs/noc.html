@@ -5,14 +5,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Turnos Noc - Calendario de Turnos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="./css/styles.css">
   <link rel="stylesheet" href="./css/noc.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script defer src="./js/auto-logout.js"></script>
 </head>
 
 <body>
@@ -121,67 +126,8 @@
             </tbody>
           </table>
 
-          <!-- Tabla de Horas Extras (Diseño de Tarjetas) -->
-          <div class="horas-extras-wrapper admin-only" style="margin-top: 2rem;">
-            <h3
-              style="margin-bottom: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
-              <i data-lucide="clock" style="color: var(--accent-color);"></i>
-              Control de Horas Extras <span style="font-size: 0.9rem; opacity: 0.7; font-weight: normal;">(26 mes
-                anterior - 25 mes actual)</span>
-            </h3>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h3 style="color: #fff; margin: 0;">Control Hrs Extras 2026</h3>
-              <button id="btnExportarExtras" class="btn-horarios admin-only"
-                style="background-color: #2ecc71; color: white; display: flex; gap: 5px; padding: 0.5rem 1rem;">
-                <i data-lucide="file-down"></i> Exportar Reporte
-              </button>
-            </div>
-
-            <div class="overtime-cards-container">
-              <!-- Card Sergio -->
-              <div class="overtime-card">
-                <div class="card-icon-wrapper" style="background: rgba(74, 144, 226, 0.2); color: #4A90E2;">
-                  <i data-lucide="user"></i>
-                </div>
-                <div class="card-content">
-                  <h4>Sergio Castillo</h4>
-                  <div class="card-stats">
-                    <div class="stat-box">
-                      <span class="stat-label">Turnos</span>
-                      <span class="stat-value" id="count-sergio">0</span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-box">
-                      <span class="stat-label">Horas Totales</span>
-                      <span class="stat-value highlight" id="hours-sergio">0</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Ignacio -->
-              <div class="overtime-card">
-                <div class="card-icon-wrapper" style="background: rgba(44, 62, 80, 0.2); color: #aab7c4;">
-                  <i data-lucide="user"></i>
-                </div>
-                <div class="card-content">
-                  <h4>Ignacio Aburto</h4>
-                  <div class="card-stats">
-                    <div class="stat-box">
-                      <span class="stat-label">Turnos</span>
-                      <span class="stat-value" id="count-ignacio">0</span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-box">
-                      <span class="stat-label">Horas Totales</span>
-                      <span class="stat-value highlight" id="hours-ignacio">0</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- Reporte de Horas Extras -->
+          <div id="overtime-report-container" class="admin-only" style="margin-top: 2rem;"></div>
         </section>
 
         <!-- Sección Turnos y Backup -->
@@ -237,9 +183,9 @@
             </select>
 
             <div class="backup-controls">
-              <button id="btnCargar" class="btn-cargar admin-only"><i data-lucide="upload"></i> Cargar
+              <button id="btnCargar" class="btn-cargar"><i data-lucide="upload"></i> Cargar
                 Calendario</button>
-              <button id="btnVerHorarios" class="btn-horarios admin-only"><i data-lucide="clock"></i> Ver Horarios de
+              <button id="btnVerHorarios" class="btn-horarios"><i data-lucide="clock"></i> Ver Horarios de
                 Turnos</button>
               <button id="btnGuardar" class="btn-guardar admin-only"><i data-lucide="save"></i> Guardar
                 Calendario</button>

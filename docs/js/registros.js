@@ -18,8 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const userDoc = await db.collection("userRoles").doc(user.uid).get();
     if (!userDoc.exists) {
       // Sin documento => rol no asignado
-      auth.signOut();
-      window.location.href = "login.html";
+      auth.signOut().then(() => {
+        localStorage.removeItem('userRole');
+        window.location.href = "login.html";
+      });
       return;
     }
 
@@ -45,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       auth.signOut().then(() => {
+        localStorage.removeItem('userRole');
         window.location.href = "login.html";
       }).catch(err => console.error("Error al cerrar sesión:", err));
     });

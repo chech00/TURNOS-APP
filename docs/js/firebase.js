@@ -21,3 +21,5 @@ window.secondaryAuth = secondaryApp.auth();
 
 window.auth = auth;
 window.db = db;
+
+export { auth, db };

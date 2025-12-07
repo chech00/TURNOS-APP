@@ -378,7 +378,10 @@ function configurarLogout() {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       auth.signOut()
-        .then(() => { window.location.href = "login.html"; })
+        .then(() => {
+          localStorage.removeItem('userRole');
+          window.location.href = "login.html";
+        })
         .catch((error) => { console.error("Error al cerrar sesión:", error); });
     });
   }
@@ -994,17 +997,38 @@ function todosLosDiasRellenos() {
 // -----------------------------------------------------------------------------
 // CALCULO DE HORAS EXTRAS
 // -----------------------------------------------------------------------------
+// Mapeo de Turnos a Empleados (Configurable)
+const SHIFT_MAP = {
+  "S": "Sergio Castillo",
+  "I": "Ignacio Aburto",
+  "M": "Manuel (Demo)", // Ejemplo de escalabilidad
+  "J": "Julio (Demo)"
+};
+
 async function calcularHorasExtras(date) {
   const currentYear = date.getFullYear();
   const currentMonth = date.getMonth(); // 0-indexed
+
+  // Estructura de resultados dinámica
+  const reportData = {};
+
+  // Inicializar contadores para empleados conocidos
+  Object.values(SHIFT_MAP).forEach(name => {
+    reportData[name] = { count: 0, hours: 0 };
+  });
+
+  // Helper para sumar turno
+  const sumarTurno = (turno) => {
+    const empleado = SHIFT_MAP[turno];
+    if (empleado && reportData[empleado]) {
+      reportData[empleado].count++;
+    }
+  };
 
   // 1. Obtener datos del mes anterior (para contar del 26 al final)
   const prevDate = new Date(currentYear, currentMonth - 1, 1);
   const prevKey = obtenerClaveMes(prevDate);
   const prevDataStr = localStorage.getItem(prevKey);
-
-  let countSergioPrev = 0;
-  let countIgnacioPrev = 0;
 
   let prevData = null;
 
@@ -1023,8 +1047,6 @@ async function calcularHorasExtras(date) {
       const doc = await db.collection("calendarios").doc(prevKey).get();
       if (doc.exists) {
         prevData = doc.data();
-        // Opcional: guardar en localStorage para la próxima
-        // localStorage.setItem(prevKey, JSON.stringify(prevData));
       }
     } catch (error) {
       console.error("Error obteniendo mes anterior de Firestore:", error);
@@ -1037,15 +1059,13 @@ async function calcularHorasExtras(date) {
       Object.entries(turnos).forEach(([dayStr, turno]) => {
         const day = parseInt(dayStr, 10);
         if (day >= 26) {
-          if (turno === "S") countSergioPrev++;
-          if (turno === "I") countIgnacioPrev++;
+          sumarTurno(turno);
         }
       });
     };
 
     // A) JSON Nuevo (prioridad)
     if (prevData.assignments || prevData.feriados || prevData.nocturno) {
-      // El usuario pidió SOLO contar en el calendario de Feriados
       if (prevData.feriados) {
         contarEnObjeto(prevData.feriados);
       }
@@ -1059,18 +1079,13 @@ async function calcularHorasExtras(date) {
         const day = parseInt(btn.getAttribute("data-day"), 10);
         const turno = btn.textContent.trim();
         if (day >= 26) {
-          if (turno === "S") countSergioPrev++;
-          if (turno === "I") countIgnacioPrev++;
+          sumarTurno(turno);
         }
       });
     }
   }
 
   // 2. Obtener datos del mes actual (del 1 al 25) del DOM actual
-  // RESTRICCIÓN: Solo buscar en #feriados-calendar
-  let countSergioCurr = 0;
-  let countIgnacioCurr = 0;
-
   const buttonsCurr = document.querySelectorAll("#feriados-calendar button.calendar-day");
   buttonsCurr.forEach(btn => {
     const day = parseInt(btn.getAttribute("data-day"), 10);
@@ -1078,27 +1093,197 @@ async function calcularHorasExtras(date) {
 
     // Contamos solo hasta el 25
     if (day <= 25) {
-      if (turno === "S") countSergioCurr++;
-      if (turno === "I") countIgnacioCurr++;
+      sumarTurno(turno);
     }
   });
 
-  // 3. Totales
-  const totalSergio = countSergioPrev + countSergioCurr;
-  const totalIgnacio = countIgnacioPrev + countIgnacioCurr;
+  // 3. Calcular totales y renderizar
+  Object.keys(reportData).forEach(name => {
+    reportData[name].hours = reportData[name].count * 5; // 5 horas por turno
+  });
 
-  // 4. Actualizar UI
-  const elCountSergio = document.getElementById("count-sergio");
-  const elHoursSergio = document.getElementById("hours-sergio");
-  const elCountIgnacio = document.getElementById("count-ignacio");
-  const elHoursIgnacio = document.getElementById("hours-ignacio");
+  // Renderizar la nueva tabla
+  renderOvertimeTable(reportData, date);
 
-  if (elCountSergio) elCountSergio.textContent = totalSergio;
-  if (elHoursSergio) elHoursSergio.textContent = totalSergio * 5; // 5 horas por turno
-  if (elCountIgnacio) elCountIgnacio.textContent = totalIgnacio;
-  if (elCountIgnacio) elCountIgnacio.textContent = totalIgnacio;
-  if (elHoursIgnacio) elHoursIgnacio.textContent = totalIgnacio * 5;
+  return reportData; // Retornar para uso externo (exportación)
 }
+
+// Renderizar la Nueva Tabla de Reporte (Premium Dashboard)
+function renderOvertimeTable(data, date) {
+  const container = document.getElementById("overtime-report-container");
+  if (!container) return;
+
+  // Calcular periodo para el título
+  const currentYear = date.getFullYear();
+  const currentMonth = date.getMonth();
+  const prevDate = new Date(currentYear, currentMonth - 1, 26);
+  const currEndDate = new Date(currentYear, currentMonth, 25);
+
+  const options = { month: 'short', day: 'numeric' };
+  const periodoStr = `${prevDate.toLocaleDateString('es-ES', options)} - ${currEndDate.toLocaleDateString('es-ES', options)}`;
+
+  // -------------------------
+  // CALCULO DE MÉTRICAS
+  // -------------------------
+  let totalHorasGlobal = 0;
+  let totalTurnosGlobal = 0;
+  let topContributorName = "N/A";
+  let topContributorHours = -1;
+
+  const validEntries = [];
+  const empleadosPrincipales = ["Sergio Castillo", "Ignacio Aburto"];
+
+  Object.entries(data).forEach(([name, stats]) => {
+    if (stats.count > 0 || empleadosPrincipales.includes(name)) {
+      validEntries.push({ name, ...stats });
+      totalHorasGlobal += stats.hours;
+      totalTurnosGlobal += stats.count;
+
+      if (stats.hours > topContributorHours) {
+        topContributorHours = stats.hours;
+        topContributorName = name;
+      }
+    }
+  });
+
+  // Si no hay horas, reset
+  if (totalHorasGlobal === 0) topContributorName = "-";
+
+  // -------------------------
+  // CONSTRUCCIÓN DEL HTML
+  // -------------------------
+
+  // 1. Header
+  let html = `
+    <div class="report-header">
+      <div class="report-title-group">
+        <h3>
+          <i data-lucide="bar-chart-2" style="color: #7796cb;"></i>
+          Control de Horas Extras
+        </h3>
+        <span class="report-period">
+          <i data-lucide="calendar" style="width: 14px; display: inline-block; vertical-align: middle;"></i> 
+          ${periodoStr}
+        </span>
+      </div>
+      <button onclick="exportarReporteHorasExtras()" class="btn-premium-export">
+        <i data-lucide="file-down"></i> Exportar PDF
+      </button>
+    </div>
+  `;
+
+  // 2. Summary Cards
+  html += `
+    <div class="summary-cards-grid">
+      <!-- Card 1: Total Horas -->
+      <div class="summary-card accent-purple">
+        <div class="card-header">
+          <div class="card-icon"><i data-lucide="clock"></i></div>
+          <span class="card-label">Total Horas</span>
+        </div>
+        <div class="card-value">${totalHorasGlobal}</div>
+        <div class="card-subtext">Horas acumuladas este periodo</div>
+      </div>
+
+      <!-- Card 2: Top Contributor -->
+      <div class="summary-card accent-blue">
+        <div class="card-header">
+          <div class="card-icon"><i data-lucide="award"></i></div>
+          <span class="card-label">Mayor Colaborador</span>
+        </div>
+        <div class="card-value" style="font-size: 1.5rem;">${topContributorName.split(" ")[0]}</div>
+        <div class="card-subtext">${topContributorHours > 0 ? topContributorHours + ' horas registradas' : 'Sin registros'}</div>
+      </div>
+
+      <!-- Card 3: Total Turnos -->
+      <div class="summary-card accent-green">
+        <div class="card-header">
+          <div class="card-icon"><i data-lucide="layers"></i></div>
+          <span class="card-label">Turnos Extra</span>
+        </div>
+        <div class="card-value">${totalTurnosGlobal}</div>
+        <div class="card-subtext">Total turnos cubiertos</div>
+      </div>
+    </div>
+  `;
+
+  // 3. Premium Table
+  html += `
+    <div class="premium-table-container">
+      <table class="premium-table">
+        <thead>
+          <tr>
+            <th style="width: 40%;">Empleado</th>
+            <th style="width: 20%; text-align: center;">Turnos</th>
+            <th style="width: 20%; text-align: center;">Horas</th>
+            <th style="width: 20%; text-align: center;">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  validEntries.forEach(entry => {
+    const initials = entry.name.split(" ").map(n => n[0]).join("").substring(0, 2);
+
+    // Determinar badge
+    let badgeClass = "normal";
+    let badgeText = "Normal";
+    let icon = "check-circle"; // default
+
+    if (entry.hours >= 20) {
+      badgeClass = "critical";
+      badgeText = "Crítico";
+      icon = "alert-circle";
+    } else if (entry.hours >= 10) {
+      badgeClass = "high";
+      badgeText = "Alto";
+      icon = "alert-triangle";
+    }
+
+    html += `
+      <tr>
+        <td>
+          <div class="employee-cell">
+            <div class="avatar-ring">
+              <div class="avatar-inner">${initials}</div>
+            </div>
+            <div class="employee-info-text">
+              <span class="employee-name-small" style="font-size: 0.95rem; color: #fff;">${entry.name}</span>
+              <span class="employee-role-small">NOC Operator</span>
+            </div>
+          </div>
+        </td>
+        <td style="text-align: center;">
+          <span class="metric-value" style="color: #a5b1c2;">${entry.count}</span>
+        </td>
+        <td style="text-align: center;">
+          <span class="metric-value" style="color: #fff;">${entry.hours}</span><span class="metric-unit"> hrs</span>
+        </td>
+        <td style="text-align: center;">
+          <span class="premium-badge ${badgeClass}">
+            <i data-lucide="${icon}" style="width: 12px;"></i> ${badgeText}
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  // Refrescar iconos
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+
+// Expose globally for onclick
+window.exportarReporteHorasExtras = exportarReporteHorasExtras;
 
 // -----------------------------------------------------------------------------
 // EXPORTAR REPORTE PDF (HORAS EXTRAS)
@@ -1112,6 +1297,7 @@ async function exportarReporteHorasExtras() {
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
 
     // Calcular fechas del periodo (26 mes anterior - 25 mes actual)
     let yearReport = currentDate.getFullYear();
@@ -1129,47 +1315,145 @@ async function exportarReporteHorasExtras() {
 
     const fechaReporte = new Date().toLocaleString("es-CL");
 
-    // Datos del DOM
-    const s_turnos = document.getElementById("count-sergio").textContent || "0";
-    const s_horas = document.getElementById("hours-sergio").textContent || "0";
-    const i_turnos = document.getElementById("count-ignacio").textContent || "0";
-    const i_horas = document.getElementById("hours-ignacio").textContent || "0";
+    // Recalcular datos frescos (Premium)
+    const data = await calcularHorasExtras(currentDate);
 
-    // Header
-    doc.setFontSize(18);
-    doc.text("Reporte de Horas Extras - NOC", 14, 20);
+    // ---------------------------------------------------------
+    // 1. ENCABEZADO CORPORATIVO
+    // ---------------------------------------------------------
+    const colorPrimary = [44, 62, 80];
+    const colorBg = [245, 247, 250];
 
-    doc.setFontSize(12);
-    doc.text(`Periodo: ${periodoStr}`, 14, 30);
-    doc.text(`Fecha de Generación: ${fechaReporte}`, 14, 38);
+    // Fondo del header
+    doc.setFillColor(...colorPrimary);
+    doc.rect(0, 0, pageWidth, 40, 'F');
 
-    // Tabla
-    doc.autoTable({
-      startY: 45,
-      head: [['Empleado', 'Turnos Extra', 'Total Horas (Aprox)']],
-      body: [
-        ['Sergio Castillo', s_turnos, s_horas],
-        ['Ignacio Aburto', i_turnos, i_horas]
-      ],
-      theme: 'grid',
-      styles: { fontSize: 12, cellPadding: 3 },
-      headStyles: { fillColor: [44, 62, 80] }, // Dark Blue
-      columnStyles: {
-        0: { fontStyle: 'bold' }
+    // Título Principal
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text("REPORTE DE HORAS EXTRAS", 14, 25);
+
+    // Subtítulo / Departamento
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(200, 200, 200);
+    doc.text("DEPARTAMENTO DE OPERACIONES NOC", 14, 32);
+
+    // Logo
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text("NOC", pageWidth - 25, 25, { align: 'right' });
+
+    // ---------------------------------------------------------
+    // 2. RESUMEN EJECUTIVO
+    // ---------------------------------------------------------
+    let totalHoras = 0;
+    let totalTurnos = 0;
+    let topEmp = "-";
+    let maxHoras = 0;
+    const empleadosPrincipales = ["Sergio Castillo", "Ignacio Aburto"];
+    const rows = [];
+
+    // Procesar datos
+    Object.entries(data).forEach(([name, stats]) => {
+      if (stats.count > 0 || empleadosPrincipales.includes(name)) {
+        totalHoras += stats.hours;
+        totalTurnos += stats.count;
+        if (stats.hours > maxHoras) {
+          maxHoras = stats.hours;
+          topEmp = name;
+        }
+        rows.push([
+          name,
+          stats.count,
+          stats.hours + " hrs",
+          stats.hours >= 20 ? "CRÍTICO" : (stats.hours >= 10 ? "ALTO" : "NORMAL")
+        ]);
       }
     });
 
-    // Pie de página
-    const finalY = doc.lastAutoTable.finalY + 20;
-    doc.setFontSize(10);
-    doc.text("Este documento sirve como respaldo para el cálculo de nómina.", 14, finalY);
+    // Dibujar cajitas de resumen
+    const startY = 50;
+    const boxWidth = (pageWidth - 28 - 10) / 3;
+    const boxHeight = 25;
 
-    doc.save(`Reporte_Horas_${monthReport + 1}_${yearReport}.pdf`);
-    Swal.fire("Reporte Generado", `Periodo: ${periodoStr}`, "success");
+    const drawCard = (x, label, value) => {
+      doc.setFillColor(...colorBg);
+      doc.setDrawColor(200, 200, 200);
+      doc.roundedRect(x, startY, boxWidth, boxHeight, 3, 3, 'FD');
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...colorPrimary);
+      doc.text(value.toString(), x + 10, startY + 12);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text(label.toUpperCase(), x + 10, startY + 20);
+    };
+
+    drawCard(14, "Total Horas", totalHoras + " hrs");
+    drawCard(14 + boxWidth + 5, "Total Turnos", totalTurnos);
+    drawCard(14 + (boxWidth + 5) * 2, "Mayor Colaborador", topEmp.split(" ")[0]);
+
+    // Información del Periodo
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...colorPrimary);
+    doc.text("DETALLE DEL PERIODO", 14, startY + boxHeight + 15);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Rango: ${periodoStr}`, 14, startY + boxHeight + 22);
+    doc.text(`Generado: ${fechaReporte}`, 14, startY + boxHeight + 27);
+
+    // ---------------------------------------------------------
+    // 3. TABLA DE DETALLE
+    // ---------------------------------------------------------
+    doc.autoTable({
+      startY: startY + boxHeight + 35,
+      head: [['EMPLEADO', 'TURNOS', 'HORAS TOTALES', 'ESTADO']],
+      body: rows,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 6, lineColor: [230, 230, 230], lineWidth: 0.1 },
+      headStyles: { fillColor: colorPrimary, textColor: 255, fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { textColor: 50 },
+      columnStyles: {
+        0: { cellWidth: 'auto', fontStyle: 'bold' },
+        1: { halign: 'center', cellWidth: 30 },
+        2: { halign: 'center', cellWidth: 40 },
+        3: { halign: 'center', cellWidth: 40, fontStyle: 'bold' }
+      },
+      alternateRowStyles: { fillColor: [250, 252, 255] },
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.column.index === 3) {
+          const text = data.cell.raw;
+          if (text === 'CRÍTICO') data.cell.styles.textColor = [231, 76, 60];
+          else if (text === 'ALTO') data.cell.styles.textColor = [241, 196, 15];
+          else data.cell.styles.textColor = [46, 204, 113];
+        }
+      }
+    });
+
+    // -----------------------------------------------------------------------------
+    // 4. PIE DE PÁGINA (Sin firmas)
+    // -----------------------------------------------------------------------------
+    const finalY = doc.lastAutoTable.finalY || 150;
+
+    // Línea de cierre
+    doc.setDrawColor(...colorPrimary);
+    doc.setLineWidth(0.5);
+    doc.line(14, finalY + 10, pageWidth - 14, finalY + 10);
+
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Este documento es generado automáticamente por el sistema de gestión NOC.", 14, finalY + 18);
+    doc.text("Confidencial - Uso Interno", pageWidth - 14, finalY + 18, { align: 'right' });
+
+    // Guardar
+    doc.save(`Reporte_NOC_${yearReport}_${monthReport + 1}.pdf`);
 
   } catch (error) {
-    console.error("Error generando PDF:", error);
-    Swal.fire("Error", "No se pudo generar el reporte.", "error");
+    console.error("Error al generar PDF:", error);
+    Swal.fire("Error", "No se pudo generar el reporte PDF: " + error.message, "error");
   }
 }
 
@@ -1186,57 +1470,61 @@ document.addEventListener("DOMContentLoaded", () => {
 let isSelecting = false;
 let isDeselecting = false;
 
-function adminMousedown(e) {
+// Modificado para recibir un target explícito (Event Delegation)
+function adminMousedown(e, targetElement) {
+  const el = targetElement || this; // Fallback compatibilidad
+
   // Botón Izquierdo (0): Seleccionar (acumulativo)
   if (e.button === 0) {
     isSelecting = true;
-    if (!this.classList.contains("selected")) {
-      this.classList.add("selected");
-      selectedDays.push(this);
+    if (!el.classList.contains("selected")) {
+      el.classList.add("selected");
+      selectedDays.push(el);
     }
   }
-  // Botón Derecho (2): Borrar (Goma de borrar)
   // Botón Derecho (2): Borrar (Goma de borrar)
   else if (e.button === 2) {
     isDeselecting = true;
 
     // 1. Quitar de la selección si estaba (ANTES de borrar clases)
-    if (this.classList.contains("selected")) {
-      this.classList.remove("selected");
-      selectedDays = selectedDays.filter((el) => el !== this);
+    if (el.classList.contains("selected")) {
+      el.classList.remove("selected");
+      selectedDays = selectedDays.filter((item) => item !== el);
     }
 
     // 2. Borrar contenido y estilos
-    this.textContent = "";
-    this.innerHTML = "";
-    this.removeAttribute("style");
-    this.className = "calendar-day w-full h-full";
-    this.removeAttribute("title");
+    el.textContent = "";
+    el.innerHTML = "";
+    el.removeAttribute("style");
+    el.className = "calendar-day w-full h-full";
+    el.removeAttribute("title");
 
     scheduleFirestoreUpdate();
   }
 }
 
-function adminMouseover(e) {
+function adminMouseover(e, targetElement) {
+  const el = targetElement || this;
+
   if (usuarioEsAdmin) {
     if (isSelecting) {
-      if (!this.classList.contains("selected")) {
-        this.classList.add("selected");
-        selectedDays.push(this);
+      if (!el.classList.contains("selected")) {
+        el.classList.add("selected");
+        selectedDays.push(el);
       }
     } else if (isDeselecting) {
       // 1. Quitar de la selección si estaba (ANTES de borrar clases)
-      if (this.classList.contains("selected")) {
-        this.classList.remove("selected");
-        selectedDays = selectedDays.filter((el) => el !== this);
+      if (el.classList.contains("selected")) {
+        el.classList.remove("selected");
+        selectedDays = selectedDays.filter((item) => item !== el);
       }
 
       // 2. Borrar al arrastrar (Goma de borrar)
-      this.textContent = "";
-      this.innerHTML = "";
-      this.removeAttribute("style");
-      this.className = "calendar-day w-full h-full";
-      this.removeAttribute("title");
+      el.textContent = "";
+      el.innerHTML = "";
+      el.removeAttribute("style");
+      el.className = "calendar-day w-full h-full";
+      el.removeAttribute("title");
 
       scheduleFirestoreUpdate();
     }
@@ -1256,13 +1544,55 @@ function adminMouseup(e) {
   }
 }
 
-function attachAdminCellListeners() {
-  document.querySelectorAll(".calendar-day").forEach((cell) => {
-    cell.addEventListener("mousedown", adminMousedown);
-    cell.addEventListener("mouseover", adminMouseover);
-    cell.addEventListener("contextmenu", adminContextmenu);
+// -----------------------------------------------------------------------------
+// REFACTOR: Event Delegation for Admin Actions (Robusto a re-renders)
+// -----------------------------------------------------------------------------
+function setupAdminEventDelegation() {
+  console.log("🔧 setupAdminEventDelegation: Inicializando event delegation");
+  const container = document.body; // Delegar en body para atrapar todo
+
+  container.addEventListener("mousedown", (e) => {
+    console.log("🖱️ Click detectado. usuarioEsAdmin =", usuarioEsAdmin);
+    if (!usuarioEsAdmin) {
+      console.warn("⛔ Click bloqueado: usuario no es admin");
+      return;
+    }
+    const target = e.target.closest(".calendar-day");
+    console.log("🎯 Target encontrado:", target);
+    if (target) {
+      console.log("✅ Ejecutando adminMousedown");
+      adminMousedown(e, target);
+    }
   });
-  document.addEventListener("mouseup", adminMouseup);
+
+  container.addEventListener("mouseover", (e) => {
+    if (!usuarioEsAdmin) return;
+    const target = e.target.closest(".calendar-day");
+    if (target) {
+      adminMouseover(e, target);
+    }
+  });
+
+  container.addEventListener("contextmenu", (e) => {
+    const target = e.target.closest(".calendar-day");
+    if (target && usuarioEsAdmin) {
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (usuarioEsAdmin) {
+      isSelecting = false;
+      isDeselecting = false;
+    }
+  });
+
+  console.log("✅ Event delegation configurado correctamente");
+}
+
+// Deprecated: No longer needed individually
+function attachAdminCellListeners() {
+  // No-op: handled by delegation now
 }
 
 // -----------------------------------------------------------------------------
@@ -1615,10 +1945,10 @@ function subscribeCalendar() {
         updateLockUI();
 
         // Sincronizar empleados después de cargar desde Firestore
-        sincronizarTablasConEmpleados();
+        // sincronizarTablasConEmpleados(); // Function not defined, causing crash
 
         lucide.createIcons();
-        fixShiftTextColors();
+        // fixShiftTextColors(); // Removed: function not defined
         if (usuarioEsAdmin) {
           attachAdminCellListeners();
         }
@@ -1685,6 +2015,7 @@ function scheduleFirestoreUpdate() {
 // 11) EVENTO PRINCIPAL (DOMContentLoaded)
 // -----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", function () {
+  setupAdminEventDelegation();
   configurarSidebar();
   configurarLogout();
 
@@ -1705,6 +2036,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   verificarRolUsuario(function (isAdmin) {
     usuarioEsAdmin = isAdmin;
+    console.log("🔐 Rol verificado. usuarioEsAdmin =", usuarioEsAdmin);
 
     // Actualizar UI de bloqueo tras confirmar rol
     updateLockUI();
@@ -1716,6 +2048,8 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       // Re-create icons for newly exposed elements
       lucide.createIcons();
+      // Attach listeners for cell selection (fix for late auth)
+      // attachAdminCellListeners(); // Removed
     }
 
     // Botón Auto-Asignar (solo admin)

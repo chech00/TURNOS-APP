@@ -6,6 +6,11 @@
    =========================================== */
 
 /* Global Reset & Layout */
+/* HOTFIX: Hide legacy KML button from cached scripts to prevent FOUC */
+#kml-import-btn {
+  display: none !important;
+}
+
 * {
   margin: 0;
   padding: 0;

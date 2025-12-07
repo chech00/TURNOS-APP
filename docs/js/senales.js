@@ -94,6 +94,7 @@ function configurarLogout() {
     logoutBtn.addEventListener("click", () => {
       auth.signOut()
         .then(() => {
+          localStorage.removeItem('userRole'); // Limpiar caché de rol
           window.location.href = "login.html";
         })
         .catch((error) => {
@@ -116,18 +117,17 @@ function cargarNodos() {
 
   // Header with context
   // Header with context and actions
-  let buttonsHtml = `
-      <button onclick="window.KMLService.startWizard()" class="fiber-action-btn kml-btn">
-          <i data-lucide="upload-cloud" style="width:14px;"></i> IMP. KML
-      </button>
-  `;
+  let buttonsHtml = "";
 
   if (usuarioEsAdmin) {
     buttonsHtml += `
-        <button onclick="crearNodo()" class="fiber-action-btn new-node-btn">
-           <i data-lucide="plus-circle" style="width:14px;"></i> NUEVO GABINETE
-        </button>
-      `;
+      <button onclick="window.KMLService.startWizard()" class="fiber-action-btn kml-btn">
+          <i data-lucide="upload-cloud" style="width:14px;"></i> IMP. KML
+      </button>
+      <button onclick="crearNodo()" class="fiber-action-btn new-node-btn">
+         <i data-lucide="plus-circle" style="width:14px;"></i> NUEVO GABINETE
+      </button>
+    `;
   }
 
   fiberContainer.innerHTML = `

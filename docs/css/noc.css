@@ -1008,3 +1008,454 @@ body.is-admin .admin-only {
   width: 20px;
   height: 20px;
 }
+
+/* =========================================
+   OVERTIME REPORT (NEW DESIGN)
+   ========================================= */
+#overtime-report-container {
+  background: var(--color-fondo-secundario);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  overflow-x: auto;
+}
+
+.overtime-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+}
+
+.overtime-table th {
+  text-align: left;
+  padding: 1rem;
+  color: var(--color-texto-secundario);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+
+.overtime-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+  color: var(--color-texto-principal);
+  transition: background 0.2s ease;
+}
+
+.overtime-table tr:last-child td {
+  border-bottom: none;
+}
+
+.overtime-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Employee Cell styling */
+.employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.employee-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-acento-primario);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.9rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.employee-info-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.employee-name-small {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.employee-role-small {
+  font-size: 0.8rem;
+  color: var(--color-texto-secundario);
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-badge.normal {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.status-badge.high {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f1c40f;
+}
+
+.status-badge.critical {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+/* Value styling */
+.metric-value {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-texto-principal);
+}
+
+.metric-unit {
+  font-size: 0.8rem;
+  color: var(--color-texto-secundario);
+  font-weight: normal;
+  margin-left: 2px;
+}
+
+/* =========================================
+   PREMIUM DASHBOARD STYLES (OVERTIME)
+   ========================================= */
+
+/* Container with Glassmorphism */
+#overtime-report-container {
+  background: rgba(30, 39, 46, 0.75) !important;
+  /* Darker, more solid for contrast */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin-top: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background glowing orb effect */
+#overtime-report-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(119, 150, 203, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#overtime-report-container>* {
+  position: relative;
+  z-index: 1;
+}
+
+/* Header & Title */
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.report-title-group h3 {
+  font-family: 'Outfit', var(--font-primary), sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #a5b1c2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.report-period {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #d2dae2;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Summary Cards Grid */
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.summary-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card Gradients for top border */
+.summary-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0.5;
+}
+
+.summary-card.accent-purple .card-icon {
+  background: rgba(155, 89, 182, 0.2);
+  color: #9b59b6;
+}
+
+.summary-card.accent-blue .card-icon {
+  background: rgba(52, 152, 219, 0.2);
+  color: #3498db;
+}
+
+.summary-card.accent-green .card-icon {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.card-label {
+  font-size: 0.9rem;
+  color: #a5b1c2;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+  font-family: 'Outfit', sans-serif;
+}
+
+.card-subtext {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Premium Table Styles */
+.premium-table-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+  /* For border radius */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.premium-table th {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #d2dae2;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.premium-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: #f1f2f6;
+  font-size: 0.95rem;
+  vertical-align: middle;
+  transition: background 0.2s;
+}
+
+.premium-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.premium-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Avatar with ring */
+.avatar-ring {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  padding: 2px;
+  /* Ring thickness */
+  background: linear-gradient(135deg, #7796cb, #a5b1c2);
+  /* Default ring */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #2c3e50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #fff;
+  border: 2px solid #1e272e;
+  /* Gap color */
+}
+
+/* Status Badges */
+.premium-badge {
+  padding: 0.35rem 1rem;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.premium-badge.normal {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.2));
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.premium-badge.high {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.2), rgba(243, 156, 18, 0.2));
+  color: #f1c40f;
+  border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+.premium-badge.critical {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2));
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.2);
+}
+
+/* Export Button */
+.btn-premium-export {
+  background: linear-gradient(135deg, #7796cb 0%, #5a7caf 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(119, 150, 203, 0.3);
+}
+
+.btn-premium-export:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(119, 150, 203, 0.5);
+  filter: brightness(1.1);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.summary-card {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.summary-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.summary-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.summary-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.premium-table-container {
+  animation: fadeInUp 0.5s ease-out 0.4s forwards;
+  opacity: 0;
+}

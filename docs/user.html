@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="./css/styles.css">
   <script src="https://unpkg.com/lucide@latest"></script> <!-- Librería de iconos modernos -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <script defer src="./js/auto-logout.js"></script>
 </head>
 
 <body>
@@ -53,7 +55,20 @@
         <h1>Vista Usuario</h1>
       </div>
       <div class="header-right">
-        <p id="welcome-message" class="welcome-message">Bienvenido</p>
+        <!-- Premium User Profile Header -->
+        <div class="user-profile-header">
+          <div class="user-avatar">
+            <i data-lucide="user"></i>
+          </div>
+          <div class="user-details">
+            <span class="user-name" id="user-display-name">Usuario</span>
+            <span class="user-email" id="user-display-email">email@example.com</span>
+          </div>
+          <div class="user-role-badge" id="user-role-badge">
+            <i data-lucide="shield"></i>
+            <span id="user-role-text">Usuario</span>
+          </div>
+        </div>
       </div>
     </header>
 

@@ -37,6 +37,29 @@ function verificarRolUsuario() {
         // Si es admin, redirigir a index.html
         if (userRole === "admin" || userRole === "superadmin") {
           window.location.href = "index.html";
+        } else {
+          // Usuario normal - actualizar header de perfil
+          const nameElement = document.getElementById('user-display-name');
+          const emailElement = document.getElementById('user-display-email');
+          const roleBadge = document.getElementById('user-role-badge');
+          const roleText = document.getElementById('user-role-text');
+
+          if (nameElement && emailElement && roleBadge && roleText) {
+            const displayName = user.displayName || user.email.split('@')[0];
+            nameElement.textContent = displayName;
+            emailElement.textContent = user.email;
+
+            roleText.textContent = 'Usuario';
+            roleBadge.className = 'user-role-badge';
+
+            const roleIcon = roleBadge.querySelector('i');
+            if (roleIcon) {
+              roleIcon.setAttribute('data-lucide', 'user');
+              if (window.lucide) window.lucide.createIcons();
+            }
+
+            console.log('✅ User profile updated (user view):', displayName);
+          }
         }
       }
     } catch (error) {

@@ -102,6 +102,7 @@ changePasswordForm.addEventListener("submit", async (event) => {
 
     // 6. Cerrar sesión y redirigir al login
     await auth.signOut();
+    localStorage.removeItem("userRole");
     window.location.href = "login.html";
 
   } catch (error) {
