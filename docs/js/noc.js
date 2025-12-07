@@ -1096,8 +1096,89 @@ async function calcularHorasExtras(date) {
   if (elCountSergio) elCountSergio.textContent = totalSergio;
   if (elHoursSergio) elHoursSergio.textContent = totalSergio * 5; // 5 horas por turno
   if (elCountIgnacio) elCountIgnacio.textContent = totalIgnacio;
+  if (elCountIgnacio) elCountIgnacio.textContent = totalIgnacio;
   if (elHoursIgnacio) elHoursIgnacio.textContent = totalIgnacio * 5;
 }
+
+// -----------------------------------------------------------------------------
+// EXPORTAR REPORTE PDF (HORAS EXTRAS)
+// -----------------------------------------------------------------------------
+async function exportarReporteHorasExtras() {
+  if (!window.jspdf) {
+    Swal.fire("Error", "Librería PDF no cargada.", "error");
+    return;
+  }
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Calcular fechas del periodo (26 mes anterior - 25 mes actual)
+    let yearReport = currentDate.getFullYear();
+    let monthReport = currentDate.getMonth(); // 0 = Enero
+
+    // Fecha Inicio: 26 del mes anterior
+    let dateStart = new Date(yearReport, monthReport - 1, 26);
+    // Fecha Fin: 25 del mes actual
+    let dateEnd = new Date(yearReport, monthReport, 25);
+
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    const strStart = dateStart.toLocaleDateString("es-ES", options);
+    const strEnd = dateEnd.toLocaleDateString("es-ES", options);
+    const periodoStr = `Del ${strStart} al ${strEnd}`;
+
+    const fechaReporte = new Date().toLocaleString("es-CL");
+
+    // Datos del DOM
+    const s_turnos = document.getElementById("count-sergio").textContent || "0";
+    const s_horas = document.getElementById("hours-sergio").textContent || "0";
+    const i_turnos = document.getElementById("count-ignacio").textContent || "0";
+    const i_horas = document.getElementById("hours-ignacio").textContent || "0";
+
+    // Header
+    doc.setFontSize(18);
+    doc.text("Reporte de Horas Extras - NOC", 14, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Periodo: ${periodoStr}`, 14, 30);
+    doc.text(`Fecha de Generación: ${fechaReporte}`, 14, 38);
+
+    // Tabla
+    doc.autoTable({
+      startY: 45,
+      head: [['Empleado', 'Turnos Extra', 'Total Horas (Aprox)']],
+      body: [
+        ['Sergio Castillo', s_turnos, s_horas],
+        ['Ignacio Aburto', i_turnos, i_horas]
+      ],
+      theme: 'grid',
+      styles: { fontSize: 12, cellPadding: 3 },
+      headStyles: { fillColor: [44, 62, 80] }, // Dark Blue
+      columnStyles: {
+        0: { fontStyle: 'bold' }
+      }
+    });
+
+    // Pie de página
+    const finalY = doc.lastAutoTable.finalY + 20;
+    doc.setFontSize(10);
+    doc.text("Este documento sirve como respaldo para el cálculo de nómina.", 14, finalY);
+
+    doc.save(`Reporte_Horas_${monthReport + 1}_${yearReport}.pdf`);
+    Swal.fire("Reporte Generado", `Periodo: ${periodoStr}`, "success");
+
+  } catch (error) {
+    console.error("Error generando PDF:", error);
+    Swal.fire("Error", "No se pudo generar el reporte.", "error");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnExportar = document.getElementById("btnExportarExtras");
+  if (btnExportar) {
+    btnExportar.addEventListener("click", exportarReporteHorasExtras);
+  }
+});
 
 // -----------------------------------------------------------------------------
 // 3) Eventos de Admin

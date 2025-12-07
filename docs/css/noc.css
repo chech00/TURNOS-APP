@@ -981,10 +981,8 @@ body.is-admin .admin-only {
 }
 
 .locked-mode .btn-turno,
-.locked-mode .btn-cargar,
 .locked-mode .btn-guardar,
-.locked-mode .btn-auto-asignar,
-.locked-mode .upload-photo-btn {
+.locked-mode .btn-auto-asignar {
   pointer-events: none;
   opacity: 0.4;
   cursor: not-allowed !important;
