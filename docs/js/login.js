@@ -37,6 +37,45 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     console.log("Datos del usuario:", userData); // DEBUG
     console.log("Rol del usuario:", userRole);
 
+    // --- NUEVO: Verificar si la cuenta está suspendida ---
+    try {
+      const userStatusDoc = await db.collection("userStatus").doc(user.uid).get();
+      if (userStatusDoc.exists) {
+        const statusData = userStatusDoc.data();
+        if (statusData.suspended === true) {
+          console.warn("Usuario suspendido intentando acceder:", user.email);
+          await auth.signOut();
+
+          let reason = statusData.suspendedReason || "Razón no especificada"; // Fallback text
+
+          // Usar SweetAlert2 si está disponible (debería estarlo en login.html)
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Cuenta Suspendida',
+              html: `<div style="text-align: center;">
+                                <p>Tu acceso al sistema ha sido restringido.</p>
+                                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; padding: 10px; border-radius: 6px; margin: 15px 0;">
+                                    <strong>Razón:</strong> ${reason}
+                                </div>
+                                <p style="font-size: 0.9em; opacity: 0.7;">Contacta a soporte para más detalles.</p>
+                               </div>`,
+              confirmButtonText: 'Cerrar',
+              confirmButtonColor: '#3b82f6',
+              background: '#1a1a2e', // Match theme roughly just in case css isn't loaded (but it is)
+              color: '#ffffff'
+            });
+          } else {
+            alert("CUENTA SUSPENDIDA\n\nRazón: " + reason);
+          }
+          return; // DETENER LOGIN
+        }
+      }
+    } catch (statusError) {
+      console.error("Warning: Error verificando estado de suspensión:", statusError);
+      // Continuamos (fail-open por robustez, o podría ser fail-close)
+    }
+
     // --- NUEVO: Verificar si debe cambiar contraseña ---
     // DEBUG: Alert removido.
 
@@ -60,15 +99,16 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     console.log("Registro de login guardado en 'loginLogs'.");
 
     // 4) Redirigir según rol
-    //    - superadmin => misma vista que admin (index.html), + menús extra
-    //    - admin => index.html
-    //    - user => user.html
+    //    - Todos los usuarios van a directorio.html como página principal
+    //    - superadmin y admin = directorio con menús admin
+    //    - user = directorio con menús limitados
     if (userRole === "admin" || userRole === "superadmin") {
-      window.location.href = "index.html";
+      localStorage.setItem("userRole", userRole);
+      window.location.href = "directorio.html";
     } else {
-      // Asumimos que el resto de roles => user.html
-      window.location.href = "user.html";
-      localStorage.setItem("lastPage", "user.html");
+      // Asumimos que el resto de roles => user
+      localStorage.setItem("userRole", userRole);
+      window.location.href = "directorio.html";
     }
   } catch (error) {
     console.error("Error en el inicio de sesión:", error);

@@ -4,6 +4,20 @@
 const auth = window.auth;
 const db = window.db;
 
+// Optimistic Loading
+document.addEventListener("DOMContentLoaded", () => {
+  const cachedRole = localStorage.getItem("userRole");
+  if (cachedRole === "superadmin") {
+    const liRegistros = document.getElementById("li-registros");
+    const liUsuarios = document.getElementById("li-usuarios");
+    if (liRegistros) liRegistros.style.display = "block";
+    if (liUsuarios) liUsuarios.style.display = "block";
+    document.body.classList.add("is-admin");
+  } else if (cachedRole === "admin") {
+    document.body.classList.add("is-admin");
+  }
+});
+
 // Variable global para saber si el usuario es admin
 let usuarioEsAdmin = false;
 
@@ -39,8 +53,11 @@ function verificarRolUsuario() {
           }
 
           const liRegistros = document.getElementById("li-registros");
-          if (role === "superadmin" && liRegistros) {
-            liRegistros.style.display = "block";
+          const liUsuarios = document.getElementById("li-usuarios");
+
+          if (role === "superadmin") {
+            if (liRegistros) liRegistros.style.display = "block";
+            if (liUsuarios) liUsuarios.style.display = "block";
           }
 
         } else {

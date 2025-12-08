@@ -1,20 +1,42 @@
 /**
  * Premium User Profile Header - Dynamic Data Population
  * Populates the user profile header with authenticated user information
+ * Includes optimistic UI caching to eliminate "flash" of default values
  */
 
 (function () {
     'use strict';
 
-    /**
-     * Updates the user profile header with current user data
-     * @param {Object} user - Firebase user object
-     * @param {string} role - User role (user/admin/superadmin)
-     */
-    function updateUserProfileHeader(user, role = 'user') {
-        if (!user) return;
+    const PROFILE_CACHE_KEY = 'userProfileCache';
 
-        // Get elements
+    /**
+     * Load cached profile data immediately on page load
+     */
+    function loadCachedProfile() {
+        const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+        if (!cached) return;
+
+        try {
+            const data = JSON.parse(cached);
+            applyProfileToUI(data.displayName, data.email, data.role);
+            console.log('[Profile] Optimistic load from cache:', data.displayName);
+        } catch (e) {
+            console.warn('[Profile] Failed to parse cache:', e);
+        }
+    }
+
+    /**
+     * Save profile data to cache
+     */
+    function cacheProfileData(displayName, email, role) {
+        const data = { displayName, email, role, timestamp: Date.now() };
+        localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(data));
+    }
+
+    /**
+     * Apply profile data to UI elements
+     */
+    function applyProfileToUI(displayName, email, role) {
         const nameElement = document.getElementById('user-display-name');
         const emailElement = document.getElementById('user-display-email');
         const roleBadge = document.getElementById('user-role-badge');
@@ -22,12 +44,9 @@
 
         if (!nameElement || !emailElement || !roleBadge || !roleText) return;
 
-        // Update user name (display name or extract from email)
-        const displayName = user.displayName || user.email.split('@')[0];
+        // Update user name and email
         nameElement.textContent = displayName;
-
-        // Update email
-        emailElement.textContent = user.email;
+        emailElement.textContent = email;
 
         // Update role badge
         const roleMap = {
@@ -36,10 +55,8 @@
             'superadmin': { text: 'Super Admin', icon: 'crown', class: 'superadmin' }
         };
 
-        const roleInfo = roleMap[role.toLowerCase()] || roleMap['user'];
+        const roleInfo = roleMap[role?.toLowerCase()] || roleMap['user'];
         roleText.textContent = roleInfo.text;
-
-        // Update badge class
         roleBadge.className = `user-role-badge ${roleInfo.class}`;
 
         // Update icon (if Lucide is loaded)
@@ -50,8 +67,27 @@
                 window.lucide.createIcons();
             }
         }
+    }
 
-        console.log('✅ User profile header updated:', displayName, '(' + role + ')');
+    /**
+     * Updates the user profile header with current user data
+     * @param {Object} user - Firebase user object
+     * @param {string} role - User role (user/admin/superadmin)
+     */
+    function updateUserProfileHeader(user, role = 'user') {
+        if (!user) return;
+
+        // Update user name (priority: custom prop > firebase profile > email)
+        const displayName = user.customName || user.displayName || user.email.split('@')[0];
+        const email = user.email;
+
+        // Apply to UI
+        applyProfileToUI(displayName, email, role);
+
+        // Cache for next page load
+        cacheProfileData(displayName, email, role);
+
+        console.log('[Profile] Updated and cached:', displayName, '(' + role + ')');
     }
 
     /**
@@ -68,26 +104,40 @@
             if (user) {
                 // Get user role from localStorage or Firestore
                 let userRole = localStorage.getItem('userRole') || 'user';
+                let customName = null;
 
-                // If role not in cache, check Firestore
-                if (window.db && !localStorage.getItem('userRole')) {
+                // Check Firestore for Role and Name
+                if (window.db) {
                     try {
-                        const userDoc = await window.db.collection('usuarios').doc(user.uid).get();
+                        const userDoc = await window.db.collection('userRoles').doc(user.uid).get();
                         if (userDoc.exists) {
-                            userRole = userDoc.data().role || 'user';
+                            const data = userDoc.data();
+                            userRole = data.rol || 'user';
                             localStorage.setItem('userRole', userRole);
+
+                            if (data.nombre) {
+                                customName = data.nombre;
+                            }
                         }
                     } catch (error) {
                         console.error('Error fetching user role:', error);
                     }
                 }
 
+                // Pass custom name via the user object (non-destructive)
+                user.customName = customName;
                 updateUserProfileHeader(user, userRole);
+            } else {
+                // User logged out - clear cache
+                localStorage.removeItem(PROFILE_CACHE_KEY);
             }
         });
     }
 
-    // Initialize when DOM is ready
+    // Load cached profile IMMEDIATELY (before Firebase loads)
+    loadCachedProfile();
+
+    // Initialize Firebase listener when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeUserProfileHeader);
     } else {
@@ -97,3 +147,4 @@
     // Export function globally for manual updates if needed
     window.updateUserProfileHeader = updateUserProfileHeader;
 })();
+

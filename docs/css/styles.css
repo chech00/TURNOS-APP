@@ -164,41 +164,35 @@ header {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  min-height: 16vh;
-  /* Un poco más compacto */
-  padding: 1.5rem 3rem;
+  height: 80px;
+  min-height: 80px;
+  padding: 0 2rem;
   background: linear-gradient(180deg, var(--color-fondo-secundario) 0%, rgba(30, 30, 46, 0.95) 100%);
   color: var(--color-texto-principal);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  /* Sombra más sofisticada */
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   z-index: 10;
+  box-sizing: border-box;
 }
 
 header img.logo {
   width: 160px;
-  /* Ajuste ligero */
   height: auto;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) brightness(2.5);
-  /* Logo con relieve */
 }
 
 header h1 {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
   font-family: var(--font-primary);
-  /* Fuente más limpia */
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  /* Más peso */
   color: #eceff4;
   text-transform: uppercase;
-  /* Más autoridad */
-  letter-spacing: 3px;
-  /* Espaciado premium */
+  letter-spacing: 2px;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  margin: 0;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .empty {
@@ -709,6 +703,8 @@ h2 {
   header {
     flex-direction: column;
     padding: 1rem;
+    height: auto;
+    min-height: auto;
   }
 
   header h1 {
@@ -1051,12 +1047,10 @@ td.pendiente {
 }
 
 
-/* Sidebar */
 /* Sidebar Premium Design - Collapsible */
 .sidebar {
   position: fixed;
   left: 0;
-  /* Always visible on desktop */
   top: 0;
   width: 88px;
   /* Mini width (collapsed) */
@@ -1067,14 +1061,17 @@ td.pendiente {
   -webkit-backdrop-filter: blur(12px);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
-  transition: width 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-  /* Smooth width transition */
+  /* Optimized transition for fluidity */
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width;
+  /* GPU acceleration hint */
   display: flex;
   flex-direction: column;
   padding-top: 2.5rem;
   z-index: 1000;
   overflow-x: hidden;
-  /* Hide overflowing content during transition */
+  /* Prevent reflow during transition */
+  contain: layout style;
 }
 
 .sidebar.expanded {
@@ -1086,7 +1083,7 @@ td.pendiente {
 .sidebar-header {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
   height: 100px;
   /* Fixed height to maintain layout */
   display: flex;
@@ -1131,7 +1128,7 @@ td.pendiente {
 }
 
 .sidebar-menu ul li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .sidebar-menu ul li a {
@@ -1139,11 +1136,11 @@ td.pendiente {
   color: var(--color-texto-secundario);
   font-family: var(--font-secondary);
   font-weight: 500;
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  padding: 1rem 1.2rem;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
   border-radius: 16px;
   /* More rounded */
   transition: all 0.4s ease;
@@ -1159,7 +1156,7 @@ td.pendiente {
 .sidebar-menu ul li a span {
   opacity: 0;
   transform: translateX(-10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
   display: inline-block;
 }
 
@@ -1215,8 +1212,8 @@ td.pendiente {
 .sidebar-menu [data-lucide],
 .sidebar-menu .lucide,
 .sidebar-menu svg {
-  width: 22px !important;
-  height: 22px !important;
+  width: 18px !important;
+  height: 18px !important;
   stroke: var(--color-texto-secundario);
   transition: stroke 0.3s ease, transform 0.3s ease;
 }
@@ -1343,8 +1340,9 @@ td.pendiente {
 
 /* Ajuste del contenido cuando el sidebar está abierto */
 .main-content {
-  transition: margin-left 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   margin-left: 88px;
+  will-change: margin-left;
   /* Default margin for collapsed sidebar */
 }
 
@@ -1400,6 +1398,11 @@ td.pendiente {
 }
 
 /* Icon Colors */
+#menu-directorio i {
+  color: #FF6B6B;
+}
+
+/* Coral/Red for Directory */
 #menu-turnos i {
   color: var(--color-acento-primario);
 }
@@ -1722,4 +1725,45 @@ div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
   border-radius: 8px !important;
   font-weight: 600 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ========================================================================
+   PREMIUM DESIGN SYSTEM - COMPLETE REDESIGN
+   ======================================================================== */
+
+/* ------------------------------
+   BOTONES PREMIUM
+   ------------------------------ */
+
+/* Bot\u00f3n Primario - CTA Principal */
+.btn-primary-premium {
+  background: var(--primary-gradient);
+  color: white;
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  box-shadow: var(--btn-primary-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-primary);
+}
+
+.btn-primary-premium:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.5);
+}
+
+.btn-primary-premium:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.btn-primary-premium:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }

@@ -6,6 +6,18 @@ const db = window.db;
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  // Optimistic Loading
+  const cachedRole = localStorage.getItem("userRole");
+  if (cachedRole === "superadmin") {
+    const liRegistros = document.getElementById("li-registros");
+    const liUsuarios = document.getElementById("li-usuarios");
+    if (liRegistros) liRegistros.style.display = "block";
+    if (liUsuarios) liUsuarios.style.display = "block";
+    document.body.classList.add("is-admin");
+  } else if (cachedRole === "admin") {
+    document.body.classList.add("is-admin");
+  }
+
   // 1. Verificar autenticación y rol
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
@@ -37,6 +49,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.body.classList.add("is-admin");
+
+    // Asegurar que los links de superadmin sean visibles
+    const liRegistros = document.getElementById("li-registros");
+    const liUsuarios = document.getElementById("li-usuarios");
+    if (liRegistros) liRegistros.style.display = "block";
+    if (liUsuarios) liUsuarios.style.display = "block";
 
     // 2. Cargar logs de inicios de sesión
     cargarRegistrosDeLogins();

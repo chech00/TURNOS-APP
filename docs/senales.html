@@ -22,6 +22,9 @@
   <script defer src="https://unpkg.com/lucide@latest"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script defer src="./js/auto-logout.js"></script>
+  <!-- Security: XSS Protection -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script src="./js/security-helpers.js"></script>
 </head>
 
 <body>
@@ -33,6 +36,7 @@
     </div>
     <nav class="sidebar-menu">
       <ul>
+        <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
         <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
         <li><a href="senales.html" id="menu-fibra" class="active"><i data-lucide="waypoints"></i> <span>Señal de
               Fibra</span></a></li>
@@ -40,8 +44,14 @@
         <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos Noc</span></a></li>
         <li id="li-empleados" class="admin-only">
           <a href="gestion_empleados.html">
-            <i data-lucide="users"></i>
+            <i data-lucide="user-cog"></i>
             <span>Gestionar Empleados</span>
+          </a>
+        </li>
+        <li id="li-usuarios" class="superadmin-only" style="display:none;">
+          <a href="gestion_usuarios.html">
+            <i data-lucide="shield-check"></i>
+            <span>Cuentas de Sistema</span>
           </a>
         </li>
         <li id="li-registros" style="display:none;">

@@ -13,20 +13,42 @@ try {
 }
 */
 
-const auth = window.auth;
-const db = window.db;
+// Auth and DB - will be populated after Firebase loads
+let auth = window.auth;
+let db = window.db;
 
-if (!auth || !db) {
-  console.error("Firebase auth/db not initialized.");
-  document.addEventListener("DOMContentLoaded", () => {
+// Delayed Firebase check - wait up to 5 seconds before showing error
+let firebaseCheckAttempts = 0;
+const maxFirebaseAttempts = 50; // 50 * 100ms = 5 seconds
+
+function checkFirebaseAvailability() {
+  firebaseCheckAttempts++;
+  auth = window.auth;
+  db = window.db;
+
+  if (auth && db) {
+    console.log("[NOC] Firebase disponible después de", firebaseCheckAttempts, "intentos");
+    return; // Firebase ready, no error needed
+  }
+
+  if (firebaseCheckAttempts < maxFirebaseAttempts) {
+    setTimeout(checkFirebaseAvailability, 100);
+  } else {
+    // Only show error after all attempts exhausted
+    console.error("Firebase auth/db not initialized after timeout.");
     Swal.fire({
       icon: "error",
       title: "Error de Carga",
       text: "No se pudo conectar con el sistema de autenticación. Por favor, deshabilita extensiones de privacidad/bloqueo de anuncios y recarga la página.",
       footer: "Detalle técnico: Firebase no inicializado."
     });
-  });
+  }
 }
+
+// Start checking after DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+  checkFirebaseAvailability();
+});
 
 let usuarioEsAdmin = false;
 let currentDate = new Date();
@@ -158,43 +180,83 @@ async function cargarFeriados() {
 // Lista de empleados - se carga desde Firestore
 let empleados = [];
 
+// CONSTANTES DE EMPLEADOS (Para sync con directorio)
+const DEFAULT_EMPLOYEES_NAMES = [
+  "Sergio Castillo",
+  "Ignacio Aburto",
+  "Claudio Bustamante",
+  "Julio Oliva",
+  "Gabriel Trujillo",
+  "Cristian Oyarzo" // Added missing employee
+];
+
 async function cargarEmpleadosDeFirestore() {
+  let loadedList = [];
   try {
     const doc = await db.collection("Config").doc("empleados_noc").get();
     if (doc.exists) {
       const data = doc.data();
       if (data.lista && Array.isArray(data.lista)) {
-        // Mapear al formato que usa noc.js (nombre, turnos: [])
-        // Nota: noc.js parece usar 'turnos' en memoria, pero si queremos persistencia de turnos
-        // eso es otra historia. Aquí solo estamos cargando la LISTA de nombres base.
-        // Si noc.js guarda turnos en otra colección, esto está bien.
-        // Asumimos que 'empleados' en noc.js es la estructura base para renderizar.
-        return data.lista.map(e => ({ nombre: e.nombre, turnos: [] }));
+        loadedList = data.lista.map(e => ({ nombre: e.nombre, turnos: [] }));
       }
     }
   } catch (error) {
     console.error("Error al cargar empleados de Firestore:", error);
   }
 
-  // Valores por defecto si falla
+  // MERGE: Ensure all default employees exist
+  DEFAULT_EMPLOYEES_NAMES.forEach(defName => {
+    if (!loadedList.some(e => e.nombre === defName)) {
+      console.log(`[NOC] Agregando empleado faltante al calendario: ${defName}`);
+      loadedList.push({ nombre: defName, turnos: [] });
+    }
+  });
+
+  return loadedList;
+}
+
+// Valores por defecto si falla (Used by catch block below, effectively unused now but kept for structure)
+/*
   return [
     { nombre: "Sergio Castillo", turnos: [] },
-    { nombre: "Ignacio Aburto", turnos: [] },
-    { nombre: "Claudio Bustamante", turnos: [] },
-    { nombre: "Julio Oliva", turnos: [] },
-    { nombre: "Gabriel Trujillo", turnos: [] }
+    ...
   ];
-}
+*/
 
 // Inicializar carga
 // Inicializar carga
+console.log("[DEBUG] Iniciando Promise.all para cargar empleados y feriados...");
 Promise.all([cargarEmpleadosDeFirestore(), cargarFeriados()]).then(([lista]) => {
+  console.log("[DEBUG] Promise.all resuelto, empleados:", lista?.length);
   empleados = lista;
   // console.log("Datos iniciales cargados (Empleados y Feriados)");
   // Disparar evento personalizado
   document.dispatchEvent(new CustomEvent('datosCargados'));
 
-  // Iniciar calendario si el DOM está listo, o esperar
+  // Iniciar calendario
+  iniciarCalendario();
+}).catch(err => {
+  console.error("[DEBUG] Promise.all error:", err);
+  // Usar fallback si hubo error
+  if (!empleados || empleados.length === 0) {
+    empleados = [
+      { nombre: "Sergio Castillo", turnos: [] },
+      { nombre: "Ignacio Aburto", turnos: [] },
+      { nombre: "Claudio Bustamante", turnos: [] },
+      { nombre: "Julio Oliva", turnos: [] },
+      { nombre: "Gabriel Trujillo", turnos: [] }
+    ];
+  }
+  if (!feriadosChile || feriadosChile.length === 0) {
+    feriadosChile = FERIADOS_DEFAULT.map(f => f.fecha);
+    feriadosInfo = {};
+    FERIADOS_DEFAULT.forEach(f => { feriadosInfo[f.fecha] = f.nombre; });
+  }
+  iniciarCalendario();
+});
+
+function iniciarCalendario() {
+  console.log("[DEBUG] iniciarCalendario llamado");
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof renderCalendar === 'function') renderCalendar();
@@ -202,7 +264,59 @@ Promise.all([cargarEmpleadosDeFirestore(), cargarFeriados()]).then(([lista]) => 
   } else {
     if (typeof renderCalendar === 'function') renderCalendar();
   }
-});
+}
+
+// -----------------------------------------------------------------------------
+// GLOBAL UI HELPER FUNCTIONS
+// -----------------------------------------------------------------------------
+
+// Fix text colors for shift buttons with background colors
+function fixShiftTextColors() {
+  const buttons = document.querySelectorAll("button.calendar-day");
+  buttons.forEach(btn => {
+    // Si tiene un color de fondo inline (asignado), poner texto negro
+    if (btn.style.backgroundColor && btn.style.backgroundColor !== "") {
+      btn.style.color = "#000";
+    }
+  });
+}
+
+// Update UI based on month lock state
+function updateLockUI() {
+  const lockIndicator = document.getElementById("lockedIndicator");
+  const btnToggleLock = document.getElementById("btnToggleLock");
+
+  // Mostrar botón de candado solo si es superadmin
+  const cachedRole = localStorage.getItem("userRole");
+  if (cachedRole === "superadmin") {
+    if (btnToggleLock) {
+      btnToggleLock.style.display = "inline-flex";
+      btnToggleLock.innerHTML = isMonthLocked
+        ? `<i data-lucide="unlock"></i> Abrir Mes`
+        : `<i data-lucide="lock"></i> Cerrar Mes`;
+
+      btnToggleLock.className = "btn-horarios superadmin-only";
+
+      if (isMonthLocked) {
+        btnToggleLock.style.backgroundColor = "#7796cb";
+        btnToggleLock.style.color = "#fff";
+      } else {
+        btnToggleLock.style.backgroundColor = "#f39c12";
+        btnToggleLock.style.color = "#fff";
+      }
+    }
+  }
+
+  if (isMonthLocked) {
+    document.body.classList.add("locked-mode");
+    if (lockIndicator) lockIndicator.style.display = "flex";
+  } else {
+    document.body.classList.remove("locked-mode");
+    if (lockIndicator) lockIndicator.style.display = "none";
+  }
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
 // Escuchar cambios de empleados desde otras pestañas
 const empleadosChannel = new BroadcastChannel("empleados_sync");
@@ -228,9 +342,75 @@ const bitacoraEmployees = [
 
 // Obtiene una clave única para cada mes (ej: "calendar_2025-4")
 function obtenerClaveMes(date) {
-  // Se agrega prefijo v2 para invalidar caché anterior y forzar recarga con nuevos feriados
-  return `calendar_v2_${date.getFullYear()}-${date.getMonth() + 1}`;
+  // Se agrega prefijo v3 para invalidar caché anterior (fix ghost employees y estructura nocturno)
+  return `calendar_v3_${date.getFullYear()}-${date.getMonth() + 1}`;
 }
+
+// Limpia claves antiguas de localStorage (v1 y v2) al cargar la página
+function limpiarCacheAntiguo() {
+  const keysToRemove = [];
+  const keysToClean = [];
+
+  // Iterar sobre todas las claves de localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    // Si la clave empieza con "calendar_v2_" o "calendar_" sin versión, la marcamos para borrar
+    if (key && (key.startsWith("calendar_v2_") || (key.startsWith("calendar_") && !key.startsWith("calendar_v3_")))) {
+      keysToRemove.push(key);
+    }
+    // Si es v3, validar y limpiar empleados eliminados
+    else if (key && key.startsWith("calendar_v3_")) {
+      keysToClean.push(key);
+    }
+  }
+
+  // Eliminar las claves antiguas (v1/v2)
+  keysToRemove.forEach(key => {
+    console.log(`Limpiando cache antiguo: ${key}`);
+    localStorage.removeItem(key);
+  });
+
+  if (keysToRemove.length > 0) {
+    console.log(`Cache antiguo limpiado: ${keysToRemove.length} entradas removidas`);
+  }
+
+  // Limpiar empleados eliminados de las entradas v3
+  const empleadosActuales = new Set(empleados.map(e => e.nombre));
+  let empleadosEliminadosCount = 0;
+
+  keysToClean.forEach(key => {
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (data && data.assignments) {
+        let modified = false;
+
+        // Filtrar empleados que ya no existen
+        Object.keys(data.assignments).forEach(nombre => {
+          if (!empleadosActuales.has(nombre)) {
+            console.log(`Eliminando empleado del cache ${key}: ${nombre}`);
+            delete data.assignments[nombre];
+            modified = true;
+            empleadosEliminadosCount++;
+          }
+        });
+
+        // Guardar de vuelta solo si hubo cambios
+        if (modified) {
+          localStorage.setItem(key, JSON.stringify(data));
+        }
+      }
+    } catch (e) {
+      console.error(`Error limpiando cache v3 ${key}:`, e);
+    }
+  });
+
+  if (empleadosEliminadosCount > 0) {
+    console.log(`Empleados eliminados purgados del cache: ${empleadosEliminadosCount} entradas`);
+  }
+}
+
+// Ejecutar limpieza al cargar el script
+limpiarCacheAntiguo();
 
 // Obtiene los datos actuales del calendario (HTML de las tablas)
 function obtenerDatosCalendario() {
@@ -307,6 +487,9 @@ function guardarCalendarioEnLocalStorage() {
     });
   }
 
+  // 4. Preservar estado de bloqueo
+  datos.locked = isMonthLocked;
+
   localStorage.setItem(key, JSON.stringify(datos));
   console.log(`Calendario guardado en localStorage (formato JSON seguro) con la clave: ${key}`);
 }
@@ -332,11 +515,15 @@ function verificarRolUsuario(callback) {
           const isAdmin = role === "admin";
           const isSuperAdmin = role === "superadmin";
 
-          // Mostrar link de Registros para superadmins
+          // Mostrar link de Registros y Usuarios para superadmins
           if (isSuperAdmin) {
             const liRegistros = document.getElementById("li-registros");
             if (liRegistros) {
               liRegistros.style.display = "block";
+            }
+            const liUsuarios = document.getElementById("li-usuarios");
+            if (liUsuarios) {
+              liUsuarios.style.display = "block";
             }
           }
 
@@ -480,45 +667,11 @@ function sincronizarTablasConEmpleados() {
   });
 
   // B) Luego revisamos las filas sobrantes (empleados eliminados)
-  // Si tienen turnos asignados, LAS MANTENEMOS para no perder historia
+  // LAS ELIMINAMOS completamente para que no aparezcan 'fantasmas'
   for (const [nombre, html] of Object.entries(existingRows)) {
-    // Crear una tabla temporal para parsear correctamente el TR
-    const tempTable = document.createElement('table');
-    const tempTbody = document.createElement('tbody');
-    tempTable.appendChild(tempTbody);
-    tempTbody.innerHTML = html;
-
-    const row = tempTbody.querySelector('tr');
-    if (!row) continue;
-
-    const buttons = row.querySelectorAll('button');
-    let tieneTurnos = false;
-
-    buttons.forEach(btn => {
-      const texto = btn.textContent.trim();
-      // Si tiene texto y no es solo "DL" automático (o vacío), consideramos que tiene datos
-      if (texto && texto !== "" && texto !== "DL") {
-        tieneTurnos = true;
-      }
-      // También si tiene icono de vacaciones (aunque el texto sea V)
-      if (btn.querySelector('svg') || btn.querySelector('i')) {
-        tieneTurnos = true;
-      }
-    });
-
-    if (tieneTurnos) {
-      // Marcar visualmente como eliminado
-      const firstCell = row.querySelector('td');
-      if (firstCell) {
-        firstCell.style.color = '#ef4444'; // Rojo suave
-        firstCell.style.fontStyle = 'italic';
-        // Agregar etiqueta si no existe ya
-        if (!firstCell.textContent.includes('(Ex)')) {
-          firstCell.innerHTML += ' <span style="font-size:0.8em; opacity:0.8;" title="Empleado Eliminado">(Ex)</span>';
-        }
-      }
-      newBodyHTML += row.outerHTML;
-    }
+    // No hacemos nada, simplemente no las agregamos a newBodyHTML.
+    // Esto elimina visualmente al empleado de la tabla.
+    console.log(`Eliminando fila de empleado inactivo/borrado: ${nombre}`);
   }
 
   // 3. Agregar fila de bitácora al final
@@ -546,7 +699,8 @@ function sincronizarTablasConEmpleados() {
 // si no existen o están incompletos, se construye desde cero.
 // Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
 // si no existen o están incompletos, se construye desde cero.
-function renderCalendar(date) {
+function renderCalendar(date = currentDate) {
+  console.log("[DEBUG] renderCalendar llamado, date:", date);
   // Limpieza de basura visual
   const general = document.getElementById("general-calendar");
   if (general) {
@@ -557,6 +711,10 @@ function renderCalendar(date) {
       toRemove.remove();
     }
   }
+
+  // IMPORTANTE: Resetear estado de bloqueo antes de cargar datos
+  // Esto previene que el estado de un mes "se pegue" al navegar a otro mes
+  isMonthLocked = false;
 
   // 1. Siempre renderizar base desde cero (asegura estructura limpia y actualizada)
   renderCalendarDesdeCero(date);
@@ -588,18 +746,26 @@ function renderCalendar(date) {
         aplicarAsignacionesSimples("feriados-calendar", data.feriados);
       }
 
-      // 4. Restaurar empleados eliminados si tienen historia
-      restaurarEmpleadosEliminados(data.assignments);
+      // 4. Restaurar estado de bloqueo
+      if (data.hasOwnProperty('locked')) {
+        isMonthLocked = !!data.locked;
+        updateLockUI();
+      }
 
     } catch (e) {
       console.error("Error leyendo localStorage:", e);
     }
   }
 
+  // ELIMINADO: restaurarEmpleadosEliminados(data.assignments); ya no queremos recuperar empleados borrados.
+
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
   lucide.createIcons();
   fixShiftTextColors();
   calcularHorasExtras(date);
+
+  // Actualizar UI de bloqueo al final (después de cargar estado desde localStorage)
+  updateLockUI();
 }
 
 // Helper para migrar datos HTML a JSON
@@ -639,7 +805,16 @@ function aplicarAsignaciones(assignments) {
   const table = document.getElementById("general-calendar");
   if (!table) return;
 
+  // Crear lista de nombres de empleados actuales para validación
+  const empleadosActuales = new Set(empleados.map(e => e.nombre));
+
   Object.entries(assignments).forEach(([name, shifts]) => {
+    // VALIDACIÓN: Solo aplicar si el empleado existe actualmente
+    if (!empleadosActuales.has(name)) {
+      console.log(`Ignorando empleado eliminado del cache: ${name}`);
+      return; // Skip este empleado
+    }
+
     // Buscar fila del empleado
     const row = Array.from(table.querySelectorAll("tbody tr")).find(tr =>
       tr.querySelector("td")?.textContent.trim() === name
@@ -804,6 +979,9 @@ function renderCalendarDesdeCero(date) {
   // ---------- CUERPO CALENDARIO GENERAL ----------
   let generalHTML = "";
   empleados.forEach((empleado) => {
+    // Exclude 'Cristian Oyarzo' from general calendar (he has his own table)
+    if (empleado.nombre === "Cristian Oyarzo") return;
+
     const nombreSeguro = escapeHtml(empleado.nombre);
     generalHTML += `<tr><td class="text-left p-2">${nombreSeguro}</td>`;
     for (let day = 1; day <= daysInMonth; day++) {
@@ -868,7 +1046,7 @@ function renderCalendarDesdeCero(date) {
     console.error("No se encontró el tbody de la tabla general");
   }
 
-  // ---------- CALENDARIO NOCTURNO (CRISTIAN) ----------
+  // ---------- CALENDARIO NOCTURNO (CRISTIAN OYARZO) ----------
   let nocturnoHTML = "";
   const cristianTurnos = [];
 
@@ -901,10 +1079,15 @@ function renderCalendarDesdeCero(date) {
     else if (turno === "N") turnoClass = "nocturno";
 
     const claseFeriado = turno === "F" ? "feriado" : "";
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     nocturnoHTML += `
       <td>
-        <button class="calendar-day w-full h-full ${turnoClass} ${claseFeriado}">
+        <button 
+          data-date="${dateStr}"
+          data-empleado="Cristian Oyarzo"
+          data-day="${day}"
+          class="calendar-day w-full h-full ${turnoClass} ${claseFeriado}">
           ${turno}
         </button>
       </td>
@@ -920,7 +1103,7 @@ function renderCalendarDesdeCero(date) {
   }
 
   // ---------- CALENDARIO FERIADOS / FINES DE SEMANA ----------
-  // SOLO UNA FILA: "Turno Nocturno"
+  // SOLO UNA FILA: "Turno Nocturno" para asignar S / I / N
   let feriadosHTML = `<tr><td class="text-left p-2">Turno Nocturno</td>`;
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -976,8 +1159,9 @@ function renderCalendarDesdeCero(date) {
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
   lucide.createIcons();
 
-  // Guardar en localStorage una vez renderizado todo
-  guardarCalendarioEnLocalStorage();
+  // REMOVED: No auto-guardar al renderizar, solo cuando el usuario hace cambios
+  // Esto previene sobrescribir estados de otros meses durante la navegación
+  // guardarCalendarioEnLocalStorage();
 }
 
 function todosLosDiasRellenos() {
@@ -2492,9 +2676,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // -----------------------------------------------------------------
     if (btnEliminar) {
       btnEliminar.addEventListener("click", function () {
+        console.log("Clic en btnEliminar. Admin:", usuarioEsAdmin);
         if (!usuarioEsAdmin) return;
 
-        const mesSeleccionado = selectMeses.value;
+        const selectMeses = document.getElementById("selectMeses");
+        const mesSeleccionado = selectMeses ? selectMeses.value : "";
         if (!mesSeleccionado) {
           Swal.fire({
             icon: "warning",
@@ -2583,85 +2769,100 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Subida de fotos (solo admin)
-    if (usuarioEsAdmin) {
+    // Definir la lógica de subida como función independiente
+    window.handlePhotoUpload = async function (inputElement) {
+      if (inputElement.files && inputElement.files[0]) {
+        const file = inputElement.files[0];
+        const employeeCard = inputElement.closest(".employee-card");
+        if (!employeeCard) {
+          console.error("No se encontró la tarjeta del empleado.");
+          return;
+        }
+        const employeeNameElement = employeeCard.querySelector(".employee-name");
+        const employeeName = employeeNameElement
+          ? employeeNameElement.textContent.trim()
+          : "Empleado";
+
+        const fileName = `${employeeName}_${Date.now()}_${file.name}`;
+
+        const { data, error } = await supabase.storage
+          .from("documentos-noc")
+          .upload(fileName, file, { upsert: true });
+
+        if (error) {
+          console.error("Error al subir foto:", error);
+          return;
+        }
+
+        const pathUploaded = data.path || fileName;
+        const { data: urlData, error: urlError } = supabase.storage
+          .from("documentos-noc")
+          .getPublicUrl(pathUploaded);
+
+        if (urlError) {
+          console.error("Error al obtener URL:", urlError);
+          return;
+        }
+        if (!urlData) {
+          console.error("No se recibió URL pública.");
+          return;
+        }
+
+        const finalURL = `${urlData.publicUrl}?ts=${Date.now()}`;
+        const imgElement = employeeCard.querySelector(".employee-photo");
+        if (imgElement) {
+          imgElement.src = finalURL;
+        }
+
+        db.collection("empleados")
+          .doc(employeeName)
+          .set({ photoURL: finalURL }, { merge: true })
+          .then(() => {
+            console.log(`Foto actualizada para ${employeeName}`);
+            Swal.fire("Éxito", "Foto actualizada correctamente", "success");
+          })
+          .catch((error) => {
+            console.error("Error guardando URL:", error);
+          });
+      } else {
+        console.warn("No se seleccionó ningún archivo.");
+      }
+    };
+
+    // Subida de fotos (solo admin)
+    window.attachPhotoUploadListeners = function () {
+      if (!usuarioEsAdmin) return;
+      console.log("Adjuntando listeners de fotos (attachPhotoUploadListeners)...");
+
       const uploadButtons = document.querySelectorAll(".upload-photo-btn");
       uploadButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-          const employeeCard = button.closest(".employee-card");
-          if (!employeeCard) {
-            console.error("No se encontró la tarjeta del empleado.");
-            return;
-          }
+        const newBtn = button.cloneNode(true);
+        if (button.parentNode) {
+          button.parentNode.replaceChild(newBtn, button);
+        }
+        newBtn.addEventListener("click", () => {
+          const employeeCard = newBtn.closest(".employee-card");
+          if (!employeeCard) return;
           const photoInput = employeeCard.querySelector(".photo-input");
-          if (!photoInput) {
-            console.error("No se encontró el input file.");
-            return;
-          }
-          photoInput.click();
+          if (photoInput) photoInput.click();
         });
       });
 
       const photoInputs = document.querySelectorAll(".photo-input");
       photoInputs.forEach((input) => {
-        input.addEventListener("change", async function () {
-          if (this.files && this.files[0]) {
-            const file = this.files[0];
-            const employeeCard = this.closest(".employee-card");
-            if (!employeeCard) {
-              console.error("No se encontró la tarjeta del empleado.");
-              return;
-            }
-            const employeeNameElement = employeeCard.querySelector(".employee-name");
-            const employeeName = employeeNameElement
-              ? employeeNameElement.textContent.trim()
-              : "Empleado";
-
-            const fileName = `${employeeName}_${Date.now()}_${file.name}`;
-
-            const { data, error } = await supabase.storage
-              .from("documentos-noc")
-              .upload(fileName, file, { upsert: true });
-
-            if (error) {
-              console.error("Error al subir foto:", error);
-              return;
-            }
-
-            const pathUploaded = data.path || fileName;
-            const { data: urlData, error: urlError } = supabase.storage
-              .from("documentos-noc")
-              .getPublicUrl(pathUploaded);
-
-            if (urlError) {
-              console.error("Error al obtener URL:", urlError);
-              return;
-            }
-            if (!urlData) {
-              console.error("No se recibió URL pública.");
-              return;
-            }
-
-            const finalURL = `${urlData.publicUrl}?ts=${Date.now()}`;
-            const imgElement = employeeCard.querySelector(".employee-photo");
-            if (imgElement) {
-              imgElement.src = finalURL;
-            }
-
-            db.collection("empleados")
-              .doc(employeeName)
-              .set({ photoURL: finalURL }, { merge: true })
-              .then(() => {
-                console.log(`Foto actualizada para ${employeeName}`);
-              })
-              .catch((error) => {
-                console.error("Error guardando URL:", error);
-              });
-          } else {
-            console.warn("No se seleccionó ningún archivo.");
-          }
+        const newInput = input.cloneNode(true);
+        if (input.parentNode) {
+          input.parentNode.replaceChild(newInput, input);
+        }
+        newInput.addEventListener("change", function () {
+          window.handlePhotoUpload(this);
         });
       });
-    }
+    };
+
+    // Llamada inicial
+    window.attachPhotoUploadListeners();
+
 
     // Botón de modo oscuro
     const themeToggle = document.querySelector(".theme-toggle");
@@ -2697,181 +2898,272 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
     }
-  });
-});
-
-// -----------------------------------------------------------------------------
-// 12) GENERAR SUGERENCIAS
-// -----------------------------------------------------------------------------
-function generarSugerencias() {
-  const conteoTurnos = calcularEstadisticas();
-  const totalTurnos = Object.values(conteoTurnos).reduce((a, b) => a + b, 0);
-  const promedio =
-    Object.keys(conteoTurnos).length > 0
-      ? totalTurnos / Object.keys(conteoTurnos).length
-      : 0;
-
-  const sugerencias = [];
-
-  for (const [turno, cantidad] of Object.entries(conteoTurnos)) {
-    if (promedio === 0) break;
-
-    if (cantidad > promedio * 1.5) {
-      sugerencias.push(
-        `El turno "${turno}" se asigna con mucha frecuencia (${cantidad} veces). Considera re-distribuirlo.`
-      );
-    } else if (cantidad < promedio * 0.5) {
-      sugerencias.push(
-        `El turno "${turno}" tiene pocas asignaciones (${cantidad} veces). Podrías equilibrarlo con otros turnos.`
-      );
-    }
-  }
-
-  if (sugerencias.length === 0) {
-    sugerencias.push(
-      "La distribución de turnos se ve bastante equilibrada en este mes."
-    );
-  }
-
-  return sugerencias;
-}
 
 
 
+    // -----------------------------------------------------------------------------
+    // 12) GENERAR SUGERENCIAS
+    // -----------------------------------------------------------------------------
+    function generarSugerencias() {
+      const conteoTurnos = calcularEstadisticas();
+      const totalTurnos = Object.values(conteoTurnos).reduce((a, b) => a + b, 0);
+      const promedio =
+        Object.keys(conteoTurnos).length > 0
+          ? totalTurnos / Object.keys(conteoTurnos).length
+          : 0;
 
+      const sugerencias = [];
 
-// -----------------------------------------------------------------------------
-// CARGAR FOTOS AL INICIO
-// -----------------------------------------------------------------------------
-async function loadEmployeePhotos() {
-  const cards = document.querySelectorAll('.employee-card');
+      for (const [turno, cantidad] of Object.entries(conteoTurnos)) {
+        if (promedio === 0) break;
 
-  try {
-    const snapshot = await db.collection('empleados').get();
-    const photosMap = {};
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.photoURL) {
-        photosMap[doc.id] = data.photoURL;
-      }
-    });
-
-    cards.forEach(card => {
-      const nameElement = card.querySelector('.employee-name');
-      if (nameElement) {
-        const name = nameElement.textContent.trim();
-        if (photosMap[name]) {
-          const img = card.querySelector('.employee-photo');
-          if (img) img.src = photosMap[name];
+        if (cantidad > promedio * 1.5) {
+          sugerencias.push(
+            `El turno "${turno}" se asigna con mucha frecuencia (${cantidad} veces). Considera re-distribuirlo.`
+          );
+        } else if (cantidad < promedio * 0.5) {
+          sugerencias.push(
+            `El turno "${turno}" tiene pocas asignaciones (${cantidad} veces). Podrías equilibrarlo con otros turnos.`
+          );
         }
       }
-    });
-  } catch (error) {
-    console.error('Error cargando fotos:', error);
-  }
-}
 
-document.addEventListener('DOMContentLoaded', loadEmployeePhotos);
+      if (sugerencias.length === 0) {
+        sugerencias.push(
+          "La distribución de turnos se ve bastante equilibrada en este mes."
+        );
+      }
 
-function fixShiftTextColors() {
-  const buttons = document.querySelectorAll("button.calendar-day");
-  buttons.forEach(btn => {
-    // Si tiene un color de fondo inline (asignado), poner texto negro
-    if (btn.style.backgroundColor && btn.style.backgroundColor !== "") {
-      btn.style.color = "#000";
+      return sugerencias;
     }
-  });
-}
 
-// -----------------------------------------------------------------------------
-// 12) FUNCIONES DE CIERRE DE MES (LOCK)
-// -----------------------------------------------------------------------------
 
-// Función para actualizar la UI según estado de bloqueo
-function updateLockUI() {
-  const lockIndicator = document.getElementById("lockedIndicator");
-  const btnToggleLock = document.getElementById("btnToggleLock");
 
-  // Mostrar botón de candado solo si es superadmin (re-verificar)
-  const cachedRole = localStorage.getItem("userRole");
-  console.log("updateLockUI - Current Role:", cachedRole); // DEBUG: Verificar rol
-  if (cachedRole === "superadmin") {
-    if (btnToggleLock) {
-      btnToggleLock.style.display = "inline-flex";
-      btnToggleLock.innerHTML = isMonthLocked
-        ? `<i data-lucide="unlock"></i> Abrir Mes`
-        : `<i data-lucide="lock"></i> Cerrar Mes`;
 
-      // Estilos dinámicos preservando la clase base 'btn-horarios'
-      btnToggleLock.className = "btn-horarios superadmin-only";
 
-      if (isMonthLocked) {
-        // Mes Cerrado -> Botón azul para desbloquear
-        btnToggleLock.style.backgroundColor = "#7796cb";
-        btnToggleLock.style.color = "#fff";
-      } else {
-        // Mes Abierto -> Botón naranja/amarillo para cerrar
-        btnToggleLock.style.backgroundColor = "#f39c12";
-        btnToggleLock.style.color = "#fff";
+    // -----------------------------------------------------------------------------
+    // CARGAR FOTOS AL INICIO
+    // -----------------------------------------------------------------------------
+    async function loadEmployeePhotos() {
+      const cards = document.querySelectorAll('.employee-card');
+
+      try {
+        const snapshot = await db.collection('empleados').get();
+        const photosMap = {};
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.photoURL) {
+            photosMap[doc.id] = data.photoURL;
+          }
+        });
+
+        cards.forEach(card => {
+          const nameElement = card.querySelector('.employee-name');
+          if (nameElement) {
+            const name = nameElement.textContent.trim();
+            if (photosMap[name]) {
+              const img = card.querySelector('.employee-photo');
+              if (img) img.src = photosMap[name];
+            }
+          }
+        });
+
+        // Re-adjuntar listeners de fotos ya que las tarjetas existen
+        if (typeof window.attachPhotoUploadListeners === 'function') {
+          window.attachPhotoUploadListeners();
+        }
+      } catch (error) {
+        console.error('Error cargando fotos:', error);
       }
     }
-  }
 
-  if (isMonthLocked) {
-    document.body.classList.add("locked-mode");
-    if (lockIndicator) lockIndicator.style.display = "flex";
-  } else {
-    document.body.classList.remove("locked-mode");
-    if (lockIndicator) lockIndicator.style.display = "none";
-  }
+    document.addEventListener('DOMContentLoaded', loadEmployeePhotos);
 
-  lucide.createIcons();
-}
+    function fixShiftTextColors() {
+      const buttons = document.querySelectorAll("button.calendar-day");
+      buttons.forEach(btn => {
+        // Si tiene un color de fondo inline (asignado), poner texto negro
+        if (btn.style.backgroundColor && btn.style.backgroundColor !== "") {
+          btn.style.color = "#000";
+        }
+      });
+    }
+
+    // -----------------------------------------------------------------------------
+    // 12) FUNCIONES DE CIERRE DE MES (LOCK)
+    // -----------------------------------------------------------------------------
+
+    // Función para actualizar la UI según estado de bloqueo
+    function updateLockUI() {
+      const lockIndicator = document.getElementById("lockedIndicator");
+      const btnToggleLock = document.getElementById("btnToggleLock");
+
+      // Mostrar botón de candado solo si es superadmin (re-verificar)
+      const cachedRole = localStorage.getItem("userRole");
+      console.log("updateLockUI - Current Role:", cachedRole); // DEBUG: Verificar rol
+      if (cachedRole === "superadmin") {
+        if (btnToggleLock) {
+          btnToggleLock.style.display = "inline-flex";
+          btnToggleLock.innerHTML = isMonthLocked
+            ? `<i data-lucide="unlock"></i> Abrir Mes`
+            : `<i data-lucide="lock"></i> Cerrar Mes`;
+
+          // Estilos dinámicos preservando la clase base 'btn-horarios'
+          btnToggleLock.className = "btn-horarios superadmin-only";
+
+          if (isMonthLocked) {
+            // Mes Cerrado -> Botón azul para desbloquear
+            btnToggleLock.style.backgroundColor = "#7796cb";
+            btnToggleLock.style.color = "#fff";
+          } else {
+            // Mes Abierto -> Botón naranja/amarillo para cerrar
+            btnToggleLock.style.backgroundColor = "#f39c12";
+            btnToggleLock.style.color = "#fff";
+          }
+        }
+      }
+
+      if (isMonthLocked) {
+        document.body.classList.add("locked-mode");
+        if (lockIndicator) lockIndicator.style.display = "flex";
+      } else {
+        document.body.classList.remove("locked-mode");
+        if (lockIndicator) lockIndicator.style.display = "none";
+      }
+
+      lucide.createIcons();
+    }
 
 
 
-// Función Toggle Lock (Superadmin)
-async function toggleMonthLock() {
-  const currentMonth = document.getElementById("current-month").textContent.trim();
+    // Función Toggle Lock (Superadmin)
+    async function toggleMonthLock() {
+      const currentMonthDisplay = document.getElementById("current-month").textContent.trim();
+      const calendarKey = obtenerClaveMes(currentDate); // Usar clave única: "calendar_v3_2026-1"
 
-  // Confirmación
-  const action = isMonthLocked ? "ABRIR" : "CERRAR";
-  const result = await Swal.fire({
-    title: `¿${action} el mes de ${currentMonth}?`,
-    text: isMonthLocked
-      ? "Al abrirlo, los administradores podrán volver a editar los turnos."
-      : "Al cerrarlo, nadie podrá editar turnos hasta que se vuelva a abrir.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: `Sí, ${action}`,
-    cancelButtonText: "Cancelar"
+      // Confirmación
+      const action = isMonthLocked ? "ABRIR" : "CERRAR";
+      const result = await Swal.fire({
+        title: `¿${action} el mes de ${currentMonthDisplay}?`,
+        text: isMonthLocked
+          ? "Al abrirlo, los administradores podrán volver a editar los turnos."
+          : "Al cerrarlo, nadie podrá editar turnos hasta que se vuelva a abrir.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: `Sí, ${action}`,
+        cancelButtonText: "Cancelar"
+      });
+
+      if (!result.isConfirmed) return;
+
+      // Cambiar el estado local inmediatamente
+      isMonthLocked = !isMonthLocked;
+      updateLockUI();
+
+      // Guardar en localStorage inmediatamente
+      guardarCalendarioEnLocalStorage();
+
+      // Actualizar en Firestore (COMPATIBILIDAD: Usar nombre de mes para que el listener lo detecte)
+      try {
+        await db.collection("calendarios").doc(currentMonthDisplay).set({
+          locked: isMonthLocked
+        }, { merge: true });
+
+        Swal.fire("Éxito", `El mes ha sido ${action === "CERRAR" ? "cerrado" : "abierto"}.`, "success");
+
+      } catch (error) {
+        console.error("Error al cambiar estado de bloqueo:", error);
+        Swal.fire("Error", "No se pudo actualizar el estado del mes.", "error");
+
+        // Revertir cambio local si falló Firestore
+        isMonthLocked = !isMonthLocked;
+        updateLockUI();
+      }
+    }
+
+    // Listener para el botón de bloqueo
+    // Listener para el botón de bloqueo
+    const btnToggleLock = document.getElementById("btnToggleLock");
+    if (btnToggleLock) {
+      btnToggleLock.addEventListener("click", toggleMonthLock);
+    }
+
+    // INITIALIZE FLOATING PALETTE
+    function initFloatingPalette() {
+      const btnToggle = document.getElementById('btnToggleFloating');
+      const turnosSection = document.querySelector('.turnos-section');
+      const header = turnosSection ? turnosSection.querySelector('.turnos-header') : null;
+
+      if (!btnToggle || !turnosSection || !header) return;
+
+      // Toggle Floating Mode
+      btnToggle.addEventListener('click', () => {
+        turnosSection.classList.toggle('floating');
+        btnToggle.classList.toggle('active');
+
+        if (turnosSection.classList.contains('floating')) {
+          // Initial Position
+          turnosSection.style.top = '120px';
+          turnosSection.style.right = '20px';
+          turnosSection.style.left = 'auto';
+
+          // Icon change
+          btnToggle.innerHTML = '<i data-lucide="minimize-2"></i>';
+        } else {
+          // Reset
+          turnosSection.style.top = '';
+          turnosSection.style.right = '';
+          turnosSection.style.left = '';
+          turnosSection.style.transform = ''; // Clear drag transform
+
+          // Icon change
+          btnToggle.innerHTML = '<i data-lucide="maximize-2"></i>';
+        }
+        if (window.lucide) lucide.createIcons();
+      });
+
+      // Draggable Logic
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      header.addEventListener('mousedown', (e) => {
+        if (!turnosSection.classList.contains('floating')) return;
+        if (e.target.closest('button')) return; // Don't drag if clicking toggle
+
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        const rect = turnosSection.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        header.style.cursor = 'grabbing';
+        e.preventDefault(); // Prevent text selection
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        turnosSection.style.left = `${initialLeft + dx}px`;
+        turnosSection.style.top = `${initialTop + dy}px`;
+        turnosSection.style.right = 'auto';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          header.style.cursor = 'move';
+        }
+      });
+    }
+
+    // Call it
+    initFloatingPalette();
+
   });
-
-  if (!result.isConfirmed) return;
-
-  // Actualizar en Firestore
-  // Usamos merge para no borrar datos, solo actualizar el flag
-  try {
-    // IMPORTANTE: Al desbloquear, actualizamos directamante.
-    // Al bloquear, igual. scheduleFirestoreUpdate NO debe ejecutarse si está bloqueado.
-    await db.collection("calendarios").doc(currentMonth).set({
-      locked: !isMonthLocked
-    }, { merge: true });
-
-    Swal.fire("Éxito", `El mes ha sido ${action === "CERRAR" ? "cerrado" : "abierto"}.`, "success");
-    // La UI se actualizará sola gracias a onSnapshot (subscribeCalendar)
-
-  } catch (error) {
-    console.error("Error al cambiar estado de bloqueo:", error);
-    Swal.fire("Error", "No se pudo actualizar el estado del mes.", "error");
-  }
-}
-
-// Listener para el botón de bloqueo
-document.addEventListener("DOMContentLoaded", () => {
-  const btnToggleLock = document.getElementById("btnToggleLock");
-  if (btnToggleLock) {
-    btnToggleLock.addEventListener("click", toggleMonthLock);
-  }
-});
-
+}); // Close DOMContentLoaded

@@ -1,14 +1,40 @@
-const auth = window.auth;
-const db = window.db;
+// Auth and DB - will be populated when Firebase loads
+let auth = window.auth;
+let db = window.db;
 
 window.onerror = function (msg, url, line, col, error) {
   console.error("Global Error:", msg, "Line:", line, "Error:", error);
+  // Don't show alert for generic "Script error" (cross-origin errors with no details)
+  if (msg === "Script error." && line === 0) {
+    return; // Ignore unhelpful cross-origin errors
+  }
+  // Don't show alert for undefined db/auth at startup
+  if (msg.includes("Cannot read properties of undefined")) {
+    console.warn("Firebase may not be initialized yet");
+    return;
+  }
   alert("Error en script.js: " + msg + " Linea: " + line);
 };
 
-// console.log("Script.js start. DB:", db, "Auth:", auth);
+// Wait for Firebase to be ready
+function waitForFirebaseScript(callback, maxAttempts = 50, interval = 100) {
+  let attempts = 0;
+  const check = () => {
+    attempts++;
+    auth = window.auth;
+    db = window.db;
+    if (db && auth) {
+      console.log("[SCRIPT] Firebase ready after", attempts, "attempts");
+      callback();
+    } else if (attempts < maxAttempts) {
+      setTimeout(check, interval);
+    } else {
+      console.error("[SCRIPT] Firebase not available after timeout");
+    }
+  };
+  check();
+}
 
-let editingUserId = null; // Si es null, estamos en modo creación; si tiene un valor, en modo edición
 
 // ----------------------
 // 2) VARIABLES GLOBALES
@@ -90,8 +116,22 @@ async function cargarFeriadosScript() {
   }
 }
 
-// Iniciar carga de feriados al cargar el script
-document.addEventListener("DOMContentLoaded", cargarFeriadosScript);
+// Iniciar carga de feriados y Optimistic UI al cargar el script
+document.addEventListener("DOMContentLoaded", () => {
+  cargarFeriadosScript();
+
+  // Optimistic Loading: Sidebar
+  const cachedRole = localStorage.getItem("userRole");
+  if (cachedRole === "superadmin") {
+    const liRegistros = document.getElementById("li-registros");
+    const liUsuarios = document.getElementById("li-usuarios");
+    if (liRegistros) liRegistros.style.display = "block";
+    if (liUsuarios) liUsuarios.style.display = "block";
+    document.body.classList.add("is-admin");
+  } else if (cachedRole === "admin") {
+    document.body.classList.add("is-admin");
+  }
+});
 
 function generarFeriados(year) {
   let feriadosFijos = [];
@@ -201,22 +241,24 @@ window.generarCalendario = function (mes, año) {
 
     if (feriado) {
       celda.classList.add("feriado");
-      celda.innerHTML = `
+      // SAFE: diaNum is a number, feriado.nombre comes from hardcoded list
+      safeInnerHTML(celda, `
         <div class="dia">${diaNum}</div>
         <div class="feriado-nombre">${feriado.nombre}</div>
         <div class="nombres">
           <div class="nombre"></div>
           <div class="nombre"></div>
           <div class="nombre"></div>
-        </div>`;
+        </div>`);
     } else {
-      celda.innerHTML = `
+      // SAFE: diaNum is a number
+      safeInnerHTML(celda, `
         <div class="dia">${diaNum}</div>
         <div class="nombres">
           <div class="nombre"></div>
           <div class="nombre"></div>
           <div class="nombre"></div>
-        </div>`;
+        </div>`);
     }
 
     fila.appendChild(celda);
@@ -331,7 +373,7 @@ function guardarAsignacionEnFirestore(asignacion, semanaIndex, año, mes, fechas
     .catch(error => console.error("Error al guardar asignación:", error));
 }
 
-function cargarAsignacionesGuardadas(mes, año) {
+window.cargarAsignacionesGuardadas = function (mes, año) {
   return db.collection('AsignacionesSemanales')
     .where('mes', '==', mes)
     .where('año', '==', año)
@@ -379,7 +421,7 @@ function cargarAsignacionesGuardadas(mes, año) {
       }
     })
     .catch(error => console.error("Error al cargar asignaciones guardadas:", error));
-}
+};
 
 // ----------------------
 // 7) NOTIFICACIONES TELEGRAM
@@ -564,7 +606,9 @@ function generarVistaLineal() {
   linearList.innerHTML = "";
   const keys = Object.keys(asignacionesManual);
   if (!keys.length) {
-    linearList.innerHTML = "<p>No hay turnos asignados para mostrar en la Vista Lineal.</p>";
+    const p = document.createElement('p');
+    p.textContent = 'No hay turnos asignados para mostrar en la Vista Lineal.';
+    linearList.appendChild(p);
     return;
   }
 
@@ -587,12 +631,13 @@ function generarVistaLineal() {
 
     const li = document.createElement("li");
     li.classList.add("linear-item");
-    li.innerHTML = `
+    // SAFE: All data is from internal assignments (tecnico, ingeniero, planta names)
+    safeInnerHTML(li, `
       <h3>Semana ${parseInt(semanaIndex) + 1}: ${fechaInicioStr} - ${fechaFinStr}</h3>
       <p><strong>Técnico:</strong> ${asignacion.tecnico}</p>
       <p><strong>Ingeniero:</strong> ${asignacion.ingeniero}</p>
       <p><strong>Planta Externa:</strong> ${asignacion.planta}</p>
-    `;
+    `);
     linearList.appendChild(li);
   });
 }
@@ -706,12 +751,13 @@ function buscarAsignacionPorFecha() {
         const fin = new Date(data.fechaFin);
         if (fechaBuscada >= inicio && fechaBuscada <= fin) {
           encontrado = true;
-          resultDiv.innerHTML = `
+          // SAFE: Data comes from Firestore (internal asignaciones semanales)
+          safeInnerHTML(resultDiv, `
             <h3>Semana ${data.semana} (${data.fechaInicio} - ${data.fechaFin})</h3>
             <p><strong>Técnico:</strong> ${data.tecnico}</p>
             <p><strong>Ingeniero:</strong> ${data.ingeniero}</p>
             <p><strong>Planta:</strong> ${data.planta}</p>
-          `;
+          `);
         }
       });
       if (!encontrado) {
@@ -742,8 +788,16 @@ function guardarContactoEnFirestore(nombre, chatId) {
   return db.collection("ContactosAdicionales").doc(nombre).set({ chatId });
 }
 
-function eliminarContactoEnFirestore(nombre) {
-  return db.collection("ContactosAdicionales").doc(nombre).delete();
+async function eliminarContactoEnFirestore(nombre) {
+  // ============================================================
+  // SECURITY: Verificar permisos de admin
+  // ============================================================
+  await requireAdmin('eliminar contactos');
+  // ============================================================
+
+  await db.collection("ContactosAdicionales").doc(nombre).delete();
+  await auditLog('CONTACT_DELETED', { contactName: nombre });
+  return;
 }
 
 function leerEmpleados() {
@@ -757,12 +811,29 @@ function leerEmpleados() {
     });
 }
 
-function guardarEmpleadoEnFirestore(nombre, rol, telegramChatId) {
-  return db.collection("Empleados").doc(nombre).set({ nombre, rol, telegramChatId });
+async function guardarEmpleadoEnFirestore(nombre, rol, telegramChatId) {
+  // ============================================================
+  // SECURITY: Verificar permisos de admin
+  // ============================================================
+  await requireAdmin('crear/modificar empleados');
+  // ============================================================
+
+  await db.collection("Empleados").doc(nombre).set({ nombre, rol, telegramChatId });
+  await auditLog('EMPLOYEE_SAVED', { employeeName: nombre, role: rol });
+  return;
 }
 
-function eliminarEmpleado(nombre) {
-  return db.collection("Empleados").doc(nombre).delete();
+async function eliminarEmpleado(nombre) {
+  // ============================================================
+  // SECURITY: Verificar permisos de admin y requiere re-autenticación
+  // ============================================================
+  await requireAdmin('eliminar empleados');
+  await requireRecentAuth(5); // Requiere autenticación reciente (5 min)
+  // ============================================================
+
+  await db.collection("Empleados").doc(nombre).delete();
+  await auditLog('EMPLOYEE_DELETED', { employeeName: nombre });
+  return;
 }
 
 // ----------------------
@@ -1141,164 +1212,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 15.6 BOTÓN QUE ABRE EL MODAL DE CREAR USUARIO
-  const addUserBtn = document.getElementById("add-user-btn");
-  const createUserModal = document.getElementById("create-user-modal");
-  if (addUserBtn && createUserModal) {
-    addUserBtn.addEventListener("click", () => {
-      createUserModal.style.display = "flex";
-      cargarUsuarios();
-    });
-  }
 
-  const closeCreateUserModal = document.getElementById("close-create-user-modal");
-  if (closeCreateUserModal && createUserModal) {
-    closeCreateUserModal.addEventListener("click", () => {
-      createUserModal.style.display = "none";
-    });
-    window.addEventListener("click", event => {
-      if (event.target === createUserModal) {
-        createUserModal.style.display = "none";
-      }
-    });
-  }
 
-  // 15.7 CREAR USUARIO NUEVO (SecondaryAuth)
-  const createUserBtn = document.getElementById("create-user-btn");
-  if (createUserBtn) {
-    createUserBtn.addEventListener("click", () => {
-      const email = document.getElementById("new-user-email").value.trim();
-      const password = document.getElementById("new-user-password").value.trim();
-      const role = document.getElementById("new-user-role").value;
 
-      if (!email) {
-        Swal.fire("Error", "Por favor, ingresa un correo electrónico.", "error");
-        return;
-      }
-
-      if (editingUserId) {
-        // Actualizar usuario existente
-        db.collection("userRoles").doc(editingUserId).update({
-          email,
-          rol: role
-        })
-          .then(() => {
-            Swal.fire("Éxito", "Usuario actualizado correctamente.", "success");
-            createUserBtn.textContent = "Crear Usuario";
-            editingUserId = null;
-            limpiarFormularioUsuario();
-            cargarUsuarios();
-          })
-          .catch(error => {
-            console.error("🚨 Error al actualizar usuario:", error);
-            Swal.fire("Error", "No se pudo actualizar el usuario.", "error");
-          });
-      } else {
-        // Crear un nuevo usuario
-        if (!password) {
-          Swal.fire("Error", "Por favor, ingresa una contraseña para el nuevo usuario.", "error");
-          return;
-        }
-
-        window.secondaryAuth.createUserWithEmailAndPassword(email, password)
-          .then(async userCredential => {
-            const newUser = userCredential.user;
-            await db.collection("userRoles").doc(newUser.uid).set({
-              email,
-              rol: role,
-              mustChangePassword: true
-            });
-            Swal.fire("Éxito", "Usuario creado exitosamente.", "success");
-            limpiarFormularioUsuario();
-            cargarUsuarios();
-          })
-          .catch(err => {
-            console.error("🚨 Error creando usuario:", err);
-            Swal.fire("Error", "Error al crear usuario: " + err.message, "error");
-          });
-      }
-    });
-  }
-
-  function limpiarFormularioUsuario() {
-    document.getElementById("new-user-email").value = "";
-    document.getElementById("new-user-password").value = "";
-    document.getElementById("new-user-role").value = "user";
-  }
-
-  // 15.8 BOTÓN QUE ABRE EL MODAL DE GESTIONAR USUARIOS
-  const openManageUserBtn = document.getElementById("open-manage-user-btn");
-  const manageUserModal = document.getElementById("manage-user-modal");
-  if (openManageUserBtn && manageUserModal) {
-    openManageUserBtn.addEventListener("click", () => {
-      cargarUsuarios();
-      resetFormUserManagement();
-      manageUserModal.style.display = "flex";
-    });
-  }
-
-  const closeUserModal = document.getElementById("close-user-modal");
-  if (closeUserModal && manageUserModal) {
-    closeUserModal.addEventListener("click", () => {
-      manageUserModal.style.display = "none";
-    });
-  }
-
-  const userSelect = document.getElementById("user-select");
-  const userEmailInput = document.getElementById("user-email");
-  const userPasswordInput = document.getElementById("user-password");
-  const userRoleSelect = document.getElementById("user-role");
-  const editUserBtn = document.getElementById("edit-user-btn");
-  const deleteUserBtn = document.getElementById("delete-user-btn");
-
-  async function cargarUsuarios() {
-    console.log("Ejecutando cargarUsuarios...");
-    const userSelect = document.getElementById("user-select");
-    if (!userSelect) {
-      console.error("Elemento user-select no encontrado en el DOM.");
-      return;
-    }
-    userSelect.innerHTML = `<option value="">-- Selecciona un usuario --</option>`;
-    try {
-      const snapshot = await db.collection("userRoles").get();
-      if (snapshot.empty) {
-        console.warn("No se encontraron usuarios en la colección userRoles.");
-        const noUsersOption = document.createElement("option");
-        noUsersOption.value = "";
-        noUsersOption.textContent = "No hay usuarios registrados";
-        userSelect.appendChild(noUsersOption);
-        return;
-      }
-      console.log("Documentos recuperados:", snapshot.size);
-      snapshot.forEach(doc => {
-        const userData = doc.data();
-        console.log("Documento obtenido:", doc.id, userData);
-        if (userData.email && userData.rol) {
-          const option = document.createElement("option");
-          option.value = doc.id;
-          option.textContent = `${userData.email} (${userData.rol})`;
-          userSelect.appendChild(option);
-        } else {
-          console.warn(`El documento ${doc.id} no tiene los campos necesarios.`);
-        }
-      });
-    } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-      const errorOption = document.createElement("option");
-      errorOption.value = "";
-      errorOption.textContent = "Error al cargar usuarios";
-      userSelect.appendChild(errorOption);
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("add-user-btn").addEventListener("click", () => {
-      const modal = document.getElementById("create-user-modal");
-      if (modal) {
-        modal.style.display = "flex";
-        cargarUsuarios();
-      }
-    });
-  });
   document.addEventListener("DOMContentLoaded", () => {
     const lastPage = localStorage.getItem("lastPage");
 
@@ -1325,168 +1241,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  function resetFormUserManagement() {
-    if (userEmailInput) userEmailInput.value = "";
-    if (userPasswordInput) userPasswordInput.value = "";
-    if (userRoleSelect) userRoleSelect.value = "user";
-    if (userSelect) userSelect.value = "";
-    if (editUserBtn) editUserBtn.disabled = true;
-    if (deleteUserBtn) deleteUserBtn.disabled = true;
-  }
 
-  if (userSelect) {
-    userSelect.addEventListener("change", () => {
-      const selected = userSelect.value;
-      editUserBtn.disabled = !selected;
-      deleteUserBtn.disabled = !selected;
-      if (selected) {
-        const selectedData = userSelect.options[userSelect.selectedIndex].text;
-        const [emailParte] = selectedData.split(" ");
-        if (userEmailInput) userEmailInput.value = emailParte || "";
-        if (userPasswordInput) userPasswordInput.value = "";
-      } else {
-        resetFormUserManagement();
-      }
-    });
-  }
-
-  if (editUserBtn) {
-    editUserBtn.addEventListener("click", () => {
-      const userId = userSelect.value;
-      if (!userId) {
-        Swal.fire("Atención", "Selecciona un usuario para editar.", "warning");
-        return;
-      }
-      db.collection("userRoles").doc(userId).get()
-        .then(doc => {
-          if (doc.exists) {
-            const userData = doc.data();
-            console.log("✅ Datos obtenidos de Firestore:", userData);
-
-            document.getElementById("new-user-email").value = userData.email || "";
-            document.getElementById("new-user-password").value = "";
-            document.getElementById("new-user-role").value = userData.rol || "user";
-
-            const modalHeaderTitle = document.querySelector("#create-user-modal h3");
-            if (modalHeaderTitle) {
-              modalHeaderTitle.textContent = "Editar Usuario";
-            }
-
-            document.getElementById("create-user-modal").style.display = "flex";
-
-            editingUserId = userId;
-          } else {
-            Swal.fire("Error", "El usuario no existe en la base de datos.", "error");
-            console.warn("🚨 Documento no encontrado en Firestore.");
-          }
-        })
-        .catch(error => {
-          console.error("🚨 Error al obtener datos del usuario:", error);
-          Swal.fire("Error", "Ocurrió un error al cargar los datos del usuario.", "error");
-        });
-    });
-  }
-
-  if (deleteUserBtn) {
-    deleteUserBtn.addEventListener("click", async () => {
-      const userId = userSelect.value;
-      if (!userId) {
-        Swal.fire("Atención", "Selecciona un usuario para eliminar.", "warning");
-        return;
-      }
-      const result = await Swal.fire({
-        title: "Confirmación",
-        text: "¿Estás seguro de eliminar este usuario?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar"
-      });
-
-      if (!result.isConfirmed) return;
-      try {
-        await db.collection("userRoles").doc(userId).delete();
-        Swal.fire("Éxito", "Usuario eliminado correctamente.", "success");
-        resetFormUserManagement();
-        cargarUsuarios();
-      } catch (error) {
-        console.error("Error al eliminar usuario:", error);
-        Swal.fire("Error", "No se pudo eliminar el usuario.", "error");
-      }
-    });
-  }
-
-  if (editUserBtn) {
-    editUserBtn.addEventListener("click", () => {
-      const userId = userSelect.value;
-      if (!userId) return;
-      db.collection("userRoles")
-        .doc(userId)
-        .get()
-        .then(doc => {
-          if (doc.exists) {
-            const userData = doc.data();
-            document.getElementById("edit-user-name").value = userData.nombre || "";
-            document.getElementById("edit-user-email").value = userData.email || "";
-            document.getElementById("edit-user-role").value = userData.rol || "";
-            document.getElementById("edit-user-modal").style.display = "flex";
-          } else {
-            Swal.fire("Error", "El usuario no existe.", "error");
-          }
-        })
-        .catch(error => {
-          console.error("Error al obtener datos del usuario:", error);
-          Swal.fire("Error", "Ocurrió un error al cargar los datos del usuario.", "error");
-        });
-    });
-  }
-
-  const saveUserChanges = document.getElementById("save-user-changes");
-  if (saveUserChanges) {
-    saveUserChanges.addEventListener("click", () => {
-      const userId = userSelect.value;
-      const updatedName = document.getElementById("edit-user-name").value.trim();
-      const updatedEmail = document.getElementById("edit-user-email").value.trim();
-      const updatedRole = document.getElementById("edit-user-role").value;
-      if (!updatedEmail || !updatedRole) {
-        Swal.fire("Atención", "Por favor, completa todos los campos.", "warning");
-        return;
-      }
-      db.collection("userRoles")
-        .doc(userId)
-        .update({ nombre: updatedName, email: updatedEmail, rol: updatedRole })
-        .then(() => {
-          Swal.fire("Éxito", "Usuario actualizado correctamente.", "success");
-          cargarUsuarios();
-          document.getElementById("edit-user-modal").style.display = "none";
-        })
-        .catch(error => {
-          console.error("Error al actualizar usuario:", error);
-          Swal.fire("Error", "Ocurrió un error al actualizar el usuario.", "error");
-        });
-    });
-  }
-
-  const closeEditUserModal = document.querySelector(".close-modal");
-  const editUserModal = document.getElementById("edit-user-modal");
-  if (closeEditUserModal && editUserModal) {
-    closeEditUserModal.addEventListener("click", () => {
-      editUserModal.style.display = "none";
-    });
-    window.addEventListener("click", event => {
-      if (event.target === editUserModal) {
-        editUserModal.style.display = "none";
-      }
-    });
-  }
 
   // 15.2 EXTRA: RENDERIZAR CONTACTOS
   function renderizarContactosEnSelect() {
     const contactSelect = document.getElementById("contact-select");
     if (!contactSelect) return;
-    contactSelect.innerHTML = `<option value="">-- Seleccione un contacto --</option>`;
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Seleccione un contacto --';
+    contactSelect.innerHTML = ''; // Clear first
+    contactSelect.appendChild(defaultOption);
     Object.keys(additionalTelegram).forEach(nombre => {
       const option = document.createElement("option");
       option.value = nombre;
@@ -1546,7 +1311,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function cargarEmpleadosEnSelectGeneral() {
     const empleadosSelect = document.getElementById("empleados-select");
     if (!empleadosSelect) return;
-    empleadosSelect.innerHTML = `<option value="">-- Seleccione un empleado --</option>`;
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Seleccione un empleado --';
+    empleadosSelect.innerHTML = ''; // Clear first
+    empleadosSelect.appendChild(defaultOption);
     leerEmpleados().then(empleados => {
       empleados.forEach(emp => {
         const option = document.createElement("option");
@@ -1619,8 +1388,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mostrar elementos de superadmin
     // Mostrar/Ocultar elementos de superadmin
     const liRegistros = document.getElementById("li-registros");
+    const liUsuarios = document.getElementById("li-usuarios");
     if (liRegistros) {
       liRegistros.style.display = (role === "superadmin") ? "block" : "none";
+    }
+    if (liUsuarios) {
+      liUsuarios.style.display = (role === "superadmin") ? "block" : "none";
     }
 
     // Mostrar elementos de admin (Gestionar Empleados)

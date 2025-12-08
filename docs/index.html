@@ -13,6 +13,11 @@
   <script defer src="https://unpkg.com/lucide@latest"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script defer src="./js/auto-logout.js"></script>
+  <!-- Security: XSS Protection -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script src="./js/security-helpers.js"></script>
+  <!-- Optimistic Profile Header Loading -->
+  <script src="./js/user-profile-header.js"></script>
 </head>
 
 <body>
@@ -38,14 +43,21 @@
     </div>
     <nav class="sidebar-menu">
       <ul>
+        <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
         <li><a href="#" id="menu-turnos" class="active"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
         <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
         <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos Noc</span></a></li>
         <li id="li-empleados" class="admin-only">
           <a href="gestion_empleados.html">
-            <i data-lucide="users"></i>
+            <i data-lucide="user-cog"></i>
             <span>Gestionar Empleados</span>
+          </a>
+        </li>
+        <li id="li-usuarios" class="superadmin-only" style="display:none;">
+          <a href="gestion_usuarios.html">
+            <i data-lucide="shield-check"></i>
+            <span>Cuentas de Sistema</span>
           </a>
         </li>
         <li id="li-registros" style="display:none;">
@@ -107,7 +119,7 @@
       </section>
 
       <section class="botones-contenedor">
-        <button id="add-user-btn" class="primary-btn">Agregar Nuevo Usuario</button>
+
         <button id="calendar-view-btn" class="primary-btn">Vista de Calendario</button>
         <button id="linear-view-btn" class="primary-btn">Vista Lineal</button>
         <button id="assign-turns" class="primary-btn">Asignar Turnos para la Semana</button>
@@ -129,46 +141,7 @@
       <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
     </footer>
 
-    <!-- Modal para crear/gestionar usuarios (se usa tanto para crear como para editar) -->
-    <div id="create-user-modal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Crear / Gestionar Usuarios</h2>
-          <span id="close-create-user-modal" class="close-modal">&times;</span>
-        </div>
-        <!-- Sección para listar usuarios existentes -->
-        <div class="form-group">
-          <label for="user-select">Seleccionar Usuario:</label>
-          <select id="user-select">
-            <option value="">-- Seleccione un usuario --</option>
-          </select>
-          <div class="button-container">
-            <button id="edit-user-btn" class="primary-btn" disabled>Editar Usuario</button>
-            <button id="delete-user-btn" class="primary-btn" disabled>Eliminar Usuario</button>
-          </div>
-          <hr />
-          <!-- Sección para crear o editar un usuario -->
-          <h3 id="create-user-title">Crear Usuario</h3>
-          <div class="form-group">
-            <label for="new-user-email">Correo Electrónico:</label>
-            <input type="email" id="new-user-email" placeholder="correo@ejemplo.com" required />
-          </div>
-          <div class="form-group">
-            <label for="new-user-password">Contraseña:</label>
-            <input type="password" id="new-user-password" placeholder="Contraseña segura" required />
-          </div>
-          <div class="form-group">
-            <label for="new-user-role">Rol:</label>
-            <select id="new-user-role">
-              <option value="user">Usuario</option>
-              <option value="admin">Administrador</option>
-              <option value="superadmin">SuperAdmin</option>
-            </select>
-          </div>
-          <button id="create-user-btn" class="primary-btn">Crear Usuario</button>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Modal de confirmación personalizado -->
     <div id="custom-confirm" class="modal">
@@ -305,7 +278,31 @@
     // Modulo de incialización optimizado
     import { auth, db } from './js/firebase.js';
 
+    function loadCachedProfile() {
+      const cached = localStorage.getItem('userProfileCache');
+      if (!cached) return;
+      try {
+        const data = JSON.parse(cached);
+        const nameEl = document.getElementById('user-display-name');
+        const emailEl = document.getElementById('user-display-email');
+        const roleBadge = document.getElementById('user-role-badge');
+        const roleText = document.getElementById('user-role-text');
+        if (nameEl) nameEl.textContent = data.displayName;
+        if (emailEl) emailEl.textContent = data.email;
+        if (roleText) roleText.textContent = data.role === 'superadmin' ? 'Super Admin' : data.role === 'admin' ? 'Admin' : 'Usuario';
+        if (roleBadge) roleBadge.className = `user-role-badge ${data.role === 'superadmin' ? 'superadmin' : data.role === 'admin' ? 'admin' : ''}`;
+        console.log('[Profile] Loaded from cache:', data.displayName);
+      } catch (e) { console.warn('[Profile] Cache parse error:', e); }
+    }
+
+    function cacheProfile(displayName, email, role) {
+      localStorage.setItem('userProfileCache', JSON.stringify({ displayName, email, role, timestamp: Date.now() }));
+    }
+
     function startApp() {
+      // 0. Load cached profile IMMEDIATELY to prevent flash
+      loadCachedProfile();
+
       // 1. Optimización: Chequeo inmediato de caché para mostrar UI instantáneamente
       const cachedRole = localStorage.getItem('userRole');
       if (cachedRole === 'admin' || cachedRole === 'superadmin') {
@@ -383,6 +380,9 @@
             }
 
             console.log('✅ User profile updated:', displayName, '(' + userRole + ')');
+
+            // Cache for next page load
+            cacheProfile(displayName, user.email, userRole);
           }
           // ============================================================
 

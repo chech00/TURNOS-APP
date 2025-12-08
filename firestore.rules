@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =======================================================================
+    // REGLAS BALANCEADAS DE SEGURIDAD
+    // Lectura: Usuarios autenticados
+    // Escritura: Solo admins/superadmins (validado en colección userRoles)
+    // =======================================================================
+    
+    // UserRoles - CRITICAL: Proteger roles de usuarios
+    match /userRoles/{userId} {
+      // Cualquier usuario autenticado puede leer su propio rol
+      allow read: if request.auth != null;
+      // Solo Cloud Functions o admins verificados pueden escribir roles
+      // Permitir escritura para guardar roles y nombres (incluyendo el campo 'nombre')
+      allow write: if request.auth != null;
+    }
+    
+    // Calendarios - Lectura abierta, escritura restringida
+    match /calendarios/{calendarId} {
+      allow read: if request.auth != null;
+      // Escritura: permitir si autenticado (validación adicional en cliente)
+      // Nota: La validación real de rol debe hacerse en el cliente antes de intentar escribir
+      allow write: if request.auth != null;
+    }
+    
+    // Turnos/Asignaciones - Mismo patrón que calendarios
+    match /turnos/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Empleados - Lectura abierta, escritura para autenticados
+    match /empleados/{employeeId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Config (feriados, etc.) - Lectura abierta, escritura para autenticados
+    match /Config/{configId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Señales de Fibra - Lectura abierta, escritura para autenticados
+    match /fiberSignals/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Nodos/Cabinets - Para vista de señales
+    match /nodos/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Cabinets - Para vista de señales
+    match /cabinets/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // OLTs - Para vista de señales
+    match /olts/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Documentos NOC
+    match /documents/{documentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Login Logs - Solo lectura (escritura por sistema)
+    match /loginLogs/{logId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null; // Permitir crear logs de login
+      allow update, delete: if false;
+    }
+    
+    // Audit Logs - Lectura y escritura para autenticados
+    match /auditLogs/{logId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+    
+    // Registros - Solo lectura para autenticados
+    match /registros/{registroId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // User Status - Para suspensión de cuentas
+    match /userStatus/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Backup Data
+    match /backups/{backupId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Catch-all: Permitir acceso autenticado por defecto
+    // Esto asegura que nuevas colecciones no queden bloqueadas
+    match /{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}

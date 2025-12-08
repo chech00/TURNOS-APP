@@ -18,6 +18,9 @@
   <script defer
     src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
   <script defer src="./js/auto-logout.js"></script>
+  <!-- Security: XSS Protection -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script src="./js/security-helpers.js"></script>
 </head>
 
 <body>
@@ -28,6 +31,7 @@
     </div>
     <nav class="sidebar-menu">
       <ul>
+        <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
         <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
         <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
@@ -35,8 +39,14 @@
               Noc</span></a></li>
         <li id="li-empleados" class="admin-only">
           <a href="gestion_empleados.html">
-            <i data-lucide="users"></i>
+            <i data-lucide="user-cog"></i>
             <span>Gestionar Empleados</span>
+          </a>
+        </li>
+        <li id="li-usuarios" class="superadmin-only" style="display:none;">
+          <a href="gestion_usuarios.html">
+            <i data-lucide="shield-check"></i>
+            <span>Cuentas de Sistema</span>
           </a>
         </li>
         <li id="li-registros" style="display:none;">
@@ -55,14 +65,10 @@
   <!-- Contenedor Principal -->
   <div id="main-content" class="main-content">
     <header>
-      <div class="container header-container">
-        <button id="menu-toggle" class="menu-btn">
-          <i data-lucide="panel-left"></i>
-        </button>
-        <h1>Turnos Noc</h1>
-
-
-      </div>
+      <button id="menu-toggle" class="menu-btn">
+        <i data-lucide="panel-left"></i>
+      </button>
+      <h1>Turnos Noc</h1>
     </header>
 
     <main>
@@ -133,7 +139,14 @@
         <!-- Sección Turnos y Backup -->
         <section class="turnos-backup">
           <div class="turnos-section admin-only">
-            <h2>Turnos</h2>
+            <div class="turnos-header"
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h2 style="margin:0;">Turnos</h2>
+              <button id="btnToggleFloating" class="btn-icon" title="Desacoplar panel"
+                style="background:transparent; border:none; color:#a1a1aa; cursor:pointer;">
+                <i data-lucide="maximize-2"></i>
+              </button>
+            </div>
 
             <div class="assignment-container">
               <div class="turnos-buttons">
@@ -269,55 +282,7 @@
           </div>
       </div>
       </section>
-
-      <!-- Sección Empleados -->
-      <section class="employees">
-        <h2>Equipo Noc</h2>
-        <div class="employee-cards">
-          <div class="employee-card">
-            <img src="https://via.placeholder.com/120" alt="Sergio Castillo" class="employee-photo" />
-            <h3 class="employee-name">Sergio Castillo</h3>
-            <p class="employee-role">Operador NOC</p>
-            <input type="file" accept="image/*" class="photo-input" style="display: none;">
-            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-          </div>
-          <div class="employee-card">
-            <img src="https://via.placeholder.com/120" alt="Ignacio Aburto" class="employee-photo" />
-            <h3 class="employee-name">Ignacio Aburto</h3>
-            <p class="employee-role">Operador NOC</p>
-            <input type="file" accept="image/*" class="photo-input" style="display: none;">
-            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-          </div>
-          <div class="employee-card">
-            <img src="https://via.placeholder.com/120" alt="Claudio Bustamante" class="employee-photo" />
-            <h3 class="employee-name">Claudio Bustamante</h3>
-            <p class="employee-role">Operador NOC</p>
-            <input type="file" accept="image/*" class="photo-input" style="display: none;">
-            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-          </div>
-          <div class="employee-card">
-            <img src="https://via.placeholder.com/120" alt="Julio Oliva" class="employee-photo" />
-            <h3 class="employee-name">Julio Oliva</h3>
-            <p class="employee-role">Operador NOC</p>
-            <input type="file" accept="image/*" class="photo-input" style="display: none;">
-            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-          </div>
-          <div class="employee-card">
-            <img src="https://via.placeholder.com/120" alt="Gabriel Trujillo" class="employee-photo" />
-            <h3 class="employee-name">Gabriel Trujillo</h3>
-            <p class="employee-role">Operador NOC</p>
-            <input type="file" accept="image/*" class="photo-input" style="display: none;">
-            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-          </div>
-          <div class="employee-card">
-            <img src="https://via.placeholder.com/120" alt="Cristian Oyarzo" class="employee-photo" />
-            <h3 class="employee-name">Cristian Oyarzo</h3>
-            <p class="employee-role">Operador NOC</p>
-            <input type="file" accept="image/*" class="photo-input" style="display: none;">
-            <button class="upload-photo-btn admin-only"><i data-lucide="camera"></i> Cambiar foto</button>
-          </div>
-        </div>
-      </section>
+      <!-- Employee cards moved to directorio.html -->
   </div>
   </main>
 
@@ -399,7 +364,6 @@
     </div>
   </div>
 
-  <!-- Modal para Estadísticas (simple, se mantiene para compatibilidad si lo usabas) -->
   <div id="modalEstadisticasSimple" class="modal-horarios" style="display:none;">
     <div class="modal-horarios-content">
       <span class="close-horarios">&times;</span>
@@ -408,10 +372,22 @@
     </div>
   </div>
 
+  <!-- Firebase SDKs (Classic Loading to ensure Globals) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
   <script type="module" src="./js/firebase.js"></script>
-  <script type="module" src="./js/noc.js"></script>
+  <script defer src="./js/noc.js"></script>
+  <!-- Employee cards moved to directorio.html -->
   <script>
-    lucide.createIcons();
+    // Esperar a que lucide esté cargado antes de inicializar iconos
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    });
   </script>
 </body>
 

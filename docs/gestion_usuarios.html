@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Cuentas de Usuario - Sistema</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="./js/auto-logout.js"></script>
+    <!-- Security: XSS Protection -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="./js/security-helpers.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/gestion_usuarios.css" />
+</head>
+
+<body>
+
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa"
+                class="logo-sidebar">
+        </div>
+        <nav class="sidebar-menu">
+            <ul>
+                <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
+                        <span>Directorio</span></a></li>
+                <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+                <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de
+                            Fibra</span></a></li>
+                <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a>
+                </li>
+                <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos
+                            Noc</span></a></li>
+                <li id="li-empleados" class="admin-only">
+                    <a href="gestion_empleados.html">
+                        <i data-lucide="user-cog"></i>
+                        <span>Gestionar Empleados</span>
+                    </a>
+                </li>
+                <li><a href="gestion_usuarios.html" class="active"><i data-lucide="shield-check"></i> <span>Cuentas de
+                            Sistema</span></a></li>
+                <li id="li-registros" style="display:none;">
+                    <a href="registros.html">
+                        <i data-lucide="file-text"></i>
+                        <span>Registros</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <button id="logout-btn" class="primary-btn logout-btn">
+            <i data-lucide="log-out"></i> <span>Cerrar sesión</span>
+        </button>
+    </div>
+
+    <!-- Contenedor Principal -->
+    <div id="main-content" class="main-content">
+        <header>
+            <button id="menu-toggle" class="menu-btn">
+                <i data-lucide="panel-left"></i>
+            </button>
+            <h1>Gestión de Cuentas</h1>
+        </header>
+
+        <main>
+            <div class="container">
+
+                <div class="info-banner">
+                    <i data-lucide="info"></i>
+                    <p><strong>Nota:</strong> Esta vista gestiona las <strong>cuentas de acceso al sistema</strong>
+                        (Firebase Auth).
+                        Para gestionar empleados del calendario NOC, usa la opción "Empleados NOC" del menú.</p>
+                </div>
+
+                <!-- Estadísticas Rápidas -->
+                <section class="stats-section">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Cuentas</span>
+                            <span class="stat-value" id="stat-total-users">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon admin">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Administradores</span>
+                            <span class="stat-value" id="stat-admins">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon superadmin">
+                            <i data-lucide="crown"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">SuperAdmins</span>
+                            <span class="stat-value" id="stat-superadmins">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon suspended">
+                            <i data-lucide="user-x"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Suspendidos</span>
+                            <span class="stat-value" id="stat-suspended">0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tabla de Usuarios -->
+                <section class="users-section">
+                    <div class="section-header">
+                        <h2><i data-lucide="shield-check"></i> Cuentas de Usuario para Acceso al Sistema</h2>
+                        <button id="btnAgregarUsuario" class="btn-agregar">
+                            <i data-lucide="user-plus"></i> Nueva Cuenta
+                        </button>
+                    </div>
+
+                    <div id="table-loader" class="table-loader" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Cargando cuentas...</p>
+                    </div>
+
+                    <table id="tablaUsuarios" class="tabla-usuarios">
+                        <thead>
+                            <tr>
+                                <th>Email / Usuario</th>
+                                <th>Rol en el Sistema</th>
+                                <th>Estado</th>
+                                <th>Último Acceso</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyUsuarios">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- Sección de Auditoría (Colapsable) -->
+                <section class="audit-section">
+                    <div class="section-header collapsible" id="audit-header">
+                        <h2><i data-lucide="shield-alert"></i> Registro de Auditoría</h2>
+                        <button class="collapse-btn">
+                            <i data-lucide="chevron-down"></i>
+                        </button>
+                    </div>
+
+                    <div id="audit-content" class="audit-content" style="display: none;">
+                        <div class="audit-filters">
+                            <div class="filter-group">
+                                <label for="filter-action">Acción:</label>
+                                <select id="filter-action">
+                                    <option value="">Todas</option>
+                                    <option value="user_created">Cuenta Creada</option>
+                                    <option value="role_changed">Cambio de Rol</option>
+                                    <option value="user_suspended">Cuenta Suspendida</option>
+                                    <option value="user_reactivated">Cuenta Reactivada</option>
+                                    <option value="password_reset">Reseteo de Contraseña</option>
+                                    <option value="user_deleted">Cuenta Eliminada</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="filter-user">Usuario:</label>
+                                <select id="filter-user">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <button id="btnApplyFilters" class="btn-filter">
+                                <i data-lucide="filter"></i> Aplicar Filtros
+                            </button>
+                            <button id="btnClearFilters" class="btn-filter secondary">
+                                <i data-lucide="x"></i> Limpiar
+                            </button>
+                        </div>
+
+                        <table id="tablaAudit" class="tabla-audit">
+                            <thead>
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Acción</th>
+                                    <th>Realizado por</th>
+                                    <th>Usuario Afectado</th>
+                                    <th>Detalles</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyAudit">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+
+        <footer>
+            <div class="container">
+                <p>PatagoniaIP SPA - Todos los derechos reservados</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="./js/firebase.js"></script>
+    <script type="module" src="./js/gestion_usuarios.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

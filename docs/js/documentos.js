@@ -128,8 +128,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (openUploadModalBtn) openUploadModalBtn.style.display = "none";
         }
 
-        if (currentUserRole === "superadmin" && liRegistros) {
-            liRegistros.style.display = "block";
+        if (currentUserRole === "superadmin") {
+            if (liRegistros) liRegistros.style.display = "block";
+            const liUsuarios = document.getElementById("li-usuarios");
+            if (liUsuarios) liUsuarios.style.display = "block";
         }
 
         // Remover la clase oculta y cargar archivos

@@ -1,0 +1,763 @@
+/* ============================================================================
+   GESTIÓN DE CUENTAS DE USUARIO DEL SISTEMA
+   Vista para gestionar cuentas de Firebase Auth (login al sistema)
+   DIFERENTE de gestión de empleados NOC (calendario de turnos)
+   ============================================================================ */
+
+/* Layout Overrides */
+/* Header styles now managed globally in styles.css */
+
+main {
+    margin-top: 2rem !important;
+    /* Force positive margin to prevent overlap */
+}
+
+/* Banner informativo */
+.info-banner {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
+    border-left: 4px solid #3b82f6;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.info-banner i {
+    width: 24px;
+    height: 24px;
+    color: #60a5fa;
+    flex-shrink: 0;
+}
+
+.info-banner p {
+    margin: 0;
+    color: var(--color-texto-secundario, #b0b0b0);
+    line-height: 1.6;
+}
+
+.info-banner strong {
+    color: var(--color-texto-principal, #ffffff);
+}
+
+/* Estadísticas Cards */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border-color: var(--color-acento-primario, #3a86ff);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-acento-primario, #3a86ff), var(--color-acento-secundario, #7796cb));
+    color: white;
+}
+
+.stat-icon i {
+    width: 32px;
+    height: 32px;
+}
+
+.stat-icon.admin {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.stat-icon.superadmin {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.stat-icon.suspended {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--color-texto-secundario, #b0b0b0);
+    font-weight: 400;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-texto-principal, #ffffff);
+}
+
+/* Sección de Usuarios */
+.users-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    min-height: 400px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.section-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    color: var(--color-texto-principal, #ffffff);
+    margin: 0;
+}
+
+.section-header h2 i {
+    width: 24px;
+    height: 24px;
+    color: var(--color-acento-primario, #3a86ff);
+}
+
+.btn-agregar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--color-acento-primario, #3a86ff), #2a6fd5);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-agregar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 134, 255, 0.4);
+}
+
+.btn-agregar i {
+    width: 20px;
+    height: 20px;
+}
+
+/* Tabla de Usuarios */
+.tabla-usuarios {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabla-usuarios thead {
+    background: linear-gradient(135deg, rgba(58, 134, 255, 0.2), rgba(119, 150, 203, 0.2));
+}
+
+.tabla-usuarios th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-texto-principal, #ffffff);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabla-usuarios tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s ease;
+}
+
+.tabla-usuarios tbody tr:hover {
+    background: rgba(58, 134, 255, 0.1);
+}
+
+.tabla-usuarios td {
+    padding: 1rem;
+    color: var(--color-texto-secundario, #b0b0b0);
+}
+
+/* Badges de Rol */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.role-badge i {
+    width: 16px;
+    height: 16px;
+}
+
+.role-badge.user {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.role-badge.admin {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.role-badge.superadmin {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* Badges de Estado */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge i {
+    width: 16px;
+    height: 16px;
+}
+
+.status-badge.active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.suspended {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Botones de Acción - Rediseño Minimalista */
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.btn-action {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    /* Slightly rounded */
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    background: transparent;
+    /* Ghost by default or subtle bg */
+}
+
+.btn-action i {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2px;
+}
+
+/* Edit: Blue */
+.btn-action.edit {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.btn-action.edit:hover {
+    background: rgba(59, 130, 246, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Suspend: Amber */
+.btn-action.suspend {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.btn-action.suspend:hover {
+    background: rgba(245, 158, 11, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+/* Activate: Green */
+.btn-action.activate {
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.btn-action.activate:hover {
+    background: rgba(34, 197, 94, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+/* Reset: Purple */
+.btn-action.reset {
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.btn-action.reset:hover {
+    background: rgba(139, 92, 246, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+/* Delete: Red */
+.btn-action.delete {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-action.delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+
+/* Sección de Auditoría */
+.audit-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.section-header.collapsible {
+    cursor: pointer;
+    user-select: none;
+}
+
+.section-header.collapsible:hover h2 {
+    color: var(--color-acento-primario, #3a86ff);
+}
+
+.collapse-btn {
+    background: rgba(58, 134, 255, 0.2);
+    border: 1px solid rgba(58, 134, 255, 0.3);
+    color: #60a5fa;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.collapse-btn i {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+.collapse-btn.active i {
+    transform: rotate(180deg);
+}
+
+.audit-content {
+    margin-top: 1.5rem;
+}
+
+.audit-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-size: 0.875rem;
+    color: var(--color-texto-secundario, #b0b0b0);
+    font-weight: 500;
+}
+
+.filter-group select {
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--color-texto-principal, #ffffff);
+    font-size: 0.9rem;
+    min-width: 200px;
+}
+
+.btn-filter {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-filter i {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-filter:not(.secondary) {
+    background: linear-gradient(135deg, var(--color-acento-primario, #3a86ff), #2a6fd5);
+    color: white;
+}
+
+.btn-filter:not(.secondary):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4);
+}
+
+.btn-filter.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-texto-secundario, #b0b0b0);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-filter.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Tabla de Auditoría */
+.tabla-audit {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabla-audit thead {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(109, 40, 217, 0.2));
+}
+
+.tabla-audit th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-texto-principal, #ffffff);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabla-audit tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tabla-audit tbody tr:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.tabla-audit td {
+    padding: 1rem;
+    color: var(--color-texto-secundario, #b0b0b0);
+    font-size: 0.9rem;
+}
+
+.action-badge {
+    display: inline-block;
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.action-badge.user_created {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.action-badge.role_changed {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.action-badge.user_suspended {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.action-badge.user_reactivated {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.action-badge.password_reset {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+}
+
+.action-badge.user_deleted {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+/* Loader */
+.table-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+    min-height: 200px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--color-acento-primario, #3a86ff);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.table-loader p {
+    color: var(--color-texto-secundario, #b0b0b0);
+    font-size: 1rem;
+}
+
+/* Asegurar que la tabla sea visible */
+.tabla-usuarios,
+.tabla-audit {
+    display: table;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tabla-usuarios,
+    .tabla-audit {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .actions-cell {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-action {
+        width: 100%;
+        /* Full width on mobile */
+        justify-content: center;
+    }
+
+    .audit-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group select {
+        min-width: 100%;
+    }
+}
+
+/* ==========================================================================
+   SWEETALERT2 CUSTOMIZATIONS - CORPORATE DARK THEME
+   ========================================================================== */
+
+/* Fondo del popup */
+div:where(.swal2-container) div:where(.swal2-popup) {
+    background: #1a1a2e !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    padding: 2rem !important;
+}
+
+/* Títulos y Texto */
+div:where(.swal2-container) h2:where(.swal2-title),
+div:where(.swal2-container) div:where(.swal2-html-container) {
+    color: #ffffff !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* User Info Column */
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Inputs y Selects */
+div:where(.swal2-container) input:where(.swal2-input),
+div:where(.swal2-container) select:where(.swal2-select),
+div:where(.swal2-container) select:where(.swal2-input),
+div:where(.swal2-container) textarea:where(.swal2-textarea) {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    width: 20em !important;
+    /* Match sweetalert default input width usually around 17-20em or allow auto but max-width */
+    max-width: 100% !important;
+}
+
+/* Opciones del select para que no sean blancas en el dropdown */
+div:where(.swal2-container) select option {
+    background-color: #1a1a2e;
+    color: #ffffff;
+    padding: 10px;
+}
+
+div:where(.swal2-container) input:where(.swal2-input):focus,
+div:where(.swal2-container) select:where(.swal2-select):focus,
+div:where(.swal2-container) textarea:where(.swal2-textarea):focus {
+    border-color: var(--color-acento-primario, #3a86ff) !important;
+    box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2) !important;
+}
+
+/* Labels de Inputs (si hay) */
+div:where(.swal2-container) .swal2-input-label {
+    color: #b0b0b0 !important;
+}
+
+/* Botones */
+div:where(.swal2-container) button:where(.swal2-styled) {
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
+    background: linear-gradient(135deg, var(--color-acento-primario, #3a86ff), #2a6fd5) !important;
+    border: none !important;
+}
+
+div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(58, 134, 255, 0.4) !important;
+    background-image: linear-gradient(135deg, #2a6fd5, #1e5bb0) !important;
+}
+
+div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Iconos */
+div:where(.swal2-icon) {
+    border-color: transparent !important;
+    /* Quitar borde por defecto */
+}
+
+div:where(.swal2-icon).swal2-success {
+    color: #4ade80 !important;
+    border-color: #4ade80 !important;
+}
+
+div:where(.swal2-icon).swal2-error {
+    color: #f87171 !important;
+    border-color: #f87171 !important;
+}
+
+div:where(.swal2-icon).swal2-warning {
+    color: #fbbf24 !important;
+    border-color: #fbbf24 !important;
+}
+
+div:where(.swal2-icon).swal2-info {
+    color: #60a5fa !important;
+    border-color: #60a5fa !important;
+}

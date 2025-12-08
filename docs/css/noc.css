@@ -62,21 +62,7 @@ body {
 /* =============================
    Header
 ================================ */
-header {
-  background: linear-gradient(180deg, var(--color-fondo-secundario) 0%, rgba(30, 30, 46, 0.95) 100%);
-  color: var(--color-texto-principal);
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-header h1 {
-  font-size: 1.8rem;
-  font-weight: 600;
-}
+/* Header styles inherited from styles.css */
 
 main {
   margin-top: 2rem;
@@ -1458,4 +1444,105 @@ body.is-admin .admin-only {
 .premium-table-container {
   animation: fadeInUp 0.5s ease-out 0.4s forwards;
   opacity: 0;
+}
+
+
+/* =========================================
+   FLOATING PALETTE STYLES (PREMIUM)
+   ========================================= */
+.turnos-section.floating {
+  position: fixed;
+  top: 120px;
+  right: 20px;
+  width: 340px;
+  max-height: 80vh;
+
+  /* Glassmorphism Effect */
+  background-color: rgba(24, 24, 27, 0.85);
+  /* Zinc 900 with opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  /* Premium Border & Shadow */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  /* Subtle highlight */
+  border-radius: 16px;
+  box-shadow:
+    0 20px 40px -5px rgba(0, 0, 0, 0.6),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* Inner light */
+
+  z-index: 9999;
+  padding: 1.25rem;
+  overflow-y: auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.turnos-section.floating .turnos-header {
+  cursor: move;
+  /* Indicates draggable */
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.turnos-section.floating h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0;
+}
+
+.turnos-section.floating .turnos-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Adjust buttons in floating mode for compactness */
+.turnos-section.floating .btn-turno {
+  width: 48px;
+  height: 38px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.turnos-section.floating .btn-turno:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Button active state for the toggle */
+#btnToggleFloating.btn-icon {
+  padding: 6px;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#btnToggleFloating.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+#btnToggleFloating.active {
+  color: #7796cb !important;
+  background: rgba(119, 150, 203, 0.15) !important;
+  box-shadow: 0 0 10px rgba(119, 150, 203, 0.2);
 }

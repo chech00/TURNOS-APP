@@ -11,6 +11,20 @@ function getDb() { return window.db; }
 // Canal de difusión para sincronizar con otras pestañas
 const empleadosChannel = new BroadcastChannel("empleados_sync");
 
+// Optimistic Loading
+document.addEventListener("DOMContentLoaded", () => {
+    const cachedRole = localStorage.getItem("userRole");
+    if (cachedRole === "superadmin") {
+        const liRegistros = document.getElementById("li-registros");
+        const liUsuarios = document.getElementById("li-usuarios");
+        if (liRegistros) liRegistros.style.display = "block";
+        if (liUsuarios) liUsuarios.style.display = "block";
+        document.body.classList.add("is-admin");
+    } else if (cachedRole === "admin") {
+        document.body.classList.add("is-admin");
+    }
+});
+
 // Lista de empleados por defecto (fallback)
 const EMPLEADOS_DEFAULT = [
     { nombre: "Sergio Castillo" },
@@ -340,10 +354,12 @@ function verificarAcceso() {
 
                     document.body.classList.add("is-admin");
 
-                    // Mostrar Registros para superadmin
+                    // Mostrar Registros y Usuarios para superadmin
                     if (isSuperAdmin) {
                         const liRegistros = document.getElementById("li-registros");
+                        const liUsuarios = document.getElementById("li-usuarios");
                         if (liRegistros) liRegistros.style.display = "block";
+                        if (liUsuarios) liUsuarios.style.display = "block";
                     }
 
                     // Renderizar tabla
