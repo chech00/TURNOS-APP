@@ -124,16 +124,36 @@ async function getCalendarData() {
     }
 
     // 2. Try Firestore (Fallback)
-    const monthName = today.toLocaleString("es-ES", { month: "long" });
-    const docId = `${monthName} ${year}`;
+    // Generate multiple possible month name formats
+    const monthNames = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    const monthName = monthNames[today.getMonth()];
 
+    // Try multiple formats: "diciembre 2025", "Diciembre 2025", "DICIEMBRE 2025"
     const docIdsToTry = [
-        docId,
-        docId.charAt(0).toUpperCase() + docId.slice(1),
-        docId.toLowerCase()
+        `${monthName} ${year}`,
+        `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`,
+        monthName.toUpperCase() + ` ${year}`
     ];
 
     console.log("[DIRECTORIO] localStorage vacío. Buscando en Firestore:", docIdsToTry);
+
+    // Wait for window.db if not ready yet
+    if (!window.db) {
+        console.log("[DIRECTORIO] Esperando Firebase...");
+        await new Promise(resolve => {
+            let attempts = 0;
+            const check = setInterval(() => {
+                attempts++;
+                if (window.db || attempts > 30) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
 
     if (window.db) {
         try {
@@ -147,9 +167,12 @@ async function getCalendarData() {
                     return data;
                 }
             }
+            console.warn("[DIRECTORIO] No se encontró calendario en Firestore para:", docIdsToTry);
         } catch (e) {
             console.warn("[DIRECTORIO] Error buscando en Firestore:", e);
         }
+    } else {
+        console.warn("[DIRECTORIO] Firebase no disponible después de esperar");
     }
 
     return { _debugSource: 'None' };

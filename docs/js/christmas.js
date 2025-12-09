@@ -174,88 +174,316 @@
     }
 
     // ==========================================
-    // 2. FIREWORKS 🎆
+    // 2. FIREWORKS 🎆 (Realistic Version)
     // ==========================================
     function enableFireworks() {
         const container = createContainer('fireworks');
         if (!container) return;
 
-        function createFirework() {
+        const colors = [
+            ['#ff1744', '#ff5252', '#ff8a80'],     // Red
+            ['#ffab00', '#ffd740', '#ffe57f'],     // Gold
+            ['#00e676', '#69f0ae', '#b9f6ca'],     // Green
+            ['#2979ff', '#448aff', '#82b1ff'],     // Blue
+            ['#d500f9', '#e040fb', '#ea80fc'],     // Purple
+            ['#00e5ff', '#18ffff', '#84ffff'],     // Cyan
+            ['#ff6d00', '#ff9100', '#ffab40'],     // Orange
+            ['#fff', '#ffd700', '#fffacd'],        // White/Gold
+        ];
+
+        function launchFirework() {
+            const startX = Math.random() * 80 + 10; // 10-90%
+            const startY = 100; // Start at bottom
+            const targetY = Math.random() * 40 + 15; // Explode at 15-55% from top
+            const colorSet = colors[Math.floor(Math.random() * colors.length)];
+            const mainColor = colorSet[0];
+
+            // Create rocket
+            const rocket = document.createElement('div');
+            rocket.className = 'firework-rocket';
+            rocket.style.left = `${startX}%`;
+            rocket.style.bottom = '0%';
+            container.appendChild(rocket);
+
+            // Rocket go up animation
+            const riseTime = 800 + Math.random() * 400;
+            rocket.animate([
+                { bottom: '0%', opacity: 1 },
+                { bottom: `${100 - targetY}%`, opacity: 1 }
+            ], {
+                duration: riseTime,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+            // Explode after rising
+            setTimeout(() => {
+                rocket.remove();
+                createExplosion(startX, targetY, colorSet);
+            }, riseTime);
+        }
+
+        function createExplosion(x, y, colorSet) {
+            const mainColor = colorSet[0];
+            const secondaryColor = colorSet[1];
+            const tertiaryColor = colorSet[2];
+
             const firework = document.createElement('div');
-            firework.className = 'firework';
-            firework.style.left = `${Math.random() * 80 + 10}%`;
-            firework.style.bottom = `${Math.random() * 40 + 10}%`;
+            firework.className = 'firework exploded';
+            firework.style.left = `${x}%`;
+            firework.style.top = `${y}%`;
+            container.appendChild(firework);
 
-            const colors = ['#ff0040', '#ff4000', '#ffbf00', '#00ff40', '#00bfff', '#8000ff', '#ff00bf', '#ffd700'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
+            // Flash effect
+            const flash = document.createElement('div');
+            flash.className = 'firework-flash';
+            flash.style.background = `radial-gradient(circle, ${mainColor} 0%, rgba(255,255,255,0.8) 30%, transparent 70%)`;
+            firework.appendChild(flash);
 
-            for (let i = 0; i < 12; i++) {
+            // Main particles (24 in a circle)
+            const particleCount = 24;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (360 / particleCount) * i;
+                const rad = angle * (Math.PI / 180);
+                const distance = 60 + Math.random() * 40;
+                const xDist = Math.cos(rad) * distance;
+                const yDist = Math.sin(rad) * distance;
+
                 const particle = document.createElement('div');
                 particle.className = 'firework-particle';
-                particle.style.setProperty('--angle', `${(360 / 12) * i}deg`);
-                particle.style.setProperty('--distance', `${50 + Math.random() * 50}px`);
-                particle.style.backgroundColor = color;
-                particle.style.boxShadow = `0 0 6px ${color}`;
+                particle.style.setProperty('--color', i % 2 === 0 ? mainColor : secondaryColor);
+                particle.style.setProperty('--x', xDist);
+                particle.style.setProperty('--y', yDist);
+                particle.style.setProperty('--size', `${3 + Math.random() * 3}px`);
+                particle.style.setProperty('--duration', `${1.2 + Math.random() * 0.5}s`);
                 firework.appendChild(particle);
             }
 
-            container.appendChild(firework);
-            setTimeout(() => firework.remove(), 2000);
+            // Falling sparks (16)
+            for (let i = 0; i < 16; i++) {
+                const angle = Math.random() * 360;
+                const rad = angle * (Math.PI / 180);
+                const distance = 30 + Math.random() * 50;
+                const xDist = Math.cos(rad) * distance;
+                const yDist = Math.sin(rad) * distance;
+
+                const spark = document.createElement('div');
+                spark.className = 'firework-spark';
+                spark.style.setProperty('--color', tertiaryColor);
+                spark.style.setProperty('--x', xDist);
+                spark.style.setProperty('--y', yDist);
+                spark.style.setProperty('--duration', `${1.5 + Math.random() * 1}s`);
+                spark.style.setProperty('--delay', `${Math.random() * 0.3}s`);
+                firework.appendChild(spark);
+            }
+
+            // Remove after animation
+            setTimeout(() => firework.remove(), 3000);
         }
 
-        createFirework();
-        container.dataset.interval = setInterval(createFirework, 800);
+        // Launch fireworks at random intervals
+        function scheduleNext() {
+            const delay = 300 + Math.random() * 1200;
+            setTimeout(() => {
+                launchFirework();
+                if (container.parentNode) {
+                    scheduleNext();
+                }
+            }, delay);
+        }
+
+        // Initial burst
+        launchFirework();
+        setTimeout(launchFirework, 200);
+        setTimeout(launchFirework, 500);
+        scheduleNext();
     }
 
     // ==========================================
-    // 3. HALLOWEEN 🎃
+    // 3. HALLOWEEN 🎃 (Realistic Immersive Version)
     // ==========================================
     function enableHalloween() {
         const container = createContainer('halloween');
         if (!container) return;
 
-        // Bats
-        for (let i = 0; i < 8; i++) {
+        // Fog layers
+        for (let i = 0; i < 2; i++) {
+            const fog = document.createElement('div');
+            fog.className = 'halloween-fog';
+            container.appendChild(fog);
+        }
+
+        // Blood Moon
+        const moon = document.createElement('div');
+        moon.className = 'halloween-moon';
+        container.appendChild(moon);
+
+        // CSS Bats with animated wings
+        for (let i = 0; i < 6; i++) {
             const bat = document.createElement('div');
             bat.className = 'halloween-bat';
-            bat.innerHTML = '🦇';
-            bat.style.left = `${Math.random() * 100}vw`;
-            bat.style.top = `${Math.random() * 50}vh`;
-            bat.style.animationDuration = `${Math.random() * 10 + 10}s`;
-            bat.style.animationDelay = `${Math.random() * 5}s`;
+            bat.style.top = `${10 + Math.random() * 35}%`;
+            bat.style.setProperty('--fly-duration', `${12 + Math.random() * 10}s`);
+            bat.style.animationDelay = `${Math.random() * 8}s`;
+
+            // Bat body element
+            const body = document.createElement('div');
+            body.className = 'bat-body';
+            bat.appendChild(body);
+
             container.appendChild(bat);
         }
 
-        // Pumpkins
-        for (let i = 0; i < 5; i++) {
+        // Pumpkins with glowing faces
+        for (let i = 0; i < 4; i++) {
             const pumpkin = document.createElement('div');
             pumpkin.className = 'halloween-pumpkin';
-            pumpkin.innerHTML = '🎃';
-            pumpkin.style.left = `${Math.random() * 90 + 5}%`;
-            pumpkin.style.bottom = `${Math.random() * 20}%`;
-            pumpkin.style.animationDelay = `${Math.random() * 3}s`;
+            pumpkin.style.left = `${10 + i * 25}%`;
+            pumpkin.style.bottom = `${5 + Math.random() * 15}%`;
+            pumpkin.style.animationDelay = `${Math.random() * 2}s`;
+            pumpkin.style.transform = `scale(${0.8 + Math.random() * 0.4})`;
+
+            // Pumpkin body
+            const body = document.createElement('div');
+            body.className = 'pumpkin-body';
+            pumpkin.appendChild(body);
+
+            // Stem
+            const stem = document.createElement('div');
+            stem.className = 'pumpkin-stem';
+            pumpkin.appendChild(stem);
+
+            // Face container
+            const face = document.createElement('div');
+            face.className = 'pumpkin-face';
+
+            // Eyes
+            const leftEye = document.createElement('div');
+            leftEye.className = 'pumpkin-eye left';
+            face.appendChild(leftEye);
+
+            const rightEye = document.createElement('div');
+            rightEye.className = 'pumpkin-eye right';
+            face.appendChild(rightEye);
+
+            // Mouth
+            const mouth = document.createElement('div');
+            mouth.className = 'pumpkin-mouth';
+            face.appendChild(mouth);
+
+            pumpkin.appendChild(face);
             container.appendChild(pumpkin);
+        }
+
+        // Ghosts
+        for (let i = 0; i < 3; i++) {
+            const ghost = document.createElement('div');
+            ghost.className = 'halloween-ghost';
+            ghost.style.left = `${15 + i * 30}%`;
+            ghost.style.top = `${20 + Math.random() * 30}%`;
+            ghost.style.setProperty('--float-duration', `${6 + Math.random() * 4}s`);
+            ghost.style.animationDelay = `${Math.random() * 5}s`;
+
+            // Ghost body
+            const body = document.createElement('div');
+            body.className = 'ghost-body';
+
+            // Eyes
+            const leftEye = document.createElement('div');
+            leftEye.className = 'ghost-eye left';
+            body.appendChild(leftEye);
+
+            const rightEye = document.createElement('div');
+            rightEye.className = 'ghost-eye right';
+            body.appendChild(rightEye);
+
+            // Mouth
+            const mouth = document.createElement('div');
+            mouth.className = 'ghost-mouth';
+            body.appendChild(mouth);
+
+            ghost.appendChild(body);
+
+            // Tail with waves
+            const tail = document.createElement('div');
+            tail.className = 'ghost-tail';
+            for (let j = 0; j < 3; j++) {
+                const wave = document.createElement('span');
+                tail.appendChild(wave);
+            }
+            ghost.appendChild(tail);
+
+            container.appendChild(ghost);
         }
     }
 
     // ==========================================
-    // 4. VALENTINE 💕
+    // 4. VALENTINE 💕 (Romantic Realistic Version)
     // ==========================================
     function enableValentine() {
         const container = createContainer('valentine');
         if (!container) return;
 
-        const hearts = ['❤️', '💕', '💖', '💗', '💓', '💝'];
-        for (let i = 0; i < 25; i++) {
+        const heartColors = [
+            '#ff3366', '#ff4477', '#ff5588', '#ff6699',
+            '#ee2255', '#dd1144', '#cc0033', '#ff0044'
+        ];
+
+        // CSS Hearts rising
+        for (let i = 0; i < 15; i++) {
             const heart = document.createElement('div');
             heart.className = 'valentine-heart';
-            heart.innerHTML = hearts[Math.floor(Math.random() * hearts.length)];
-            heart.style.left = `${Math.random() * 100}vw`;
-            heart.style.animationDuration = `${Math.random() * 8 + 6}s`;
-            heart.style.animationDelay = `${Math.random() * 5}s`;
-            heart.style.fontSize = `${Math.random() * 1.5 + 0.8}rem`;
+            const size = 20 + Math.random() * 25;
+            heart.style.setProperty('--size', `${size}px`);
+            heart.style.setProperty('--color', heartColors[Math.floor(Math.random() * heartColors.length)]);
+            heart.style.setProperty('--duration', `${8 + Math.random() * 6}s`);
+            heart.style.setProperty('--sway', `${-40 + Math.random() * 80}px`);
+            heart.style.left = `${Math.random() * 100}%`;
+            heart.style.animationDelay = `${Math.random() * 10}s`;
+
+            if (Math.random() > 0.7) heart.classList.add('pulse');
             container.appendChild(heart);
         }
+
+        // Rose Petals
+        for (let i = 0; i < 20; i++) {
+            const petal = document.createElement('div');
+            petal.className = 'valentine-petal';
+            const size = 15 + Math.random() * 15;
+            petal.style.setProperty('--size', `${size}px`);
+            petal.style.setProperty('--duration', `${10 + Math.random() * 8}s`);
+            petal.style.left = `${Math.random() * 100}%`;
+            petal.style.animationDelay = `${Math.random() * 12}s`;
+            container.appendChild(petal);
+        }
+
+        // Sparkles
+        for (let i = 0; i < 25; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'valentine-sparkle';
+            sparkle.style.left = `${Math.random() * 100}%`;
+            sparkle.style.top = `${Math.random() * 100}%`;
+            sparkle.style.setProperty('--duration', `${1 + Math.random() * 2}s`);
+            sparkle.style.animationDelay = `${Math.random() * 3}s`;
+            container.appendChild(sparkle);
+        }
+
+        // Cupid Arrows (occasional)
+        function launchArrow() {
+            const arrow = document.createElement('div');
+            arrow.className = 'valentine-arrow';
+            arrow.style.top = `${20 + Math.random() * 50}%`;
+            arrow.style.setProperty('--duration', `${4 + Math.random() * 4}s`);
+            container.appendChild(arrow);
+
+            setTimeout(() => arrow.remove(), 8000);
+        }
+
+        // Launch arrows periodically
+        launchArrow();
+        setInterval(() => {
+            if (container.parentNode) launchArrow();
+        }, 5000);
     }
 
     // ==========================================
@@ -310,20 +538,36 @@
     }
 
     // ==========================================
-    // 7. RAIN 🌧️
+    // 7. RAIN 🌧️ (Realistic Version)
     // ==========================================
     function enableRain() {
         const container = createContainer('rain');
         if (!container) return;
 
-        for (let i = 0; i < 100; i++) {
+        // Rain drops with varying sizes
+        for (let i = 0; i < 120; i++) {
             const drop = document.createElement('div');
             drop.className = 'rain-drop';
-            drop.style.left = `${Math.random() * 100}vw`;
-            drop.style.animationDuration = `${Math.random() * 0.5 + 0.5}s`;
+            const height = 15 + Math.random() * 25;
+            const width = 1 + Math.random() * 2;
+            drop.style.setProperty('--height', `${height}px`);
+            drop.style.setProperty('--width', `${width}px`);
+            drop.style.setProperty('--duration', `${0.4 + Math.random() * 0.4}s`);
+            drop.style.setProperty('--angle', `${5 + Math.random() * 8}deg`);
+            drop.style.setProperty('--opacity', `${0.3 + Math.random() * 0.4}`);
+            drop.style.left = `${Math.random() * 100}%`;
             drop.style.animationDelay = `${Math.random() * 2}s`;
-            drop.style.opacity = Math.random() * 0.3 + 0.2;
             container.appendChild(drop);
+        }
+
+        // Splash effects at bottom
+        for (let i = 0; i < 15; i++) {
+            const splash = document.createElement('div');
+            splash.className = 'rain-splash';
+            splash.style.left = `${Math.random() * 100}%`;
+            splash.style.animationDelay = `${Math.random() * 2}s`;
+            splash.style.animationDuration = `${0.3 + Math.random() * 0.3}s`;
+            container.appendChild(splash);
         }
     }
 
@@ -348,39 +592,51 @@
     }
 
     // ==========================================
-    // 9. BUBBLES 🫧
+    // 9. BUBBLES 🫧 (Realistic Version)
     // ==========================================
     function enableBubbles() {
         const container = createContainer('bubbles');
         if (!container) return;
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 25; i++) {
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
-            const size = Math.random() * 30 + 10;
+            const size = 15 + Math.random() * 45;
             bubble.style.width = `${size}px`;
             bubble.style.height = `${size}px`;
-            bubble.style.left = `${Math.random() * 100}vw`;
-            bubble.style.animationDuration = `${Math.random() * 6 + 4}s`;
-            bubble.style.animationDelay = `${Math.random() * 5}s`;
+            bubble.style.setProperty('--duration', `${6 + Math.random() * 6}s`);
+            bubble.style.setProperty('--wobble', `${2 + Math.random() * 2}s`);
+            bubble.style.setProperty('--sway', `${-30 + Math.random() * 60}px`);
+            bubble.style.left = `${Math.random() * 100}%`;
+            bubble.style.animationDelay = `${Math.random() * 8}s`;
             container.appendChild(bubble);
         }
     }
 
     // ==========================================
-    // 10. AURORA BOREALIS 🌌
+    // 10. AURORA BOREALIS 🌌 (Realistic)
     // ==========================================
     function enableAurora() {
         const container = createContainer('aurora');
         if (!container) return;
-        container.className = 'aurora-container';
 
+        // 5 wave layers with different timings
         for (let i = 0; i < 5; i++) {
             const wave = document.createElement('div');
             wave.className = 'aurora-wave';
-            wave.style.animationDelay = `${i * 2}s`;
-            wave.style.opacity = 0.3 - (i * 0.05);
+            wave.style.animationDelay = `${i * 3}s`;
             container.appendChild(wave);
+        }
+
+        // 8 vertical curtain streaks
+        for (let i = 0; i < 8; i++) {
+            const curtain = document.createElement('div');
+            curtain.className = 'aurora-curtain';
+            curtain.style.left = `${5 + i * 12}%`;
+            curtain.style.animationDelay = `${i * 1.5}s`;
+            curtain.style.width = `${60 + Math.random() * 80}px`;
+            curtain.style.opacity = 0.3 + Math.random() * 0.4;
+            container.appendChild(curtain);
         }
     }
 
@@ -411,7 +667,7 @@
     }
 
     // ==========================================
-    // 12. CONNECTED PARTICLES 🔗
+    // 12. CONNECTED PARTICLES 🔗 (Enhanced Version)
     // ==========================================
     function enableParticles() {
         const container = createContainer('particles');
@@ -424,7 +680,16 @@
 
         const ctx = canvas.getContext('2d');
         let particles = [];
-        const particleCount = 50;
+        const particleCount = 80;
+        const connectionDistance = 150;
+
+        // Color palette
+        const colors = [
+            { r: 119, g: 150, b: 203 },  // Blue
+            { r: 150, g: 119, b: 203 },  // Purple
+            { r: 119, g: 203, b: 180 },  // Teal
+            { r: 203, g: 150, b: 119 },  // Orange
+        ];
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -437,20 +702,58 @@
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.radius = 2;
+                this.vx = (Math.random() - 0.5) * 0.8;
+                this.vy = (Math.random() - 0.5) * 0.8;
+                this.baseRadius = 2 + Math.random() * 3;
+                this.radius = this.baseRadius;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.pulseSpeed = 0.02 + Math.random() * 0.02;
+                this.pulseOffset = Math.random() * Math.PI * 2;
             }
-            update() {
+
+            update(time) {
                 this.x += this.vx;
                 this.y += this.vy;
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                // Bounce off edges with slight damping
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -0.95;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -0.95;
+
+                // Keep in bounds
+                this.x = Math.max(0, Math.min(canvas.width, this.x));
+                this.y = Math.max(0, Math.min(canvas.height, this.y));
+
+                // Pulse effect
+                this.radius = this.baseRadius + Math.sin(time * this.pulseSpeed + this.pulseOffset) * 1;
             }
+
             draw() {
+                const { r, g, b } = this.color;
+
+                // Glow effect
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.radius * 4
+                );
+                gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.8)`);
+                gradient.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, 0.3)`);
+                gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 4, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Core
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(119, 150, 203, 0.8)';
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 1)`;
+                ctx.fill();
+
+                // Bright center
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, 0.8)`;
                 ctx.fill();
             }
         }
@@ -459,31 +762,50 @@
             particles.push(new Particle());
         }
 
+        let time = 0;
         function animate() {
             if (!document.getElementById(ANIMATION_IDS.particles)) return;
 
+            time++;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // Update and draw particles
             particles.forEach(p => {
-                p.update();
-                p.draw();
+                p.update(time);
             });
 
-            // Draw connections
+            // Draw connections first (behind particles)
+            ctx.lineWidth = 1;
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
                     const dx = particles[i].x - particles[j].x;
                     const dy = particles[i].y - particles[j].y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 120) {
+
+                    if (dist < connectionDistance) {
+                        const opacity = 0.4 * (1 - dist / connectionDistance);
+                        const { r: r1, g: g1, b: b1 } = particles[i].color;
+                        const { r: r2, g: g2, b: b2 } = particles[j].color;
+
+                        // Gradient line between particles
+                        const gradient = ctx.createLinearGradient(
+                            particles[i].x, particles[i].y,
+                            particles[j].x, particles[j].y
+                        );
+                        gradient.addColorStop(0, `rgba(${r1}, ${g1}, ${b1}, ${opacity})`);
+                        gradient.addColorStop(1, `rgba(${r2}, ${g2}, ${b2}, ${opacity})`);
+
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(119, 150, 203, ${0.3 * (1 - dist / 120)})`;
+                        ctx.strokeStyle = gradient;
                         ctx.stroke();
                     }
                 }
             }
+
+            // Draw particles on top
+            particles.forEach(p => p.draw());
 
             container.dataset.animFrame = requestAnimationFrame(animate);
         }
