@@ -14,6 +14,9 @@ const DEFAULT_EMPLOYEES = [
 let allEmployees = [];
 let currentFilter = 'all';
 let searchTerm = '';
+let currentViewMode = 'grid'; // 'grid' or 'compact'
+let sortableInstance = null;
+let employeeOrder = []; // Save custom order
 
 // Wait for Firebase
 function waitForFirebase(callback, maxAttempts = 50, interval = 100) {
@@ -274,17 +277,16 @@ function getEmployeeStatus(employeeName, calendarData) {
 
                     if (nowMinutes > endMinutes) {
                         label = 'Turno Finalizado';
-                        icon = 'check-circle'; // Or 'moon'
-                        statusClass = 'free'; // Visually free? Or specific 'finished' style?
-                        // Let's keep 'working' color but change text, or add 'finished' class
-                        // User asked for "fuera de turno" in the free/working part
+                        icon = 'check-circle';
+                        statusClass = 'free';
                     } else if (nowMinutes < startMinutes) {
                         label = `Entra ${hours.start}`;
                         icon = 'clock';
+                        statusClass = 'upcoming'; // NEW: Different color for upcoming shift
                     }
                 }
 
-                // If label changed to "Turno Finalizado", maybe map to 'free' or custom
+                // If label changed to "Turno Finalizado", map to 'free'
                 if (label === 'Turno Finalizado') {
                     return { status: 'free', shift: todayShift, customLabel: label, customIcon: icon };
                 }
@@ -389,6 +391,19 @@ function renderEmployees(employees) {
         filtered = filtered.filter(emp => emp.status === currentFilter);
     }
 
+    // Apply custom order from localStorage
+    const savedOrder = JSON.parse(localStorage.getItem('directoryOrder') || '[]');
+    if (savedOrder.length > 0 && currentFilter === 'all' && !searchTerm) {
+        filtered.sort((a, b) => {
+            const idxA = savedOrder.indexOf(a.nombre);
+            const idxB = savedOrder.indexOf(b.nombre);
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+        });
+    }
+
     if (filtered.length === 0) {
         grid.innerHTML = `
       <div class="no-results">
@@ -409,6 +424,9 @@ function renderEmployees(employees) {
     });
 
     if (window.lucide) lucide.createIcons();
+
+    // Initialize Sortable.js
+    initSortable();
 }
 
 // Create employee card element
@@ -425,6 +443,7 @@ function createEmployeeCard(emp, index) {
 
     const statusConfig = {
         working: { label: 'De Turno', icon: 'briefcase' },
+        upcoming: { label: 'Próximo', icon: 'clock' }, // NEW: Yellow/Orange for upcoming shift
         free: { label: 'Libre', icon: 'coffee' },
         vacation: { label: 'Vacaciones', icon: 'palm-tree' },
         next: { label: 'Próximo Turno', icon: 'clock' },
@@ -445,6 +464,7 @@ function createEmployeeCard(emp, index) {
     // Check if user is admin BEFORE generating HTML
     const userRole = localStorage.getItem('userRole');
     const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+    const isSuperAdmin = userRole === 'superadmin';
 
     // Edit button
     const editButton = isAdmin
@@ -454,7 +474,16 @@ function createEmployeeCard(emp, index) {
     // DEBUG: Show raw shift if free/error
     const debugText = `<span style="font-size:9px; color:#aaa; display:block; margin-top:4px;">${emp.rawShift || 'None'}</span>`;
 
+    // Drag handle - only for superadmin
+    const dragHandle = isSuperAdmin
+        ? `<div class="drag-handle" title="Arrastrar para reordenar"><i data-lucide="grip-vertical"></i></div>`
+        : '';
+
     card.innerHTML = `
+    ${dragHandle}
+    <button class="expand-toggle" title="Ver más">
+      <i data-lucide="chevron-down"></i>
+    </button>
     <div class="employee-card-header">
       <div class="employee-photo-container">
         <img src="${photoUrl}" alt="${emp.nombre}" class="employee-photo" 
@@ -480,6 +509,20 @@ function createEmployeeCard(emp, index) {
         ${editButton}
       </div>
     </div>
+    <div class="expand-content">
+      <div class="detail-row">
+        <i data-lucide="briefcase"></i>
+        <span class="detail-label">Turno:</span>
+        <span class="detail-value">${emp.rawShift || 'Sin asignar'}</span>
+      </div>
+      <div class="detail-row">
+        <i data-lucide="user"></i>
+        <span class="detail-label">Cargo:</span>
+        <span class="detail-value">${role}</span>
+      </div>
+      ${emp.telefono ? `<div class="detail-row"><i data-lucide="phone"></i><span class="detail-label">Teléfono:</span><span class="detail-value">${emp.telefono}</span></div>` : ''}
+      ${emp.email ? `<div class="detail-row"><i data-lucide="mail"></i><span class="detail-label">Email:</span><span class="detail-value">${emp.email}</span></div>` : ''}
+    </div>
   `;
 
     // Add action event listeners
@@ -501,6 +544,13 @@ function createEmployeeCard(emp, index) {
     card.querySelector('.action-btn.edit')?.addEventListener('click', (e) => {
         const name = e.currentTarget.dataset.name;
         editEmployee(name);
+    });
+
+    // Expand toggle
+    card.querySelector('.expand-toggle')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.classList.toggle('expanded');
+        if (window.lucide) lucide.createIcons();
     });
 
     return card;
@@ -733,6 +783,7 @@ async function saveEmployeeData(originalName, data) {
 function setupSearchAndFilters() {
     const searchInput = document.getElementById('search-employee');
     const filterBtns = document.querySelectorAll('.filter-btn');
+    const viewBtns = document.querySelectorAll('.view-btn');
 
     // Search
     searchInput?.addEventListener('input', (e) => {
@@ -748,6 +799,52 @@ function setupSearchAndFilters() {
             currentFilter = btn.dataset.filter;
             renderEmployees(allEmployees);
         });
+    });
+
+    // View Mode Toggle
+    viewBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            viewBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentViewMode = btn.dataset.view;
+            const grid = document.getElementById('employees-grid');
+            if (grid) {
+                grid.setAttribute('data-view', currentViewMode);
+            }
+        });
+    });
+}
+
+// Initialize Sortable.js for drag-and-drop (SUPERADMIN ONLY)
+function initSortable() {
+    const grid = document.getElementById('employees-grid');
+    if (!grid || !window.Sortable) return;
+
+    // Only enable for superadmin
+    const userRole = localStorage.getItem('userRole');
+    if (userRole !== 'superadmin') return;
+
+    // Destroy previous instance
+    if (sortableInstance) {
+        sortableInstance.destroy();
+    }
+
+    sortableInstance = new Sortable(grid, {
+        animation: 200,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        onEnd: function (evt) {
+            // Save new order to localStorage
+            const cards = grid.querySelectorAll('.employee-card');
+            const newOrder = Array.from(cards).map(card => {
+                const nameEl = card.querySelector('.employee-name');
+                return nameEl ? nameEl.textContent : '';
+            });
+            localStorage.setItem('directoryOrder', JSON.stringify(newOrder));
+            console.log('[DIRECTORIO] Orden guardado:', newOrder);
+        }
     });
 }
 

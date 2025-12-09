@@ -151,10 +151,19 @@
                     <button class="filter-btn" data-filter="free">Libres</button>
                     <button class="filter-btn" data-filter="vacation">Vacaciones</button>
                 </div>
+                <!-- View Mode Toggle -->
+                <div class="view-mode-toggle">
+                    <button class="view-btn active" data-view="grid" title="Vista Tarjetas">
+                        <i data-lucide="layout-grid"></i>
+                    </button>
+                    <button class="view-btn" data-view="compact" title="Vista Compacta">
+                        <i data-lucide="list"></i>
+                    </button>
+                </div>
             </section>
 
-            <!-- Employee Cards Grid -->
-            <section class="employees-grid" id="employees-grid">
+            <!-- Employee Cards Grid (Sortable) -->
+            <section class="employees-grid" id="employees-grid" data-view="grid">
                 <!-- Cards will be loaded dynamically -->
                 <div class="loading-placeholder">
                     <div class="spinner"></div>
@@ -173,6 +182,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <!-- Sortable.js for drag-and-drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <!-- Firebase init -->
     <script type="module" src="./js/firebase.js"></script>

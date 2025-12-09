@@ -303,6 +303,18 @@
     border: 1px solid rgba(156, 39, 176, 0.3);
 }
 
+.employee-status.upcoming {
+    background: rgba(255, 152, 0, 0.15);
+    color: #FF9800;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.employee-status.night {
+    background: rgba(103, 58, 183, 0.15);
+    color: #9575CD;
+    border: 1px solid rgba(103, 58, 183, 0.3);
+}
+
 .employee-status i {
     width: 14px;
     height: 14px;
@@ -521,4 +533,279 @@
 
 .employee-card:nth-child(10) {
     animation-delay: 0.5s;
+}
+
+/* ==========================================================================
+   VIEW MODE TOGGLE
+   ========================================================================== */
+.view-mode-toggle {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: transparent;
+    color: var(--color-texto-secundario, #888);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.view-btn:hover {
+    color: var(--color-texto-principal, #fff);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.view-btn.active {
+    background: var(--color-acento-primario, #7796cb);
+    color: #fff;
+}
+
+.view-btn i {
+    width: 18px;
+    height: 18px;
+}
+
+/* ==========================================================================
+   COMPACT LIST VIEW
+   ========================================================================== */
+.employees-grid[data-view="compact"] {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.employees-grid[data-view="compact"] .employee-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    gap: 16px;
+}
+
+.employees-grid[data-view="compact"] .employee-card-header {
+    display: none;
+}
+
+.employees-grid[data-view="compact"] .employee-photo-container {
+    position: static;
+    transform: none;
+}
+
+.employees-grid[data-view="compact"] .employee-photo {
+    width: 48px;
+    height: 48px;
+    border-width: 2px;
+}
+
+.employees-grid[data-view="compact"] .employee-card-body {
+    padding: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.employees-grid[data-view="compact"] .employee-name {
+    font-size: 1rem;
+    margin-bottom: 0;
+    min-width: 150px;
+}
+
+.employees-grid[data-view="compact"] .employee-role {
+    display: none;
+}
+
+.employees-grid[data-view="compact"] .employee-status {
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+}
+
+.employees-grid[data-view="compact"] .employee-meta {
+    display: none;
+}
+
+.employees-grid[data-view="compact"] .employee-actions {
+    border-top: none;
+    padding-top: 0;
+    gap: 8px;
+}
+
+.employees-grid[data-view="compact"] .action-btn {
+    width: 36px;
+    height: 36px;
+}
+
+.employees-grid[data-view="compact"] .debug-text {
+    display: none !important;
+}
+
+/* ==========================================================================
+   EXPANDABLE CARDS
+   ========================================================================== */
+.employee-card .expand-content {
+    display: none;
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.1);
+    animation: expandIn 0.3s ease forwards;
+}
+
+.employee-card.expanded .expand-content {
+    display: block;
+}
+
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+
+    to {
+        opacity: 1;
+        max-height: 200px;
+    }
+}
+
+.expand-content .detail-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: var(--color-texto-secundario);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.expand-content .detail-row:last-child {
+    border-bottom: none;
+}
+
+.expand-content .detail-row i {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+    stroke: var(--color-acento-primario);
+}
+
+.expand-content .detail-label {
+    color: var(--color-texto-secundario);
+    opacity: 0.7;
+    min-width: 80px;
+}
+
+.expand-content .detail-value {
+    color: var(--color-texto-principal);
+    font-weight: 500;
+}
+
+.expand-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-texto-secundario);
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.expand-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--color-texto-principal);
+}
+
+.expand-toggle i {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+}
+
+.employee-card.expanded .expand-toggle i {
+    transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   DRAG AND DROP
+   ========================================================================== */
+.employee-card.sortable-ghost {
+    opacity: 0.4;
+}
+
+.employee-card.sortable-chosen {
+    box-shadow: 0 10px 40px rgba(119, 150, 203, 0.4);
+    transform: scale(1.02);
+}
+
+.employee-card.sortable-drag {
+    opacity: 1 !important;
+}
+
+.employee-card .drag-handle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 24px;
+    height: 24px;
+    cursor: grab;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+    color: var(--color-texto-secundario);
+    z-index: 10;
+}
+
+.employee-card:hover .drag-handle {
+    opacity: 0.8;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Favorite star indicator */
+.employee-card .favorite-star {
+    position: absolute;
+    top: 10px;
+    left: 38px;
+    font-size: 14px;
+    opacity: 0.3;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.employee-card .favorite-star:hover,
+.employee-card .favorite-star.active {
+    opacity: 1;
+}
+
+.employee-card .favorite-star.active {
+    color: #FFD700;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
 }
