@@ -489,26 +489,16 @@ async function asignarTurnosAutomaticos(isManualTrigger = false) {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
 
-    // 7. Guardar en Firestore
-    await db.collection("AsignacionesSemanales").doc(docId).set({
-      tecnico,
-      ingeniero,
-      planta,
+    // Preparar datos de la semana para el flujo de confirmación
+    const datosSemana = {
       semana: semanaIndex + 1,
       año,
       mes,
       fechaInicio: formatFecha(inicioSemana),
-      fechaFin: formatFecha(finSemana),
-      creadoAutomaticamente: true,
-      fechaCreacion: new Date().toISOString()
-    });
+      fechaFin: formatFecha(finSemana)
+    };
 
-    console.log(`✅ Asignación guardada en Firestore: ${docId}`);
-
-    // 8. Enviar notificaciones por Telegram
-    const mensajeBase = `📅 *Asignación de Turno Semanal*\n\nSemana ${semanaIndex + 1} (${formatFecha(inicioSemana)} - ${formatFecha(finSemana)})\n\n👷 Técnico: ${tecnico}\n👨‍💼 Ingeniero: ${ingeniero}\n🏭 Planta: ${planta}`;
-
-    // Cargar chat IDs de empleados desde la colección Empleados
+    // Cargar chat IDs de empleados
     const chatIds = {};
     empleadosSnapshot.forEach(doc => {
       const data = doc.data();
@@ -518,31 +508,54 @@ async function asignarTurnosAutomaticos(isManualTrigger = false) {
       }
     });
 
-    // Enviar a los asignados
-    const destinatarios = [tecnico, ingeniero, planta];
-    for (const nombre of destinatarios) {
-      if (chatIds[nombre]) {
-        await enviarMensajeTelegramDirecto(chatIds[nombre], `Hola ${nombre}, ${mensajeBase}`);
-        console.log(`📱 Telegram enviado a: ${nombre}`);
-      } else {
-        console.log(`⚠️ No se encontró telegramChatId para: ${nombre}`);
-      }
-    }
+    // 7. INICIAR FLUJO DE CONFIRMACIÓN INTERACTIVA
+    // En lugar de asignar directamente, preguntamos a cada empleado
+    console.log("📱 Iniciando flujo de confirmación interactiva...");
 
-    // Cargar y notificar a contactos adicionales
-    const contactosSnapshot = await db.collection("ContactosAdicionales").get();
-    for (const doc of contactosSnapshot.docs) {
-      const chatId = doc.data().chatId;
-      if (chatId) {
-        await enviarMensajeTelegramDirecto(chatId, mensajeBase);
-      }
-    }
+    const resultados = {
+      tecnico: null,
+      ingeniero: null,
+      planta: null
+    };
 
-    console.log("✅ Notificaciones de Telegram enviadas");
+    // Iniciar confirmación para cada rol
+    resultados.tecnico = await iniciarConfirmacionRol(
+      "tecnico",
+      tecnicosRed,
+      chatIds,
+      datosSemana,
+      { tecnicosRed, ingenieros, plantaExterna }
+    );
+
+    resultados.ingeniero = await iniciarConfirmacionRol(
+      "ingeniero",
+      ingenieros,
+      chatIds,
+      datosSemana,
+      { tecnicosRed, ingenieros, plantaExterna }
+    );
+
+    resultados.planta = await iniciarConfirmacionRol(
+      "planta",
+      plantaExterna,
+      chatIds,
+      datosSemana,
+      { tecnicosRed, ingenieros, plantaExterna }
+    );
+
+    console.log("✅ Mensajes de confirmación enviados. Esperando respuestas...");
+    console.log(`   Técnico: ${resultados.tecnico?.empleado || 'Sin candidato'}`);
+    console.log(`   Ingeniero: ${resultados.ingeniero?.empleado || 'Sin candidato'}`);
+    console.log(`   Planta: ${resultados.planta?.empleado || 'Sin candidato'}`);
 
     return {
       success: true,
-      asignacion: { tecnico, ingeniero, planta, semana: semanaIndex + 1 }
+      mensaje: "Flujo de confirmación iniciado. Esperando respuestas de los empleados.",
+      pendientes: {
+        tecnico: resultados.tecnico?.empleado,
+        ingeniero: resultados.ingeniero?.empleado,
+        planta: resultados.planta?.empleado
+      }
     };
 
   } catch (error) {
@@ -598,10 +611,436 @@ app.get("/cron-status", (req, res) => {
 });
 
 // =============================================================================
+// SISTEMA DE CONFIRMACIÓN INTERACTIVA VIA TELEGRAM
+// =============================================================================
+
+/**
+ * Envía mensaje con botones de confirmación (Sí/No)
+ */
+async function enviarMensajeConBotones(chatId, mensaje, callbackData) {
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+  if (!BOT_TOKEN) {
+    console.error("❌ BOT_TOKEN no configurado");
+    return false;
+  }
+
+  try {
+    const response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      chat_id: chatId,
+      text: mensaje,
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "✅ Sí, confirmo", callback_data: `confirmar_${callbackData}` },
+            { text: "❌ No puedo", callback_data: `rechazar_${callbackData}` }
+          ]
+        ]
+      }
+    });
+    console.log(`📱 Mensaje con botones enviado a chatId: ${chatId}`);
+    return response.data.result.message_id;
+  } catch (error) {
+    console.error(`Error enviando mensaje con botones:`, error.message);
+    return false;
+  }
+}
+
+/**
+ * Inicia el flujo de confirmación para un rol específico
+ */
+async function iniciarConfirmacionRol(rol, candidatos, chatIds, datosSemana, empleadosData) {
+  if (!candidatos || candidatos.length === 0) {
+    console.error(`❌ No hay candidatos para el rol: ${rol}`);
+    return null;
+  }
+
+  const primerCandidato = candidatos[0];
+  const chatId = chatIds[primerCandidato];
+
+  if (!chatId) {
+    console.log(`⚠️ ${primerCandidato} no tiene telegramChatId, pasando al siguiente...`);
+    // Intentar con el siguiente
+    if (candidatos.length > 1) {
+      return await iniciarConfirmacionRol(rol, candidatos.slice(1), chatIds, datosSemana, empleadosData);
+    }
+    return null;
+  }
+
+  // Crear documento de asignación pendiente
+  const pendienteId = `${datosSemana.año}-${datosSemana.mes}-${datosSemana.semana}-${rol}`;
+
+  await db.collection("AsignacionesPendientes").doc(pendienteId).set({
+    rol: rol,
+    empleadoActual: primerCandidato,
+    empleadosRestantes: candidatos.slice(1),
+    chatIdActual: chatId,
+    datosSemana: datosSemana,
+    fechaEnvio: new Date().toISOString(),
+    estado: "pendiente",
+    todosLosEmpleados: empleadosData // Para fallback
+  });
+
+  // Enviar mensaje con botones
+  const mensaje = `📅 *Asignación de Turno Semanal*\n\n` +
+    `Hola *${primerCandidato}*, te corresponde el turno como *${rol}*:\n\n` +
+    `📆 Semana ${datosSemana.semana}\n` +
+    `📅 ${datosSemana.fechaInicio} - ${datosSemana.fechaFin}\n\n` +
+    `¿Puedes tomar este turno?`;
+
+  const messageId = await enviarMensajeConBotones(chatId, mensaje, pendienteId);
+
+  if (messageId) {
+    await db.collection("AsignacionesPendientes").doc(pendienteId).update({
+      messageId: messageId
+    });
+  }
+
+  return { pendienteId, empleado: primerCandidato };
+}
+
+/**
+ * Procesa la confirmación de un turno
+ */
+async function procesarConfirmacion(pendienteId, chatId) {
+  try {
+    const docRef = db.collection("AsignacionesPendientes").doc(pendienteId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      console.error(`❌ No se encontró asignación pendiente: ${pendienteId}`);
+      return { success: false, message: "Asignación no encontrada" };
+    }
+
+    const data = doc.data();
+
+    if (data.estado !== "pendiente") {
+      return { success: false, message: "Esta asignación ya fue procesada" };
+    }
+
+    // Marcar como confirmado
+    await docRef.update({
+      estado: "confirmado",
+      fechaConfirmacion: new Date().toISOString()
+    });
+
+    // Guardar en AsignacionesSemanales si todos los roles están confirmados
+    await verificarYGuardarAsignacionCompleta(data.datosSemana);
+
+    console.log(`✅ ${data.empleadoActual} confirmó el turno como ${data.rol}`);
+
+    return {
+      success: true,
+      message: `¡Gracias ${data.empleadoActual}! Tu turno ha sido confirmado.`,
+      empleado: data.empleadoActual,
+      rol: data.rol
+    };
+  } catch (error) {
+    console.error("Error procesando confirmación:", error);
+    return { success: false, message: "Error al procesar" };
+  }
+}
+
+/**
+ * Procesa el rechazo y pregunta al siguiente candidato
+ */
+async function procesarRechazo(pendienteId, chatId) {
+  try {
+    const docRef = db.collection("AsignacionesPendientes").doc(pendienteId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return { success: false, message: "Asignación no encontrada" };
+    }
+
+    const data = doc.data();
+
+    if (data.estado !== "pendiente") {
+      return { success: false, message: "Esta asignación ya fue procesada" };
+    }
+
+    const restantes = data.empleadosRestantes || [];
+
+    if (restantes.length === 0) {
+      // No hay más candidatos - notificar al admin
+      await docRef.update({
+        estado: "rechazado_todos",
+        fechaRechazo: new Date().toISOString()
+      });
+
+      await notificarAdminRechazoTotal(data);
+
+      return {
+        success: true,
+        message: "Entendido. Se ha notificado al administrador.",
+        todosRechazaron: true
+      };
+    }
+
+    // Hay más candidatos - preguntar al siguiente
+    const siguienteCandidato = restantes[0];
+    const todosEmpleados = data.todosLosEmpleados || {};
+
+    // Buscar chatId del siguiente
+    const empleadosSnapshot = await db.collection("Empleados").get();
+    let siguienteChatId = null;
+
+    empleadosSnapshot.forEach(empDoc => {
+      const empData = empDoc.data();
+      if ((empData.nombre || empDoc.id) === siguienteCandidato && empData.telegramChatId) {
+        siguienteChatId = empData.telegramChatId;
+      }
+    });
+
+    if (!siguienteChatId) {
+      // El siguiente no tiene telegram, intentar con el que sigue
+      await docRef.update({
+        empleadoActual: siguienteCandidato,
+        empleadosRestantes: restantes.slice(1),
+        historialRechazos: admin.firestore.FieldValue.arrayUnion(data.empleadoActual)
+      });
+
+      return await procesarRechazo(pendienteId, chatId);
+    }
+
+    // Actualizar documento con nuevo candidato
+    await docRef.update({
+      empleadoActual: siguienteCandidato,
+      chatIdActual: siguienteChatId,
+      empleadosRestantes: restantes.slice(1),
+      historialRechazos: admin.firestore.FieldValue.arrayUnion(data.empleadoActual),
+      fechaEnvio: new Date().toISOString()
+    });
+
+    // Enviar mensaje al siguiente
+    const mensaje = `📅 *Asignación de Turno Semanal*\n\n` +
+      `Hola *${siguienteCandidato}*, te corresponde el turno como *${data.rol}*:\n\n` +
+      `📆 Semana ${data.datosSemana.semana}\n` +
+      `📅 ${data.datosSemana.fechaInicio} - ${data.datosSemana.fechaFin}\n\n` +
+      `¿Puedes tomar este turno?`;
+
+    await enviarMensajeConBotones(siguienteChatId, mensaje, pendienteId);
+
+    console.log(`🔄 ${data.empleadoActual} rechazó. Preguntando a ${siguienteCandidato}...`);
+
+    return {
+      success: true,
+      message: "Entendido. Se ha contactado a otro compañero.",
+      siguienteEmpleado: siguienteCandidato
+    };
+  } catch (error) {
+    console.error("Error procesando rechazo:", error);
+    return { success: false, message: "Error al procesar" };
+  }
+}
+
+/**
+ * Notifica al admin que todos rechazaron
+ */
+async function notificarAdminRechazoTotal(data) {
+  // Buscar admins en userRoles
+  try {
+    const adminsSnapshot = await db.collection("userRoles")
+      .where("rol", "in", ["admin", "superadmin"])
+      .get();
+
+    const mensaje = `⚠️ *ALERTA: Turno sin asignar*\n\n` +
+      `Todos los empleados del rol *${data.rol}* rechazaron el turno:\n\n` +
+      `📆 Semana ${data.datosSemana.semana}\n` +
+      `📅 ${data.datosSemana.fechaInicio} - ${data.datosSemana.fechaFin}\n\n` +
+      `Por favor, realiza la asignación manualmente.`;
+
+    // Buscar telegram de algún admin
+    const empleadosSnapshot = await db.collection("Empleados").get();
+    const adminEmails = [];
+    adminsSnapshot.forEach(doc => adminEmails.push(doc.data().email));
+
+    console.log(`⚠️ Todos rechazaron el rol ${data.rol}. Admins notificados: ${adminEmails.join(', ')}`);
+
+    // Intentar enviar a contactos adicionales (que suelen ser admins)
+    const contactosSnapshot = await db.collection("ContactosAdicionales").get();
+    for (const doc of contactosSnapshot.docs) {
+      const chatId = doc.data().chatId;
+      if (chatId) {
+        await enviarMensajeTelegramDirecto(chatId, mensaje);
+      }
+    }
+  } catch (error) {
+    console.error("Error notificando a admins:", error);
+  }
+}
+
+/**
+ * Verifica si todos los roles están confirmados y guarda la asignación final
+ */
+async function verificarYGuardarAsignacionCompleta(datosSemana) {
+  try {
+    const roles = ["tecnico", "ingeniero", "planta"];
+    const asignaciones = {};
+    let todosConfirmados = true;
+
+    for (const rol of roles) {
+      const pendienteId = `${datosSemana.año}-${datosSemana.mes}-${datosSemana.semana}-${rol}`;
+      const doc = await db.collection("AsignacionesPendientes").doc(pendienteId).get();
+
+      if (!doc.exists || doc.data().estado !== "confirmado") {
+        todosConfirmados = false;
+        break;
+      }
+
+      asignaciones[rol] = doc.data().empleadoActual;
+    }
+
+    if (todosConfirmados) {
+      // Guardar asignación final
+      const docId = `${datosSemana.año}-${datosSemana.mes}-${datosSemana.semana}`;
+
+      await db.collection("AsignacionesSemanales").doc(docId).set({
+        tecnico: asignaciones.tecnico,
+        ingeniero: asignaciones.ingeniero,
+        planta: asignaciones.planta,
+        semana: datosSemana.semana,
+        año: datosSemana.año,
+        mes: datosSemana.mes,
+        fechaInicio: datosSemana.fechaInicio,
+        fechaFin: datosSemana.fechaFin,
+        confirmadoPorTelegram: true,
+        fechaCreacion: new Date().toISOString()
+      });
+
+      console.log(`✅ Asignación completa guardada: Técnico=${asignaciones.tecnico}, Ingeniero=${asignaciones.ingeniero}, Planta=${asignaciones.planta}`);
+
+      // Notificar a todos los asignados
+      const mensajeFinal = `🎉 *Turno Confirmado*\n\n` +
+        `Semana ${datosSemana.semana} (${datosSemana.fechaInicio} - ${datosSemana.fechaFin})\n\n` +
+        `👷 Técnico: ${asignaciones.tecnico}\n` +
+        `👨‍💼 Ingeniero: ${asignaciones.ingeniero}\n` +
+        `🏭 Planta: ${asignaciones.planta}\n\n` +
+        `¡Todos confirmados! Gracias.`;
+
+      const contactosSnapshot = await db.collection("ContactosAdicionales").get();
+      for (const doc of contactosSnapshot.docs) {
+        const chatId = doc.data().chatId;
+        if (chatId) {
+          await enviarMensajeTelegramDirecto(chatId, mensajeFinal);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error verificando asignación completa:", error);
+  }
+}
+
+/**
+ * Edita el mensaje original para mostrar la respuesta
+ */
+async function editarMensajeTelegram(chatId, messageId, nuevoTexto) {
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+  if (!BOT_TOKEN) return;
+
+  try {
+    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+      chat_id: chatId,
+      message_id: messageId,
+      text: nuevoTexto,
+      parse_mode: "Markdown"
+    });
+  } catch (error) {
+    console.error("Error editando mensaje:", error.message);
+  }
+}
+
+// =============================================================================
+// WEBHOOK DE TELEGRAM (Recibe respuestas de botones)
+// =============================================================================
+app.post("/telegram-webhook", async (req, res) => {
+  try {
+    const update = req.body;
+
+    // Verificar si es un callback_query (respuesta de botón)
+    if (update.callback_query) {
+      const callbackQuery = update.callback_query;
+      const data = callbackQuery.data;
+      const chatId = callbackQuery.message.chat.id;
+      const messageId = callbackQuery.message.message_id;
+      const userName = callbackQuery.from.first_name || "Usuario";
+
+      console.log(`📩 Callback recibido: ${data} de chatId: ${chatId}`);
+
+      let resultado;
+      let respuestaMensaje;
+
+      if (data.startsWith("confirmar_")) {
+        const pendienteId = data.replace("confirmar_", "");
+        resultado = await procesarConfirmacion(pendienteId, chatId);
+        respuestaMensaje = resultado.success
+          ? `✅ *Turno Confirmado*\n\n¡Gracias ${resultado.empleado}! Tu turno como ${resultado.rol} ha sido registrado.`
+          : `⚠️ ${resultado.message}`;
+      }
+      else if (data.startsWith("rechazar_")) {
+        const pendienteId = data.replace("rechazar_", "");
+        resultado = await procesarRechazo(pendienteId, chatId);
+        respuestaMensaje = resultado.success
+          ? (resultado.todosRechazaron
+            ? `📢 Entendido. Se ha notificado al administrador para asignación manual.`
+            : `👍 Entendido. Se ha contactado a ${resultado.siguienteEmpleado || 'otro compañero'}.`)
+          : `⚠️ ${resultado.message}`;
+      }
+
+      // Editar mensaje original para quitar botones
+      await editarMensajeTelegram(chatId, messageId, respuestaMensaje);
+
+      // Responder al callback para quitar el "loading" del botón
+      const BOT_TOKEN = process.env.BOT_TOKEN;
+      await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+        callback_query_id: callbackQuery.id,
+        text: resultado.success ? "✅ Registrado" : "⚠️ Error"
+      });
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Error en webhook de Telegram:", error);
+    res.sendStatus(200); // Siempre responder 200 para evitar reintentos
+  }
+});
+
+// Endpoint para registrar el webhook (ejecutar una vez)
+app.get("/setup-telegram-webhook", async (req, res) => {
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+  const WEBHOOK_URL = `https://turnos-app-8viu.onrender.com/telegram-webhook`;
+
+  try {
+    const response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
+      url: WEBHOOK_URL
+    });
+
+    console.log("✅ Webhook de Telegram configurado:", response.data);
+    res.json({ success: true, result: response.data });
+  } catch (error) {
+    console.error("❌ Error configurando webhook:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Endpoint para verificar estado del webhook
+app.get("/webhook-status", async (req, res) => {
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+
+  try {
+    const response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`);
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// =============================================================================
 // INICIAR SERVIDOR
 // =============================================================================
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
   console.log(`🔒 CORS configurado para: ${ALLOWED_ORIGINS.join(', ')}`);
   console.log(`📁 Tipos de archivo permitidos: ${ALLOWED_EXTENSIONS.join(', ')}`);
+  console.log(`📱 Webhook de Telegram: /telegram-webhook`);
 });
