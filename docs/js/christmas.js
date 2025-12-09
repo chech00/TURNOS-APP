@@ -244,30 +244,33 @@
     }
 
     // ==========================================
-    // 6. INDEPENDENCE DAY 🇦🇷
+    // 6. FIESTAS PATRIAS CHILE 🇨🇱
     // ==========================================
     function enableIndependence() {
         const container = createContainer('independence');
         if (!container) return;
 
-        for (let i = 0; i < 15; i++) {
+        // Chile flag colors: Red, White, Blue
+        const colors = ['#D52B1E', '#FFFFFF', '#0039A6'];
+
+        for (let i = 0; i < 20; i++) {
             const ribbon = document.createElement('div');
             ribbon.className = 'independence-ribbon';
             ribbon.style.left = `${Math.random() * 100}vw`;
             ribbon.style.animationDuration = `${Math.random() * 8 + 6}s`;
             ribbon.style.animationDelay = `${Math.random() * 5}s`;
-            ribbon.style.background = i % 2 === 0 ? '#74ACDF' : '#FFFFFF';
+            ribbon.style.background = colors[i % 3];
             container.appendChild(ribbon);
         }
 
-        // Escarapela
-        for (let i = 0; i < 3; i++) {
-            const esc = document.createElement('div');
-            esc.className = 'independence-escarapela';
-            esc.innerHTML = '🎀';
-            esc.style.left = `${20 + i * 30}%`;
-            esc.style.animationDelay = `${i * 2}s`;
-            container.appendChild(esc);
+        // Chilean star
+        for (let i = 0; i < 5; i++) {
+            const star = document.createElement('div');
+            star.className = 'independence-star';
+            star.innerHTML = '⭐';
+            star.style.left = `${15 + i * 18}%`;
+            star.style.animationDelay = `${i * 1.5}s`;
+            container.appendChild(star);
         }
     }
 

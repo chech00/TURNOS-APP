@@ -336,8 +336,12 @@
     position: absolute;
 }
 
-.preview-ribbon.celeste {
-    background: #74ACDF;
+.preview-ribbon.red {
+    background: #D52B1E;
+}
+
+.preview-ribbon.blue {
+    background: #0039A6;
 }
 
 .preview-ribbon.white {
@@ -705,7 +709,7 @@ input:checked+.toggle-slider.easter {
 }
 
 input:checked+.toggle-slider.independence {
-    background: linear-gradient(135deg, #74ACDF, #4a8fcf);
+    background: linear-gradient(135deg, #D52B1E, #0039A6);
 }
 
 input:checked+.toggle-slider.rain {

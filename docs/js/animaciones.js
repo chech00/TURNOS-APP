@@ -1,6 +1,6 @@
 /**
  * Animaciones Manager - Controls all animation settings
- * Supports 12 different animation types
+ * Supports 12 different animation types with mutual exclusivity
  */
 document.addEventListener('DOMContentLoaded', () => {
     const checkFirebase = setInterval(() => {
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         halloween: 'Halloween',
         valentine: 'San Valentín',
         easter: 'Pascua',
-        independence: 'Día de la Independencia',
+        independence: 'Fiestas Patrias',
         rain: 'Lluvia',
         autumn: 'Hojas de otoño',
         bubbles: 'Burbujas',
@@ -84,12 +84,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggle.addEventListener('change', (e) => {
                     const isEnabled = e.target.checked;
 
-                    // Build update object - disable other animations when enabling one
-                    const updateObj = { [key]: isEnabled };
+                    // Build update object - DISABLE ALL OTHER ANIMATIONS when enabling one
+                    const updateObj = {};
+
+                    if (isEnabled) {
+                        // Disable all animations first
+                        ANIMATION_KEYS.forEach(k => {
+                            updateObj[k] = false;
+                        });
+                        // Enable only the selected one
+                        updateObj[key] = true;
+                    } else {
+                        // Just disable this one
+                        updateObj[key] = false;
+                    }
 
                     docRef.set(updateObj, { merge: true })
                         .then(() => {
-                            updateCardState(key, isEnabled);
+                            // Update all card states and toggles
+                            ANIMATION_KEYS.forEach(k => {
+                                const otherToggle = document.getElementById(`toggle-${k}`);
+                                if (otherToggle) {
+                                    otherToggle.checked = updateObj[k];
+                                }
+                                updateCardState(k, updateObj[k]);
+                            });
 
                             Swal.fire({
                                 icon: 'success',
