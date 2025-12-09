@@ -22,9 +22,19 @@
     const STORAGE_KEY = 'seasonalAnimations';
     let attempts = 0;
     const maxAttempts = 50;
+    let firestoreAvailable = false;
 
     // Load from localStorage immediately
     loadFromLocalStorage();
+
+    // Listen for storage changes from other tabs/windows
+    window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) {
+            console.log("🎨 Animations: Storage changed in another tab");
+            const data = e.newValue ? JSON.parse(e.newValue) : {};
+            applyAnimations(data);
+        }
+    });
 
     // Wait for Firebase
     const checkFirebase = setInterval(() => {
@@ -36,6 +46,8 @@
         } else if (attempts >= maxAttempts) {
             clearInterval(checkFirebase);
             console.log("🎨 Animations: Using cached settings");
+            // For pages without Firebase, periodically check localStorage
+            startLocalStoragePolling();
         }
     }, 200);
 
@@ -45,8 +57,13 @@
             if (cached) {
                 const data = JSON.parse(cached);
                 applyAnimations(data);
+            } else {
+                // No cache - disable all animations
+                clearAllAnimations();
             }
-        } catch (e) { }
+        } catch (e) {
+            clearAllAnimations();
+        }
     }
 
     function saveToLocalStorage(data) {
@@ -55,7 +72,21 @@
         } catch (e) { }
     }
 
+    // For pages that can't access Firestore, poll localStorage every 3 seconds
+    function startLocalStoragePolling() {
+        setInterval(() => {
+            loadFromLocalStorage();
+        }, 3000);
+    }
+
+    function clearAllAnimations() {
+        Object.keys(ANIMATION_IDS).forEach(type => {
+            disableAnimation(type);
+        });
+    }
+
     function initSeasonalThemes() {
+        firestoreAvailable = true;
         const db = firebase.firestore();
         const docRef = db.collection('config').doc('animations');
 
@@ -69,7 +100,11 @@
                 applyAnimations(data);
                 saveToLocalStorage(data);
             }, () => { });
-        }).catch(() => { });
+        }).catch((error) => {
+            console.log("🎨 Animations: Firestore access denied, using localStorage");
+            // For pages without auth, poll localStorage for changes
+            startLocalStoragePolling();
+        });
     }
 
     function applyAnimations(data) {
