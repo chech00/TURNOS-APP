@@ -403,6 +403,182 @@ app.use((err, req, res, next) => {
 });
 
 // =============================================================================
+// ASIGNACIÓN AUTOMÁTICA DE TURNOS (CRON JOB)
+// =============================================================================
+const cron = require("node-cron");
+
+/**
+ * Función principal que asigna turnos automáticamente
+ * @param {boolean} isManualTrigger - Si es true, no verifica día/hora
+ */
+async function asignarTurnosAutomaticos(isManualTrigger = false) {
+  console.log("🔄 Iniciando asignación automática de turnos...");
+
+  try {
+    // 1. Cargar empleados desde Firestore
+    const configDoc = await db.collection("Config").doc("empleados_noc").get();
+    if (!configDoc.exists) {
+      console.error("❌ No se encontró configuración de empleados en Firestore");
+      return { success: false, error: "Configuración de empleados no encontrada" };
+    }
+
+    const empleadosData = configDoc.data();
+    const empleados = empleadosData.lista || [];
+
+    // 2. Separar empleados por categoría
+    const tecnicosRed = empleados.filter(e => e.categoria === "TecnicoRed").map(e => e.nombre);
+    const ingenieros = empleados.filter(e => e.categoria === "Ingeniero").map(e => e.nombre);
+    const plantaExterna = empleados.filter(e => e.categoria === "PlantaExterna").map(e => e.nombre);
+
+    console.log(`📊 Empleados cargados: ${tecnicosRed.length} técnicos, ${ingenieros.length} ingenieros, ${plantaExterna.length} planta`);
+
+    if (tecnicosRed.length === 0 || ingenieros.length === 0 || plantaExterna.length === 0) {
+      console.error("❌ Faltan empleados en alguna categoría");
+      return { success: false, error: "Faltan empleados en alguna categoría" };
+    }
+
+    // 3. Calcular semana actual del mes
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = hoy.getMonth();
+    const primerDiaDelMes = new Date(año, mes, 1);
+    const diaSemanaPrimerDia = primerDiaDelMes.getDay() === 0 ? 7 : primerDiaDelMes.getDay();
+    const diaDelMes = hoy.getDate();
+    const semanaIndex = Math.floor((diaDelMes + diaSemanaPrimerDia - 2) / 7);
+
+    console.log(`📅 Año: ${año}, Mes: ${mes}, Semana: ${semanaIndex + 1}`);
+
+    // 4. Verificar si ya existe asignación para esta semana
+    const docId = `${año}-${mes}-${semanaIndex + 1}`;
+    const existingDoc = await db.collection("AsignacionesSemanales").doc(docId).get();
+
+    if (existingDoc.exists && !isManualTrigger) {
+      console.log(`⚠️ Ya existe asignación para semana ${semanaIndex + 1}. Saltando.`);
+      return { success: false, error: "Ya existe asignación para esta semana" };
+    }
+
+    // 5. Calcular la rotación (usando semanaIndex como offset)
+    const tecnico = tecnicosRed[semanaIndex % tecnicosRed.length];
+    const ingeniero = ingenieros[semanaIndex % ingenieros.length];
+    const planta = plantaExterna[semanaIndex % plantaExterna.length];
+
+    console.log(`👥 Asignación: Técnico=${tecnico}, Ingeniero=${ingeniero}, Planta=${planta}`);
+
+    // 6. Calcular fechas de la semana
+    const inicioSemana = new Date(año, mes, diaDelMes - hoy.getDay() + 1); // Lunes
+    const finSemana = new Date(inicioSemana);
+    finSemana.setDate(finSemana.getDate() + 6); // Domingo
+
+    const formatFecha = (d) => {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    // 7. Guardar en Firestore
+    await db.collection("AsignacionesSemanales").doc(docId).set({
+      tecnico,
+      ingeniero,
+      planta,
+      semana: semanaIndex + 1,
+      año,
+      mes,
+      fechaInicio: formatFecha(inicioSemana),
+      fechaFin: formatFecha(finSemana),
+      creadoAutomaticamente: true,
+      fechaCreacion: new Date().toISOString()
+    });
+
+    console.log(`✅ Asignación guardada en Firestore: ${docId}`);
+
+    // 8. Enviar notificaciones por Telegram
+    const mensajeBase = `📅 *Asignación de Turno Semanal*\n\nSemana ${semanaIndex + 1} (${formatFecha(inicioSemana)} - ${formatFecha(finSemana)})\n\n👷 Técnico: ${tecnico}\n👨‍💼 Ingeniero: ${ingeniero}\n🏭 Planta: ${planta}`;
+
+    // Cargar chat IDs de empleados
+    const usuariosSnapshot = await db.collection("usuarios").get();
+    const chatIds = {};
+    usuariosSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.telegram_id && data.nombre) {
+        chatIds[data.nombre] = data.telegram_id;
+      }
+    });
+
+    // Enviar a los asignados
+    const destinatarios = [tecnico, ingeniero, planta];
+    for (const nombre of destinatarios) {
+      if (chatIds[nombre]) {
+        await enviarMensajeTelegramDirecto(chatIds[nombre], `Hola ${nombre}, ${mensajeBase}`);
+      }
+    }
+
+    // Cargar y notificar a contactos adicionales
+    const contactosSnapshot = await db.collection("ContactosAdicionales").get();
+    for (const doc of contactosSnapshot.docs) {
+      const chatId = doc.data().chatId;
+      if (chatId) {
+        await enviarMensajeTelegramDirecto(chatId, mensajeBase);
+      }
+    }
+
+    console.log("✅ Notificaciones de Telegram enviadas");
+
+    return {
+      success: true,
+      asignacion: { tecnico, ingeniero, planta, semana: semanaIndex + 1 }
+    };
+
+  } catch (error) {
+    console.error("❌ Error en asignación automática:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Envía mensaje directo a un chat de Telegram
+ */
+async function enviarMensajeTelegramDirecto(chatId, mensaje) {
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+  if (!BOT_TOKEN) return;
+
+  try {
+    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      chat_id: chatId,
+      text: mensaje,
+      parse_mode: "Markdown"
+    });
+  } catch (error) {
+    console.error(`Error enviando Telegram a ${chatId}:`, error.message);
+  }
+}
+
+// ⏰ CRON JOB: Martes a las 17:15 (MODO PRUEBA)
+// Cambiar a '0 9 * * 1' para producción (Lunes 9:00 AM)
+cron.schedule('15 17 * * 2', async () => {
+  console.log("⏰ Cron job ejecutándose: Asignación automática de turnos");
+  await asignarTurnosAutomaticos(false);
+}, {
+  timezone: "America/Santiago"
+});
+
+console.log("✅ Cron job de turnos configurado para MARTES 17:15 (Chile) - MODO PRUEBA");
+
+// Endpoint para disparar manualmente (solo admin autenticado)
+app.post("/trigger-assignment", checkAuth, requireAdmin, async (req, res) => {
+  console.log(`🔧 Asignación manual disparada por: ${req.user.email || req.user.uid}`);
+  const result = await asignarTurnosAutomaticos(true);
+  res.json(result);
+});
+
+// Endpoint público para verificar estado del cron (health check)
+app.get("/cron-status", (req, res) => {
+  res.json({
+    cronConfigured: true,
+    schedule: "Martes 17:15 (PRUEBA)",
+    productionSchedule: "Lunes 9:00 AM",
+    timezone: "America/Santiago"
+  });
+});
+
+// =============================================================================
 // INICIAR SERVIDOR
 // =============================================================================
 app.listen(PORT, () => {
