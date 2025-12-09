@@ -1817,8 +1817,10 @@ div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
   color: #FFF;
   font-size: 1.2rem;
   opacity: 0.15;
-  /* Very subtle for background */
   user-select: none;
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 @keyframes snowfall {
