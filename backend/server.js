@@ -415,26 +415,42 @@ async function asignarTurnosAutomaticos(isManualTrigger = false) {
   console.log("🔄 Iniciando asignación automática de turnos...");
 
   try {
-    // 1. Cargar empleados desde Firestore
-    const configDoc = await db.collection("Config").doc("empleados_noc").get();
-    if (!configDoc.exists) {
-      console.error("❌ No se encontró configuración de empleados en Firestore");
-      return { success: false, error: "Configuración de empleados no encontrada" };
+    // 1. Cargar empleados desde la colección "Empleados"
+    const empleadosSnapshot = await db.collection("Empleados").get();
+
+    if (empleadosSnapshot.empty) {
+      console.error("❌ No se encontraron empleados en Firestore");
+      return { success: false, error: "No se encontraron empleados" };
     }
 
-    const empleadosData = configDoc.data();
-    const empleados = empleadosData.lista || [];
+    // 2. Separar empleados por rol
+    const tecnicosRed = [];
+    const ingenieros = [];
+    const plantaExterna = [];
 
-    // 2. Separar empleados por categoría
-    const tecnicosRed = empleados.filter(e => e.categoria === "TecnicoRed").map(e => e.nombre);
-    const ingenieros = empleados.filter(e => e.categoria === "Ingeniero").map(e => e.nombre);
-    const plantaExterna = empleados.filter(e => e.categoria === "PlantaExterna").map(e => e.nombre);
+    empleadosSnapshot.forEach(doc => {
+      const data = doc.data();
+      const nombre = data.nombre || doc.id;
+      const rol = data.rol || "";
+
+      // Mapear roles según los valores en Firestore
+      if (rol.toLowerCase().includes("tecnico") || rol.toLowerCase().includes("técnico")) {
+        tecnicosRed.push(nombre);
+      } else if (rol.toLowerCase().includes("ingeniero")) {
+        ingenieros.push(nombre);
+      } else if (rol.toLowerCase().includes("planta")) {
+        plantaExterna.push(nombre);
+      }
+    });
 
     console.log(`📊 Empleados cargados: ${tecnicosRed.length} técnicos, ${ingenieros.length} ingenieros, ${plantaExterna.length} planta`);
+    console.log(`   Técnicos: ${tecnicosRed.join(', ')}`);
+    console.log(`   Ingenieros: ${ingenieros.join(', ')}`);
+    console.log(`   Planta: ${plantaExterna.join(', ')}`);
 
     if (tecnicosRed.length === 0 || ingenieros.length === 0 || plantaExterna.length === 0) {
       console.error("❌ Faltan empleados en alguna categoría");
-      return { success: false, error: "Faltan empleados en alguna categoría" };
+      return { success: false, error: `Faltan empleados. Técnicos: ${tecnicosRed.length}, Ingenieros: ${ingenieros.length}, Planta: ${plantaExterna.length}` };
     }
 
     // 3. Calcular semana actual del mes
@@ -492,13 +508,13 @@ async function asignarTurnosAutomaticos(isManualTrigger = false) {
     // 8. Enviar notificaciones por Telegram
     const mensajeBase = `📅 *Asignación de Turno Semanal*\n\nSemana ${semanaIndex + 1} (${formatFecha(inicioSemana)} - ${formatFecha(finSemana)})\n\n👷 Técnico: ${tecnico}\n👨‍💼 Ingeniero: ${ingeniero}\n🏭 Planta: ${planta}`;
 
-    // Cargar chat IDs de empleados
-    const usuariosSnapshot = await db.collection("usuarios").get();
+    // Cargar chat IDs de empleados desde la colección Empleados
     const chatIds = {};
-    usuariosSnapshot.forEach(doc => {
+    empleadosSnapshot.forEach(doc => {
       const data = doc.data();
-      if (data.telegram_id && data.nombre) {
-        chatIds[data.nombre] = data.telegram_id;
+      const nombre = data.nombre || doc.id;
+      if (data.telegramChatId) {
+        chatIds[nombre] = data.telegramChatId;
       }
     });
 
@@ -507,6 +523,9 @@ async function asignarTurnosAutomaticos(isManualTrigger = false) {
     for (const nombre of destinatarios) {
       if (chatIds[nombre]) {
         await enviarMensajeTelegramDirecto(chatIds[nombre], `Hola ${nombre}, ${mensajeBase}`);
+        console.log(`📱 Telegram enviado a: ${nombre}`);
+      } else {
+        console.log(`⚠️ No se encontró telegramChatId para: ${nombre}`);
       }
     }
 
