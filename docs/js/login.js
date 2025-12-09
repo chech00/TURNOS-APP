@@ -70,14 +70,21 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
       return;
     }
 
-    // 3) Logging NO BLOQUEANTE (Fire and forget)
-    db.collection("loginLogs").add({
-      email: user.email,
-      rol: userRole,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(err => console.error("Error guardando log:", err));
+    // 3) Guardar log de inicio de sesión (esperar a que se complete)
+    try {
+      console.log("📝 Guardando log de inicio de sesión...");
+      await db.collection("loginLogs").add({
+        email: user.email,
+        rol: userRole,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      console.log("✅ Log de sesión guardado correctamente");
+    } catch (logError) {
+      // No bloqueamos el login si falla el log, pero lo reportamos
+      console.error("⚠️ Error guardando log de sesión:", logError);
+    }
 
-    // 4) Redirigir inmediatamente
+    // 4) Redirigir después de guardar el log
     localStorage.setItem("userRole", userRole);
     window.location.href = "directorio.html";
   } catch (error) {

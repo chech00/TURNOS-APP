@@ -198,13 +198,64 @@ function validateEmail(email) {
 }
 
 /**
- * Valida una contraseña
+ * Valida una contraseña con requisitos de seguridad
+ * @param {string} password - Contraseña a validar
+ * @param {object} options - Opciones de validación
+ * @returns {string} - Contraseña validada
+ * @throws {Error} - Si no cumple los requisitos
  */
-function validatePassword(password, minLength = 6) {
+function validatePassword(password, options = {}) {
+    const {
+        minLength = 8,
+        requireUppercase = true,
+        requireLowercase = true,
+        requireNumber = true,
+        requireSpecial = true
+    } = options;
+
+    const errors = [];
+
+    if (password.length < minLength) {
+        errors.push(`Mínimo ${minLength} caracteres`);
+    }
+
+    if (requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push('Al menos una letra mayúscula');
+    }
+
+    if (requireLowercase && !/[a-z]/.test(password)) {
+        errors.push('Al menos una letra minúscula');
+    }
+
+    if (requireNumber && !/[0-9]/.test(password)) {
+        errors.push('Al menos un número');
+    }
+
+    if (requireSpecial && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push('Al menos un carácter especial (!@#$%^&*...)');
+    }
+
+    // Verificar contraseñas comunes
+    const commonPasswords = ['password', '123456', '12345678', 'qwerty', 'abc123', 'password1'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+        errors.push('Contraseña demasiado común');
+    }
+
+    if (errors.length > 0) {
+        throw new Error(`Requisitos de contraseña: ${errors.join(', ')}`);
+    }
+
+    return password;
+}
+
+/**
+ * Validación simple de contraseña (solo longitud mínima)
+ * Para casos donde no se requiere validación estricta
+ */
+function validatePasswordSimple(password, minLength = 6) {
     if (password.length < minLength) {
         throw new Error(`La contraseña debe tener al menos ${minLength} caracteres`);
     }
-
     return password;
 }
 
@@ -255,6 +306,7 @@ if (typeof module !== 'undefined' && module.exports) {
         auditLog,
         validateEmail,
         validatePassword,
+        validatePasswordSimple,
         sanitizeText,
         debugLog,
         debugError

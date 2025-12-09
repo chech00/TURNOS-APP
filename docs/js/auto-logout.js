@@ -11,7 +11,7 @@
     'use strict';
 
     // Configuración
-    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutos en milisegundos
+    const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 30 minutos en milisegundos
     const WARNING_TIME = 2 * 60 * 1000; // Advertencia 2 minutos antes
 
     let inactivityTimer = null;

@@ -4,6 +4,7 @@ const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
 const axios = require("axios");
+const rateLimit = require("express-rate-limit");
 
 // Firebase Admin
 const admin = require("firebase-admin");
@@ -20,21 +21,96 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// =============================================================================
+// SEGURIDAD: Configuración de CORS restrictiva
+// =============================================================================
+const ALLOWED_ORIGINS = [
+  'https://asignacionturnos-cc578.web.app',
+  'https://asignacionturnos-cc578.firebaseapp.com',
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:5000'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como apps móviles o Postman en desarrollo)
+    if (!origin) return callback(null, true);
+
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS bloqueado para origen: ${origin}`);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
-// Configurar Multer para subir archivos a memoria
+// =============================================================================
+// SEGURIDAD: Rate Limiting para prevenir ataques de fuerza bruta
+// =============================================================================
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por ventana
+  message: { error: "Demasiadas solicitudes, intenta de nuevo más tarde" },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 20, // máximo 20 uploads por hora
+  message: { error: "Límite de subidas alcanzado, intenta más tarde" }
+});
+
+const telegramLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 10, // máximo 10 mensajes por minuto
+  message: { error: "Límite de mensajes alcanzado" }
+});
+
+// Aplicar rate limiter general a todas las rutas
+app.use(generalLimiter);
+
+// =============================================================================
+// SEGURIDAD: Validación de tipos de archivo permitidos
+// =============================================================================
+const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg', '.gif', '.txt', '.csv'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+function validateFileType(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  return ALLOWED_EXTENSIONS.includes(ext);
+}
+
+// Configurar Multer con límites de seguridad
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: MAX_FILE_SIZE
+  },
+  fileFilter: (req, file, cb) => {
+    if (!validateFileType(file.originalname)) {
+      return cb(new Error(`Tipo de archivo no permitido. Extensiones válidas: ${ALLOWED_EXTENSIONS.join(', ')}`), false);
+    }
+    cb(null, true);
+  }
+});
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1) INACTIVIDAD (Firebase) - MIDDLEWARE
-// ─────────────────────────────────────────────────────────────────────────────
-const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // Ej. 30 minutos
+// =============================================================================
+// MIDDLEWARE: Verificación de autenticación
+// =============================================================================
+const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
 
 async function checkAuth(req, res, next) {
   try {
-    // Leer token de la cabecera "Authorization: Bearer <token>"
     const authHeader = req.headers.authorization || "";
     if (!authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "No token provided" });
@@ -60,10 +136,10 @@ async function checkAuth(req, res, next) {
       return res.status(401).json({ error: "Session expired by inactivity" });
     }
 
-    // Actualizar la última actividad para reiniciar el "cronómetro"
+    // Actualizar la última actividad
     await db.collection("userRoles").doc(uid).update({ lastActivity: now });
 
-    // Guardar datos en req.user si necesitas
+    // Guardar datos en req.user
     req.user = { uid, ...userData };
     next();
   } catch (error) {
@@ -72,15 +148,34 @@ async function checkAuth(req, res, next) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 2) NOTIFICAR A TELEGRAM
-// ─────────────────────────────────────────────────────────────────────────────
+// Middleware para verificar rol de admin
+async function requireAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  const role = req.user.rol;
+  if (role !== 'admin' && role !== 'superadmin') {
+    console.warn(`⚠️ Intento de acceso admin denegado para: ${req.user.uid}`);
+    return res.status(403).json({ error: "Admin privileges required" });
+  }
+
+  next();
+}
+
+// =============================================================================
+// FUNCIÓN: Notificar a Telegram
+// =============================================================================
 async function enviarMensajeTelegram(mensaje) {
   const BOT_TOKEN = process.env.BOT_TOKEN;
+  if (!BOT_TOKEN) {
+    console.error("❌ BOT_TOKEN no configurado");
+    return;
+  }
+
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
   try {
-    // Ajusta "usuarios" por la colección donde guardas telegram_id
     const usersSnapshot = await db.collection("usuarios").where("telegram_id", "!=", null).get();
 
     if (usersSnapshot.empty) {
@@ -88,7 +183,6 @@ async function enviarMensajeTelegram(mensaje) {
       return;
     }
 
-    // Enviar mensaje a cada usuario con telegram_id
     for (const docItem of usersSnapshot.docs) {
       const chat_id = docItem.data().telegram_id;
       console.log(`📩 Enviando mensaje a: ${chat_id}`);
@@ -111,25 +205,28 @@ async function enviarMensajeTelegram(mensaje) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 3) ENDPOINTS DE TELEGRAM
-// ─────────────────────────────────────────────────────────────────────────────
-app.post("/send-message", async (req, res) => {
+// =============================================================================
+// ENDPOINTS DE TELEGRAM (Protegidos)
+// =============================================================================
+app.post("/send-message", telegramLimiter, checkAuth, async (req, res) => {
   try {
     const { chatId, message } = req.body;
     if (!chatId || !message) {
       return res.status(400).json({ error: "Faltan datos (chatId o mensaje)." });
     }
 
+    // Sanitizar el mensaje (evitar inyección)
+    const sanitizedMessage = String(message).substring(0, 4000);
+
     const BOT_TOKEN = process.env.BOT_TOKEN;
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
     const response = await axios.post(url, {
       chat_id: chatId,
-      text: message,
+      text: sanitizedMessage,
     });
 
-    console.log(`✅ Mensaje enviado a ${chatId}:`, response.data);
+    console.log(`✅ Mensaje enviado a ${chatId} por: ${req.user.email || req.user.uid}`);
     res.json({ success: true, response: response.data });
   } catch (error) {
     console.error(`❌ Error enviando mensaje a ${req.body.chatId}:`, error.message);
@@ -137,7 +234,7 @@ app.post("/send-message", async (req, res) => {
   }
 });
 
-app.get("/prueba-telegram", async (req, res) => {
+app.get("/prueba-telegram", checkAuth, requireAdmin, async (req, res) => {
   try {
     await enviarMensajeTelegram("Mensaje de prueba desde el servidor");
     res.json({ success: true });
@@ -146,17 +243,27 @@ app.get("/prueba-telegram", async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 4) SUBIDA, LISTA Y ELIMINACIÓN DE ARCHIVOS (SUPABASE)
-// ─────────────────────────────────────────────────────────────────────────────
-app.post("/upload", upload.single("file"), async (req, res) => {
+// =============================================================================
+// ENDPOINTS DE ARCHIVOS (Protegidos)
+// =============================================================================
+
+// SUBIR ARCHIVO - Requiere autenticación y ser admin
+app.post("/upload", uploadLimiter, checkAuth, requireAdmin, upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No se ha seleccionado ningún archivo." });
     }
 
-    // Nombre único
-    const fileName = `${Date.now()}-${req.file.originalname}`;
+    // El fileFilter de multer ya valida el tipo, pero doble verificación
+    if (!validateFileType(req.file.originalname)) {
+      return res.status(400).json({
+        error: `Tipo de archivo no permitido. Extensiones válidas: ${ALLOWED_EXTENSIONS.join(', ')}`
+      });
+    }
+
+    // Nombre único (sanitizar nombre original)
+    const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `${Date.now()}-${safeName}`;
 
     // Subir a Supabase
     const { error } = await supabase.storage
@@ -173,8 +280,9 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       .getPublicUrl(fileName);
 
     // Notificar a Telegram
-    await enviarMensajeTelegram(`Nuevo archivo subido: ${fileName}`);
+    await enviarMensajeTelegram(`📁 Nuevo archivo subido: ${fileName} por ${req.user.email || 'Admin'}`);
 
+    console.log(`✅ Archivo subido: ${fileName} por ${req.user.email || req.user.uid}`);
     res.json({ success: true, url: publicURL, fileName });
   } catch (error) {
     console.error("❌ Error al subir archivo:", error);
@@ -182,7 +290,8 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-app.get("/files", async (req, res) => {
+// LISTAR ARCHIVOS - Solo requiere autenticación
+app.get("/files", checkAuth, async (req, res) => {
   try {
     const { data, error } = await supabase.storage.from("documentos-noc").list();
     if (error) throw error;
@@ -199,13 +308,22 @@ app.get("/files", async (req, res) => {
   }
 });
 
-app.delete("/delete/:fileName", async (req, res) => {
+// ELIMINAR ARCHIVO - Requiere autenticación y ser admin
+app.delete("/delete/:fileName", checkAuth, requireAdmin, async (req, res) => {
   try {
     const fileName = req.params.fileName;
+
+    // Validar que el nombre no contenga path traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      return res.status(400).json({ error: "Nombre de archivo inválido" });
+    }
+
     const { error } = await supabase.storage.from("documentos-noc").remove([fileName]);
     if (error) throw error;
 
-    await enviarMensajeTelegram(`Archivo eliminado: ${fileName}`);
+    await enviarMensajeTelegram(`🗑️ Archivo eliminado: ${fileName} por ${req.user.email || 'Admin'}`);
+
+    console.log(`✅ Archivo eliminado: ${fileName} por ${req.user.email || req.user.uid}`);
     res.json({ success: true, message: "Archivo eliminado correctamente." });
   } catch (error) {
     console.error("❌ Error al eliminar archivo:", error);
@@ -213,41 +331,52 @@ app.delete("/delete/:fileName", async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5) RUTAS DE EJEMPLO (PROTEGIDAS Y NO PROTEGIDAS)
-// ─────────────────────────────────────────────────────────────────────────────
+// =============================================================================
+// RUTAS PÚBLICAS Y DE HEALTH CHECK
+// =============================================================================
 app.get("/public", (req, res) => {
   res.json({ message: "Ruta pública, sin token." });
 });
 
-// Ruta protegida: requiere que el token sea válido y no haya inactividad
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Ruta protegida de ejemplo
 app.get("/privado", checkAuth, (req, res) => {
   res.json({
     message: "¡Acceso concedido a ruta privada!",
-    userData: req.user,
+    userData: { uid: req.user.uid, email: req.user.email, rol: req.user.rol }
   });
 });
 
-// Simular login: (actualiza lastActivity)
-app.post("/fake-login/:uid", async (req, res) => {
-  const { uid } = req.params;
-  const now = Date.now();
+// =============================================================================
+// MANEJO DE ERRORES GLOBAL
+// =============================================================================
+app.use((err, req, res, next) => {
+  console.error("Error no manejado:", err.message);
 
-  // En tu frontend real, esto se hace tras Firebase Auth signIn.
-  // Aquí es solo para que la "sesión" arranque con lastActivity.
-  await db.collection("userRoles").doc(uid).set(
-    { lastActivity: now },
-    { merge: true }
-  );
+  // Error de Multer (archivo muy grande o tipo no permitido)
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: `Archivo demasiado grande. Máximo: ${MAX_FILE_SIZE / 1024 / 1024} MB` });
+  }
 
-  res.json({ message: `Fake login para uid=${uid}`, time: now });
+  if (err.message.includes('Tipo de archivo no permitido')) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  if (err.message === 'No permitido por CORS') {
+    return res.status(403).json({ error: "Origen no permitido" });
+  }
+
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 6) INICIAR SERVIDOR
-// ─────────────────────────────────────────────────────────────────────────────
+// =============================================================================
+// INICIAR SERVIDOR
+// =============================================================================
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🔒 CORS configurado para: ${ALLOWED_ORIGINS.join(', ')}`);
+  console.log(`📁 Tipos de archivo permitidos: ${ALLOWED_EXTENSIONS.join(', ')}`);
 });
-
-
