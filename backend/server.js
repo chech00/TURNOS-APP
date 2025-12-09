@@ -600,6 +600,13 @@ app.post("/trigger-assignment", checkAuth, requireAdmin, async (req, res) => {
   res.json(result);
 });
 
+// ⚠️ TEMPORAL: Endpoint de prueba SIN autenticación (ELIMINAR después de probar)
+app.get("/test-assignment", async (req, res) => {
+  console.log("🧪 PRUEBA: Disparando asignación de prueba...");
+  const result = await asignarTurnosAutomaticos(true);
+  res.json(result);
+});
+
 // Endpoint público para verificar estado del cron (health check)
 app.get("/cron-status", (req, res) => {
   res.json({
