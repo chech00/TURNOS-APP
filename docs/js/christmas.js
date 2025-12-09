@@ -5,12 +5,21 @@
 (function () {
     const SNOW_ID = 'snow-container';
     const FIREWORKS_ID = 'fireworks-container';
+    let attempts = 0;
+    const maxAttempts = 50; // 10 seconds max wait
 
-    // Wait for Firebase
+    // Wait for Firebase to be fully initialized
     const checkFirebase = setInterval(() => {
-        if (window.firebase && firebase.firestore) {
+        attempts++;
+
+        // Check if Firebase and Firestore are ready
+        if (window.firebase && firebase.firestore && firebase.apps && firebase.apps.length > 0) {
             clearInterval(checkFirebase);
+            console.log("🎄 Seasonal Themes: Firebase ready, initializing...");
             initSeasonalThemes();
+        } else if (attempts >= maxAttempts) {
+            clearInterval(checkFirebase);
+            console.warn("🎄 Seasonal Themes: Firebase not available after timeout");
         }
     }, 200);
 
