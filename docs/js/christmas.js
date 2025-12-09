@@ -90,19 +90,25 @@
         const db = firebase.firestore();
         const docRef = db.collection('config').doc('animations');
 
+        // Try to read from Firestore (works even on unauthenticated pages with public read rule)
         docRef.get().then((doc) => {
-            const data = doc.data() || {};
+            console.log("🎨 Animations: Loaded from Firestore");
+            const data = doc.exists ? doc.data() : {};
             applyAnimations(data);
             saveToLocalStorage(data);
 
+            // Listen for real-time updates
             docRef.onSnapshot((doc) => {
-                const data = doc.data() || {};
+                const data = doc.exists ? doc.data() : {};
                 applyAnimations(data);
                 saveToLocalStorage(data);
-            }, () => { });
+            }, (error) => {
+                console.log("🎨 Animations: Snapshot error, using cached data");
+            });
         }).catch((error) => {
-            console.log("🎨 Animations: Firestore access denied, using localStorage");
-            // For pages without auth, poll localStorage for changes
+            console.log("🎨 Animations: Firestore read failed:", error.code);
+            // Fallback to localStorage and start polling
+            loadFromLocalStorage();
             startLocalStoragePolling();
         });
     }
