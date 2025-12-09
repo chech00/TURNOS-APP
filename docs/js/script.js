@@ -1389,11 +1389,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mostrar/Ocultar elementos de superadmin
     const liRegistros = document.getElementById("li-registros");
     const liUsuarios = document.getElementById("li-usuarios");
+    const liAnimaciones = document.getElementById("li-animaciones");
     if (liRegistros) {
       liRegistros.style.display = (role === "superadmin") ? "block" : "none";
     }
     if (liUsuarios) {
       liUsuarios.style.display = (role === "superadmin") ? "block" : "none";
+    }
+    if (liAnimaciones) {
+      liAnimaciones.style.display = (role === "superadmin") ? "block" : "none";
     }
 
     // Mostrar elementos de admin (Gestionar Empleados)
@@ -1405,8 +1409,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Redirección si no es admin y está en index.html
     if ((role !== "admin" && role !== "superadmin") && window.location.pathname.includes("index.html")) {
-      const lastPage = localStorage.getItem("lastPage");
-      window.location.href = lastPage || "user.html";
+      // Priorizar Directorio como "Home"
+      window.location.href = "directorio.html";
     }
   }
 

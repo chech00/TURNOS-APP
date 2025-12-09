@@ -1546,3 +1546,20 @@ body.is-admin .admin-only {
   background: rgba(119, 150, 203, 0.15) !important;
   box-shadow: 0 0 10px rgba(119, 150, 203, 0.2);
 }
+
+/* Optimization for dragging */
+.turnos-section.floating {
+  will-change: transform;
+}
+
+/* While dragging, disable expensive effects */
+.turnos-section.floating.dragging {
+  cursor: grabbing;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5) !important;
+  /* Simplified shadow */
+  transition: none !important;
+  /* Disable transition during drag */
+  opacity: 0.9;
+}

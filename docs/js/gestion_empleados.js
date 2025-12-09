@@ -358,8 +358,10 @@ function verificarAcceso() {
                     if (isSuperAdmin) {
                         const liRegistros = document.getElementById("li-registros");
                         const liUsuarios = document.getElementById("li-usuarios");
+                        const liAnimaciones = document.getElementById("li-animaciones");
                         if (liRegistros) liRegistros.style.display = "block";
                         if (liUsuarios) liUsuarios.style.display = "block";
+                        if (liAnimaciones) liAnimaciones.style.display = "block";
                     }
 
                     // Renderizar tabla

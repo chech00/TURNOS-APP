@@ -26,8 +26,8 @@ body {
   display: flex !important;
   flex-direction: column;
   min-height: 100vh;
-  background: #050505;
-  /* Deep dark background for contrast */
+  background: var(--color-fondo-principal);
+  /* Same background as other views for consistency */
 }
 
 main {
@@ -1335,4 +1335,28 @@ footer {
 .olt-btn-install:active {
   transform: translateY(1px);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* ===========================================
+   CHRISTMAS SNOW COMPATIBILITY
+   Makes the snow visible through the main content
+   =========================================== */
+
+/* When snow container exists, make main-content semi-transparent */
+body:has(#snow-container) .main-content {
+  background: rgba(27, 31, 35, 0.85) !important;
+}
+
+body:has(#snow-container) .rack-aisle-grid {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(42, 42, 42, 0.9) 0%, rgba(5, 5, 5, 0.9) 80%),
+    repeating-linear-gradient(90deg, rgba(17, 17, 17, 0.9) 0px, rgba(17, 17, 17, 0.9) 20px, rgba(26, 26, 26, 0.9) 20px, rgba(26, 26, 26, 0.9) 40px) !important;
+}
+
+body:has(#snow-container) .olt-chassis {
+  background: linear-gradient(90deg, rgba(45, 45, 45, 0.95) 0%, rgba(58, 58, 58, 0.95) 15%, rgba(58, 58, 58, 0.95) 85%, rgba(45, 45, 45, 0.95) 100%) !important;
+}
+
+body:has(#snow-container) .olt-card-detail-container {
+  background: rgba(34, 34, 34, 0.95) !important;
 }

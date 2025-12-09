@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Animaciones - NOC</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/animaciones.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Security -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="./js/security-helpers.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script defer src="./js/auto-logout.js"></script>
+    <script defer src="./js/christmas.js"></script>
+</head>
+
+<body>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo" class="logo-sidebar" />
+        </div>
+        <nav class="sidebar-menu">
+            <ul>
+                <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
+                        <span>Directorio</span></a></li>
+                <li><a href="user.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+                <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de
+                            Fibra</span></a></li>
+                <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a>
+                </li>
+                <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos
+                            Noc</span></a></li>
+                <li id="li-empleados" class="admin-only"><a href="gestion_empleados.html"><i data-lucide="user-cog"></i>
+                        <span>Gestionar Empleados</span></a></li>
+                <li id="li-usuarios" class="superadmin-only"><a href="gestion_usuarios.html"><i
+                            data-lucide="shield-check"></i>
+                        <span>Cuentas de Sistema</span></a></li>
+                <li id="li-animaciones" class="superadmin-only"><a href="animaciones.html" class="active"><i
+                            data-lucide="sparkles"></i>
+                        <span>Animaciones</span></a></li>
+                <li id="li-registros" class="superadmin-only"><a href="registros.html"><i data-lucide="file-text"></i>
+                        <span>Registros</span></a></li>
+            </ul>
+        </nav>
+        <button id="logout-btn" class="primary-btn logout-btn"><i data-lucide="log-out"></i> <span>Cerrar
+                sesión</span></button>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <button id="menu-toggle" class="menu-btn"><i data-lucide="panel-left"></i></button>
+            <h1>Gestión de Animaciones</h1>
+        </header>
+
+        <!-- Premium Animations Dashboard -->
+        <div class="animaciones-dashboard">
+            <!-- Header Section -->
+            <div class="dashboard-header">
+                <div class="header-content">
+                    <div class="header-icon-wrapper">
+                        <i data-lucide="wand-2" class="header-icon"></i>
+                    </div>
+                    <div class="header-text">
+                        <h2>Centro de Control de Animaciones</h2>
+                        <p>Personaliza la experiencia visual de la aplicación con efectos temáticos especiales</p>
+                    </div>
+                </div>
+                <div class="status-badges">
+                    <div class="status-badge" id="snow-status">
+                        <span class="status-dot"></span>
+                        <span>Nieve: Inactiva</span>
+                    </div>
+                    <div class="status-badge" id="fireworks-status">
+                        <span class="status-dot"></span>
+                        <span>Fuegos: Inactivos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Animation Cards Grid -->
+            <div class="animations-grid">
+                <!-- Christmas Snow Card -->
+                <div class="animation-card snow-card" id="snow-card">
+                    <div class="card-preview">
+                        <div class="preview-scene snow-scene">
+                            <div class="mini-snowflake">❄</div>
+                            <div class="mini-snowflake">❅</div>
+                            <div class="mini-snowflake">❆</div>
+                            <div class="mini-snowflake">❄</div>
+                            <div class="mini-snowflake">❅</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-icon-badge snow-badge">
+                            <i data-lucide="snowflake"></i>
+                        </div>
+                        <h3>Modo Navidad</h3>
+                        <p>Copos de nieve cayendo suavemente en el fondo de todas las vistas</p>
+                        <div class="card-footer">
+                            <div class="toggle-container">
+                                <span class="toggle-label">Desactivado</span>
+                                <div class="toggle-switch-premium">
+                                    <input type="checkbox" id="toggle-snow">
+                                    <label for="toggle-snow" class="slider-premium snow-slider"></label>
+                                </div>
+                                <span class="toggle-label">Activado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Year Fireworks Card -->
+                <div class="animation-card fireworks-card" id="fireworks-card">
+                    <div class="card-preview">
+                        <div class="preview-scene fireworks-scene">
+                            <div class="mini-firework" style="--delay: 0s; --x: 20%;"></div>
+                            <div class="mini-firework" style="--delay: 0.3s; --x: 50%;"></div>
+                            <div class="mini-firework" style="--delay: 0.6s; --x: 80%;"></div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-icon-badge fireworks-badge">
+                            <i data-lucide="sparkles"></i>
+                        </div>
+                        <h3>Modo Año Nuevo</h3>
+                        <p>Fuegos artificiales coloridos celebrando el nuevo año en todas las vistas</p>
+                        <div class="card-footer">
+                            <div class="toggle-container">
+                                <span class="toggle-label">Desactivado</span>
+                                <div class="toggle-switch-premium">
+                                    <input type="checkbox" id="toggle-fireworks">
+                                    <label for="toggle-fireworks" class="slider-premium fireworks-slider"></label>
+                                </div>
+                                <span class="toggle-label">Activado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Footer -->
+            <div class="dashboard-footer">
+                <div class="info-box">
+                    <i data-lucide="info" class="info-icon"></i>
+                    <p>Las animaciones se aplican en tiempo real a todas las vistas de la aplicación, incluyendo el
+                        login.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Init -->
+    <script type="module" src="./js/firebase.js"></script>
+    <script defer src="./js/animaciones.js"></script>
+
+    <script>
+        // Initialize Icons and Sidebar
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+
+            // Sidebar toggle
+            document.getElementById("menu-toggle")?.addEventListener("click", () => {
+                document.getElementById("sidebar").classList.toggle("expanded");
+                document.querySelector(".main-content").classList.toggle("expanded");
+            });
+
+            // Logout
+            document.getElementById("logout-btn")?.addEventListener("click", () => {
+                firebase.auth().signOut().then(() => {
+                    localStorage.removeItem('userRole');
+                    window.location.href = "login.html";
+                });
+            });
+
+            // Update card states based on toggle changes
+            const snowToggle = document.getElementById('toggle-snow');
+            const fireworksToggle = document.getElementById('toggle-fireworks');
+            const snowCard = document.getElementById('snow-card');
+            const fireworksCard = document.getElementById('fireworks-card');
+            const snowStatus = document.getElementById('snow-status');
+            const fireworksStatus = document.getElementById('fireworks-status');
+
+            function updateCardStates() {
+                // Snow card
+                if (snowToggle?.checked) {
+                    snowCard?.classList.add('active');
+                    if (snowStatus) {
+                        snowStatus.classList.add('active');
+                        snowStatus.querySelector('span:last-child').textContent = 'Nieve: Activa';
+                    }
+                } else {
+                    snowCard?.classList.remove('active');
+                    if (snowStatus) {
+                        snowStatus.classList.remove('active');
+                        snowStatus.querySelector('span:last-child').textContent = 'Nieve: Inactiva';
+                    }
+                }
+
+                // Fireworks card
+                if (fireworksToggle?.checked) {
+                    fireworksCard?.classList.add('active');
+                    if (fireworksStatus) {
+                        fireworksStatus.classList.add('active');
+                        fireworksStatus.querySelector('span:last-child').textContent = 'Fuegos: Activos';
+                    }
+                } else {
+                    fireworksCard?.classList.remove('active');
+                    if (fireworksStatus) {
+                        fireworksStatus.classList.remove('active');
+                        fireworksStatus.querySelector('span:last-child').textContent = 'Fuegos: Inactivos';
+                    }
+                }
+            }
+
+            snowToggle?.addEventListener('change', updateCardStates);
+            fireworksToggle?.addEventListener('change', updateCardStates);
+
+            // Initial state update after a short delay (wait for animaciones.js to load values)
+            setTimeout(updateCardStates, 1000);
+        });
+    </script>
+</body>
+
+</html>

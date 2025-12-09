@@ -58,6 +58,8 @@ function verificarRolUsuario() {
           if (role === "superadmin") {
             if (liRegistros) liRegistros.style.display = "block";
             if (liUsuarios) liUsuarios.style.display = "block";
+            const liAnimaciones = document.getElementById("li-animaciones");
+            if (liAnimaciones) liAnimaciones.style.display = "block";
           }
 
         } else {

@@ -396,6 +396,36 @@
     color: var(--color-texto-principal, #fff);
 }
 
+/* Employee Meta (Birthday, Vacation) */
+.employee-meta {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-texto-secundario);
+}
+
+.meta-item.highlight {
+    color: var(--color-acento-secundario);
+    font-weight: 500;
+}
+
+.meta-item i {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.5;
+    opacity: 0.8;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .stats-container {

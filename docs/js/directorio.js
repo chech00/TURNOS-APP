@@ -80,10 +80,16 @@ async function loadEmployees() {
         // 2. Load Calendar Data (Centralized)
         const calendarData = await getCalendarData();
 
-        // 3. Determine status for each employee using loaded calendar data
+        // 3. Determine status and Next Vacation for each employee
         employeesList = employeesList.map(emp => {
             const statusData = getEmployeeStatus(emp.nombre, calendarData);
-            return { ...emp, status: statusData.status, rawShift: statusData.shift };
+            const vacacion = getNextVacation(emp.nombre, calendarData);
+            return {
+                ...emp,
+                ...statusData, // Spread all status properties (status, shift, customLabel, customIcon)
+                rawShift: statusData.shift,
+                proximaVacacion: vacacion
+            };
         });
 
         allEmployees = employeesList;
@@ -176,17 +182,120 @@ function getEmployeeStatus(employeeName, calendarData) {
             };
         }
 
+        // Shift Definitions (Based on "Ver Horarios" modal)
+        const SHIFT_HOURS = {
+            'M0': { start: '09:00', end: '19:00' },
+            'M0A': { start: '09:00', end: '19:00' },
+            'M1': { start: '08:30', end: '17:30', sat: { start: '08:30', end: '13:30' } },
+            'M1A': { start: '08:30', end: '18:30' },
+            'M1B': { start: '07:00', end: '17:00' },
+            'M2': { start: '11:00', end: '20:00', sat: { start: '13:00', end: '18:00' } },
+            'M2A': { start: '10:00', end: '20:00' },
+            'M2B': { start: '10:00', end: '20:00' },
+            'M3': { start: '11:00', end: '21:00' },
+            'T': { start: '15:00', end: '23:00' }, // Estimated
+            'S': { start: '09:00', end: '18:00' }, // Estimated
+            'I': { start: '09:00', end: '18:00' }  // Estimated
+        };
+
+        // ... inside getEmployeeStatus ...
+
+        // ... inside getEmployeeStatus ...
+
+        // CHECK FERIADOS (Special Night Shifts: 21:00 - 02:00)
+        if (calendarData.feriados) {
+            const feriadoShift = calendarData.feriados[dayString] || calendarData.feriados[dayPadded];
+            if (feriadoShift) {
+                let isAssignedHoliday = false;
+
+                // User request: S = Sergio, I = Ignacio
+                if (feriadoShift === 'S' && employeeName === 'Sergio Castillo') isAssignedHoliday = true;
+                if (feriadoShift === 'I' && employeeName === 'Ignacio Aburto') isAssignedHoliday = true;
+
+                if (isAssignedHoliday) {
+                    // Holiday night shift logic
+                    const now = new Date();
+                    const hour = now.getHours();
+
+                    let label = 'Entra 21:00';
+                    let icon = 'clock';
+                    let statusClass = 'night'; // Use night style (or working)
+
+                    // If now is late night (21+) or early morning (< 2)
+                    // Note: < 2 covers the "next day" part if checking same-day (which is imperfect but works for visual "De Turno")
+                    if (hour >= 21 || hour < 2) {
+                        label = 'De Turno (Feriado)';
+                        icon = 'moon'; // Moon for night
+                        statusClass = 'working';
+                    }
+
+                    return {
+                        status: statusClass,
+                        shift: 'Feriado (21:00 - 02:00)',
+                        customLabel: label,
+                        customIcon: icon
+                    };
+                }
+            }
+        }
+
         // Try both formats (8 and 08)
         const todayShift = employeeShifts[dayString] || employeeShifts[dayPadded];
 
         if (todayShift) {
-            if (todayShift === 'L' || todayShift === 'DL' || todayShift === 'F') {
+            if (['L', 'DL', 'F'].includes(todayShift)) {
                 return { status: 'free', shift: todayShift };
             } else if (todayShift === 'V') {
                 return { status: 'vacation', shift: todayShift };
+            } else if (todayShift === 'N') {
+                // Night Shift Handling (Complex because it spans two days)
+                // For simplified view: Always show "Night Shift" if assigned today
+                return { status: 'night', shift: `N (21:00 - 07:00)` };
             } else {
-                return { status: 'working', shift: todayShift };
+                // Check Real-Time Status
+                let label = 'De Turno';
+                let icon = 'briefcase';
+                let statusClass = 'working';
+
+                const shiftDef = SHIFT_HOURS[todayShift];
+                if (shiftDef) {
+                    const now = new Date();
+                    const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
+
+                    let hours = shiftDef;
+                    if (dayOfWeek === 6 && shiftDef.sat) hours = shiftDef.sat; // Saturday specific
+
+                    const [startH, startM] = hours.start.split(':').map(Number);
+                    const [endH, endM] = hours.end.split(':').map(Number);
+
+                    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                    const startMinutes = startH * 60 + startM;
+                    const endMinutes = endH * 60 + endM;
+
+                    if (nowMinutes > endMinutes) {
+                        label = 'Turno Finalizado';
+                        icon = 'check-circle'; // Or 'moon'
+                        statusClass = 'free'; // Visually free? Or specific 'finished' style?
+                        // Let's keep 'working' color but change text, or add 'finished' class
+                        // User asked for "fuera de turno" in the free/working part
+                    } else if (nowMinutes < startMinutes) {
+                        label = `Entra ${hours.start}`;
+                        icon = 'clock';
+                    }
+                }
+
+                // If label changed to "Turno Finalizado", maybe map to 'free' or custom
+                if (label === 'Turno Finalizado') {
+                    return { status: 'free', shift: todayShift, customLabel: label, customIcon: icon };
+                }
+
+                return { status: statusClass, shift: todayShift, customLabel: label, customIcon: icon };
             }
+        }
+
+        // Implicit Fix: If Cristian Oyarzo is "Empty", he is Free (as per user request: Sat/Sun/Hol/Empty = Free)
+        if (employeeName === "Cristian Oyarzo") {
+            return { status: 'free', shift: 'Descanso' };
         }
 
         // Debug: Show keys if shift is empty to see what keys exist
@@ -199,6 +308,66 @@ function getEmployeeStatus(employeeName, calendarData) {
     } catch (e) {
         return { status: 'free', shift: 'Error' };
     }
+}
+
+// Helper: Find next vacation in CURRENT month
+function getNextVacation(employeeName, calendarData) {
+    if (!calendarData) return null;
+
+    let shifts;
+    if (employeeName === "Cristian Oyarzo") {
+        shifts = calendarData.nocturno;
+    } else if (calendarData.assignments) {
+        shifts = calendarData.assignments[employeeName];
+    }
+
+    if (!shifts) return null;
+
+    const today = new Date();
+    const currentDay = today.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+    // Look ahead from tomorrow until end of month
+    for (let day = currentDay + 1; day <= daysInMonth; day++) {
+        const dayStr = day.toString();
+        const dayPad = dayStr.padStart(2, '0');
+        const shift = shifts[dayStr] || shifts[dayPad];
+
+        if (shift === 'V') {
+            return `${dayPad}/${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+        }
+    }
+    return null;
+}
+
+// Helper: Find next vacation in CURRENT month
+function getNextVacation(employeeName, calendarData) {
+    if (!calendarData) return null;
+
+    let shifts;
+    if (employeeName === "Cristian Oyarzo") {
+        shifts = calendarData.nocturno;
+    } else if (calendarData.assignments) {
+        shifts = calendarData.assignments[employeeName];
+    }
+
+    if (!shifts) return null;
+
+    const today = new Date();
+    const currentDay = today.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+    // Look ahead from tomorrow until end of month
+    for (let day = currentDay + 1; day <= daysInMonth; day++) {
+        const dayStr = day.toString();
+        const dayPad = dayStr.padStart(2, '0');
+        const shift = shifts[dayStr] || shifts[dayPad];
+
+        if (shift === 'V') {
+            return `${dayPad}/${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+        }
+    }
+    return null;
 }
 
 // Render employee cards
@@ -258,10 +427,20 @@ function createEmployeeCard(emp, index) {
         working: { label: 'De Turno', icon: 'briefcase' },
         free: { label: 'Libre', icon: 'coffee' },
         vacation: { label: 'Vacaciones', icon: 'palm-tree' },
-        next: { label: 'Próximo Turno', icon: 'clock' }
+        next: { label: 'Próximo Turno', icon: 'clock' },
+        night: { label: 'Turno Noche', icon: 'moon' }
     };
 
-    const statusInfo = statusConfig[status] || statusConfig.free;
+    let statusInfo = statusConfig[status] || statusConfig.free;
+
+    // Override with custom real-time status if available
+    if (emp.customLabel) {
+        statusInfo = {
+            ...statusInfo,
+            label: emp.customLabel,
+            icon: emp.customIcon || statusInfo.icon
+        };
+    }
 
     // Check if user is admin BEFORE generating HTML
     const userRole = localStorage.getItem('userRole');
@@ -288,6 +467,10 @@ function createEmployeeCard(emp, index) {
       <div class="employee-status ${status}">
         <i data-lucide="${statusInfo.icon}"></i>
         ${statusInfo.label}
+      </div>
+      <div class="employee-meta">
+          ${emp.fechaNacimiento ? `<div class="meta-item"><i data-lucide="cake"></i> <span>${emp.fechaNacimiento}</span></div>` : ''}
+          ${emp.proximaVacacion ? `<div class="meta-item highlight"><i data-lucide="plane"></i> <span>Vacaciones: ${emp.proximaVacacion}</span></div>` : ''}
       </div>
       ${debugText} 
       <div class="employee-actions">
@@ -380,6 +563,12 @@ function editEmployee(name) {
                         <label style="display:block; text-align:left; margin-bottom:6px; font-weight:500; font-size: 0.9em; color: #a1a1aa;">Cargo / Rol</label>
                         <input type="text" id="edit-cargo" class="swal2-input" value="${employee.cargo || 'Operador NOC'}" placeholder="Cargo" style="margin:0; width:100%; font-size: 1rem; padding: 10px; background: #27272a; border: 1px solid #3f3f46; color: white;" />
                     </div>
+
+                    <!-- New Fields for Birthday -->
+                    <div class="swal2-input-group" style="margin:0;">
+                        <label style="display:block; text-align:left; margin-bottom:6px; font-weight:500; font-size: 0.9em; color: #a1a1aa;">🎂 Cumpleaños (DD/MM)</label>
+                        <input type="text" id="edit-cumple" class="swal2-input" value="${employee.fechaNacimiento || ''}" placeholder="Ej: 15/05" style="margin:0; width:100%; font-size: 0.95rem; padding: 10px; background: #27272a; border: 1px solid #3f3f46; color: white;" />
+                    </div>
                 </div>
             </div>
             
@@ -425,6 +614,7 @@ function editEmployee(name) {
             return {
                 nombre: document.getElementById('edit-nombre').value.trim(),
                 cargo: document.getElementById('edit-cargo').value.trim(),
+                fechaNacimiento: document.getElementById('edit-cumple').value.trim(),
                 photoFile: document.getElementById('edit-photo-input').files[0] || null,
                 photoPreviewSrc: document.getElementById('edit-photo-preview').src
             };
@@ -474,9 +664,11 @@ async function saveEmployeeData(originalName, data) {
         }
 
         // 2. Prepare data object (Keep existing contact info if not in modal)
+        // 2. Prepare data object (Keep existing contact info if not in modal)
         const updateData = {
             nombre: data.nombre,
             cargo: data.cargo,
+            fechaNacimiento: data.fechaNacimiento,
             photoURL: photoURL,
             updatedAt: new Date()
         };
@@ -503,8 +695,9 @@ async function saveEmployeeData(originalName, data) {
                             ...emp,
                             nombre: data.nombre,
                             cargo: data.cargo,
+                            fechaNacimiento: data.fechaNacimiento,
                             photoURL: photoURL
-                            // We do NOT update email/phone/telegram here to preserve them if they exist
+                            // Updated fields
                         };
                     }
                     return emp;

@@ -223,36 +223,46 @@ async function cargarEmpleadosDeFirestore() {
   ];
 */
 
-// Inicializar carga
-// Inicializar carga
-console.log("[DEBUG] Iniciando Promise.all para cargar empleados y feriados...");
+// -----------------------------------------------------------------------------
+// CARGA OPTIMISTA (Mejora de Velocidad)
+// -----------------------------------------------------------------------------
+// 1. Inicializar con valores por defecto INMEDIATAMENTE
+empleados = DEFAULT_EMPLOYEES_NAMES.map(name => ({ nombre: name, turnos: [] }));
+
+if (!feriadosChile || feriadosChile.length === 0) {
+  feriadosChile = FERIADOS_DEFAULT.map(f => f.fecha);
+  feriadosInfo = {};
+  FERIADOS_DEFAULT.forEach(f => { feriadosInfo[f.fecha] = f.nombre; });
+}
+
+// 2. Renderizar Calendario VISUALMENTE (usando caché de localStorage si existe)
+// Esto hace que la tabla aparezca al instante, sin esperar a la red.
+document.addEventListener('DOMContentLoaded', () => {
+  // Solo si renderCalendar existe
+  if (typeof renderCalendar === 'function') {
+    console.log("[OPTIMIZACIÓN] Renderizado inicial optimista (sin esperar DB)");
+    renderCalendar();
+  }
+});
+
+// 3. Cargar datos reales en SEGUNDO PLANO (Background Sync)
+console.log("[DEBUG] Iniciando sincronización en segundo plano...");
 Promise.all([cargarEmpleadosDeFirestore(), cargarFeriados()]).then(([lista]) => {
-  console.log("[DEBUG] Promise.all resuelto, empleados:", lista?.length);
-  empleados = lista;
-  // console.log("Datos iniciales cargados (Empleados y Feriados)");
-  // Disparar evento personalizado
+  console.log("[DEBUG] Datos frescos cargados. Actualizando vista...");
+
+  if (lista && lista.length > 0) {
+    empleados = lista;
+  }
+
+  // Re-renderizar para aplicar feriados actualizados o nuevos empleados
+  iniciarCalendario();
+
+  // Disparar evento
   document.dispatchEvent(new CustomEvent('datosCargados'));
 
-  // Iniciar calendario
-  iniciarCalendario();
 }).catch(err => {
-  console.error("[DEBUG] Promise.all error:", err);
-  // Usar fallback si hubo error
-  if (!empleados || empleados.length === 0) {
-    empleados = [
-      { nombre: "Sergio Castillo", turnos: [] },
-      { nombre: "Ignacio Aburto", turnos: [] },
-      { nombre: "Claudio Bustamante", turnos: [] },
-      { nombre: "Julio Oliva", turnos: [] },
-      { nombre: "Gabriel Trujillo", turnos: [] }
-    ];
-  }
-  if (!feriadosChile || feriadosChile.length === 0) {
-    feriadosChile = FERIADOS_DEFAULT.map(f => f.fecha);
-    feriadosInfo = {};
-    FERIADOS_DEFAULT.forEach(f => { feriadosInfo[f.fecha] = f.nombre; });
-  }
-  iniciarCalendario();
+  console.error("[DEBUG] Error en sincronización:", err);
+  // No hacemos nada drástico, ya tenemos los defaults cargados
 });
 
 function iniciarCalendario() {
@@ -524,6 +534,10 @@ function verificarRolUsuario(callback) {
             const liUsuarios = document.getElementById("li-usuarios");
             if (liUsuarios) {
               liUsuarios.style.display = "block";
+            }
+            const liAnimaciones = document.getElementById("li-animaciones");
+            if (liAnimaciones) {
+              liAnimaciones.style.display = "block";
             }
           }
 
@@ -3088,7 +3102,7 @@ document.addEventListener("DOMContentLoaded", function () {
       btnToggleLock.addEventListener("click", toggleMonthLock);
     }
 
-    // INITIALIZE FLOATING PALETTE
+    // INITIALIZE FLOATING PALETTE (Optimized)
     function initFloatingPalette() {
       const btnToggle = document.getElementById('btnToggleFloating');
       const turnosSection = document.querySelector('.turnos-section');
@@ -3096,70 +3110,98 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!btnToggle || !turnosSection || !header) return;
 
+      let isFloating = false;
+      let currentX = 0;
+      let currentY = 0;
+      let initialX = 0;
+      let initialY = 0;
+      let xOffset = 0;
+      let yOffset = 0;
+      let isDragging = false;
+      let animationFrameId = null;
+
       // Toggle Floating Mode
       btnToggle.addEventListener('click', () => {
         turnosSection.classList.toggle('floating');
+        isFloating = turnosSection.classList.contains('floating');
         btnToggle.classList.toggle('active');
 
-        if (turnosSection.classList.contains('floating')) {
-          // Initial Position
+        if (isFloating) {
+          // Reset offsets when enabling
+          xOffset = 0;
+          yOffset = 0;
+
+          // Initial Position (Fixed via CSS usually, but here JS sets it)
           turnosSection.style.top = '120px';
           turnosSection.style.right = '20px';
-          turnosSection.style.left = 'auto';
+          turnosSection.style.left = 'auto'; // Reset left
+          turnosSection.style.transform = `translate3d(0px, 0px, 0)`;
 
-          // Icon change
           btnToggle.innerHTML = '<i data-lucide="minimize-2"></i>';
         } else {
           // Reset
           turnosSection.style.top = '';
           turnosSection.style.right = '';
           turnosSection.style.left = '';
-          turnosSection.style.transform = ''; // Clear drag transform
+          turnosSection.style.transform = 'none';
 
-          // Icon change
           btnToggle.innerHTML = '<i data-lucide="maximize-2"></i>';
         }
         if (window.lucide) lucide.createIcons();
       });
 
-      // Draggable Logic
-      let isDragging = false;
-      let startX, startY, initialLeft, initialTop;
+      // Drag Start
+      header.addEventListener('mousedown', dragStart);
 
-      header.addEventListener('mousedown', (e) => {
-        if (!turnosSection.classList.contains('floating')) return;
-        if (e.target.closest('button')) return; // Don't drag if clicking toggle
+      // Drag End (Global)
+      document.addEventListener('mouseup', dragEnd);
+      document.addEventListener('mousemove', drag);
+
+      function dragStart(e) {
+        if (!isFloating) return;
+        if (e.target.closest('button')) return;
+
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
 
         isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-
-        const rect = turnosSection.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialTop = rect.top;
-
+        turnosSection.classList.add('dragging'); // Trigger CSS optimization
         header.style.cursor = 'grabbing';
-        e.preventDefault(); // Prevent text selection
-      });
+      }
 
-      document.addEventListener('mousemove', (e) => {
+      function dragEnd(e) {
         if (!isDragging) return;
-        e.preventDefault();
+        initialX = currentX;
+        initialY = currentY;
+        isDragging = false;
+        turnosSection.classList.remove('dragging'); // Re-enable effects
+        header.style.cursor = 'move';
 
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null; // FIX: Reset ID so next drag starts fresh
+      }
 
-        turnosSection.style.left = `${initialLeft + dx}px`;
-        turnosSection.style.top = `${initialTop + dy}px`;
-        turnosSection.style.right = 'auto';
-      });
-
-      document.addEventListener('mouseup', () => {
+      function drag(e) {
         if (isDragging) {
-          isDragging = false;
-          header.style.cursor = 'move';
+          e.preventDefault();
+
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+
+          xOffset = currentX;
+          yOffset = currentY;
+
+          // Use requestAnimationFrame for smooth rendering
+          if (!animationFrameId) {
+            animationFrameId = requestAnimationFrame(setTranslate);
+          }
         }
-      });
+      }
+
+      function setTranslate() {
+        turnosSection.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        animationFrameId = null;
+      }
     }
 
     // Call it

@@ -132,6 +132,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (liRegistros) liRegistros.style.display = "block";
             const liUsuarios = document.getElementById("li-usuarios");
             if (liUsuarios) liUsuarios.style.display = "block";
+            const liAnimaciones = document.getElementById("li-animaciones");
+            if (liAnimaciones) liAnimaciones.style.display = "block";
         }
 
         // Remover la clase oculta y cargar archivos

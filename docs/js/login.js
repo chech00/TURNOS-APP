@@ -23,10 +23,16 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     errorMessageElement.style.display = "none";
     errorMessageElement.textContent = "";
 
-    // 2) Obtener rol desde Firestore
-    const userDoc = await db.collection("userRoles").doc(user.uid).get();
+    // 2) Obtener rol y estado en PARALELO para mayor velocidad
+    const [userDoc, userStatusDoc] = await Promise.all([
+      db.collection("userRoles").doc(user.uid).get(),
+      db.collection("userStatus").doc(user.uid).get().catch(err => {
+        console.warn("Error verificando estado:", err);
+        return null; // Fallback seguro
+      })
+    ]);
+
     if (!userDoc.exists) {
-      // Si no hay documento de rol, cierra sesión y avisa
       await auth.signOut();
       Swal.fire("Error", "No tienes un rol asignado. Contacta al administrador.", "error");
       return;
@@ -34,82 +40,46 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
     const userData = userDoc.data();
     const userRole = userData.rol;
-    console.log("Datos del usuario:", userData); // DEBUG
     console.log("Rol del usuario:", userRole);
 
-    // --- NUEVO: Verificar si la cuenta está suspendida ---
-    try {
-      const userStatusDoc = await db.collection("userStatus").doc(user.uid).get();
-      if (userStatusDoc.exists) {
-        const statusData = userStatusDoc.data();
-        if (statusData.suspended === true) {
-          console.warn("Usuario suspendido intentando acceder:", user.email);
-          await auth.signOut();
+    // --- Verificación de Suspensión ---
+    if (userStatusDoc && userStatusDoc.exists) {
+      const statusData = userStatusDoc.data();
+      if (statusData.suspended === true) {
+        console.warn("Usuario suspendido:", user.email);
+        await auth.signOut();
+        let reason = statusData.suspendedReason || "Razón no especificada";
 
-          let reason = statusData.suspendedReason || "Razón no especificada"; // Fallback text
-
-          // Usar SweetAlert2 si está disponible (debería estarlo en login.html)
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              icon: 'error',
-              title: 'Cuenta Suspendida',
-              html: `<div style="text-align: center;">
-                                <p>Tu acceso al sistema ha sido restringido.</p>
-                                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; padding: 10px; border-radius: 6px; margin: 15px 0;">
-                                    <strong>Razón:</strong> ${reason}
-                                </div>
-                                <p style="font-size: 0.9em; opacity: 0.7;">Contacta a soporte para más detalles.</p>
-                               </div>`,
-              confirmButtonText: 'Cerrar',
-              confirmButtonColor: '#3b82f6',
-              background: '#1a1a2e', // Match theme roughly just in case css isn't loaded (but it is)
-              color: '#ffffff'
-            });
-          } else {
-            alert("CUENTA SUSPENDIDA\n\nRazón: " + reason);
-          }
-          return; // DETENER LOGIN
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'error',
+            title: 'Cuenta Suspendida',
+            text: reason,
+            confirmButtonColor: '#3b82f6'
+          });
+        } else {
+          alert("CUENTA SUSPENDIDA: " + reason);
         }
+        return;
       }
-    } catch (statusError) {
-      console.error("Warning: Error verificando estado de suspensión:", statusError);
-      // Continuamos (fail-open por robustez, o podría ser fail-close)
     }
 
-    // --- NUEVO: Verificar si debe cambiar contraseña ---
-    // DEBUG: Alert removido.
-
+    // --- Verificación de Cambio de Contraseña ---
     if (userData.mustChangePassword === true) {
-      console.log("El usuario debe cambiar su contraseña (flag activo).");
       window.location.href = "change-password.html";
-      return; // Detener ejecución aquí
-    } else {
-      console.log("El usuario NO necesita cambiar contraseña (flag:", userData.mustChangePassword, ")");
+      return;
     }
-    // --------------------------------------------------
-    // --------------------------------------------------
 
-    // 3) Guardar log de inicio de sesión en la colección "loginLogs"
-    //    (Lo creas en Firestore con los campos: email, rol, timestamp)
-    await db.collection("loginLogs").add({
+    // 3) Logging NO BLOQUEANTE (Fire and forget)
+    db.collection("loginLogs").add({
       email: user.email,
       rol: userRole,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    console.log("Registro de login guardado en 'loginLogs'.");
+    }).catch(err => console.error("Error guardando log:", err));
 
-    // 4) Redirigir según rol
-    //    - Todos los usuarios van a directorio.html como página principal
-    //    - superadmin y admin = directorio con menús admin
-    //    - user = directorio con menús limitados
-    if (userRole === "admin" || userRole === "superadmin") {
-      localStorage.setItem("userRole", userRole);
-      window.location.href = "directorio.html";
-    } else {
-      // Asumimos que el resto de roles => user
-      localStorage.setItem("userRole", userRole);
-      window.location.href = "directorio.html";
-    }
+    // 4) Redirigir inmediatamente
+    localStorage.setItem("userRole", userRole);
+    window.location.href = "directorio.html";
   } catch (error) {
     console.error("Error en el inicio de sesión:", error);
     errorMessageElement.style.display = "block";

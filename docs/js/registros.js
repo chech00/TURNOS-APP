@@ -11,8 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cachedRole === "superadmin") {
     const liRegistros = document.getElementById("li-registros");
     const liUsuarios = document.getElementById("li-usuarios");
+    const liAnimaciones = document.getElementById("li-animaciones");
     if (liRegistros) liRegistros.style.display = "block";
     if (liUsuarios) liUsuarios.style.display = "block";
+    if (liAnimaciones) liAnimaciones.style.display = "block";
     document.body.classList.add("is-admin");
   } else if (cachedRole === "admin") {
     document.body.classList.add("is-admin");
@@ -53,8 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Asegurar que los links de superadmin sean visibles
     const liRegistros = document.getElementById("li-registros");
     const liUsuarios = document.getElementById("li-usuarios");
+    const liAnimaciones = document.getElementById("li-animaciones");
     if (liRegistros) liRegistros.style.display = "block";
     if (liUsuarios) liUsuarios.style.display = "block";
+    if (liAnimaciones) liAnimaciones.style.display = "block";
 
     // 2. Cargar logs de inicios de sesión
     cargarRegistrosDeLogins();

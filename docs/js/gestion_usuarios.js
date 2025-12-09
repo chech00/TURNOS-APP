@@ -811,7 +811,9 @@ function verificarAccesoSuperAdmin() {
 
             // Mostrar link de registros
             const liRegistros = document.getElementById("li-registros");
+            const liAnimaciones = document.getElementById("li-animaciones");
             if (liRegistros) liRegistros.style.display = "block";
+            if (liAnimaciones) liAnimaciones.style.display = "block";
 
             // Cargar datos
             await renderUsersTable();
