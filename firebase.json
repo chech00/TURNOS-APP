@@ -1,5 +1,6 @@
 {
     "hosting": {
+        "site": "asignacionturnos-cc578",
         "public": "docs",
         "ignore": [
             "firebase.json",

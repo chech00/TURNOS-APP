@@ -1,0 +1,229 @@
+/* action.css - Estilos adicionales para la página de acción */
+
+/* Override del contenedor para que quepa todo - forzar con !important */
+.recover-container {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    padding: 20px 0;
+}
+
+.recover-content {
+    padding: 1.5rem 2rem !important;
+    overflow-y: visible !important;
+    justify-content: flex-start !important;
+}
+
+/* Logo más pequeño para esta vista */
+.recover-content .logo img {
+    width: 120px !important;
+    margin-bottom: 0.8rem !important;
+}
+
+/* Título más compacto */
+.recover-content h2 {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.2rem !important;
+}
+
+/* Descripción más compacta */
+.recover-description {
+    font-size: 0.85rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Formulario más compacto */
+.recover-form {
+    gap: 0.8rem !important;
+}
+
+/* Inputs más compactos */
+.form-group input {
+    padding: 0.75rem 1rem !important;
+}
+
+/* Botón más compacto */
+.btn-primary {
+    padding: 0.75rem !important;
+    margin-top: 0.2rem !important;
+}
+
+/* Link de volver más compacto */
+.back-login {
+    margin-top: 1rem !important;
+}
+
+/* Secciones de acción */
+.action-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.action-section.hidden {
+    display: none;
+}
+
+/* Password toggle button */
+.password-group {
+    position: relative;
+}
+
+.password-group input {
+    padding-right: 50px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: var(--color-acento-primario);
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Password strength indicator */
+.password-strength {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-bar.weak {
+    width: 25%;
+    background: var(--color-error, #e74c3c);
+}
+
+.strength-bar.fair {
+    width: 50%;
+    background: #f39c12;
+}
+
+.strength-bar.good {
+    width: 75%;
+    background: #3498db;
+}
+
+.strength-bar.strong {
+    width: 100%;
+    background: var(--color-exito, #2ecc71);
+}
+
+.strength-text {
+    font-size: 0.75rem;
+    color: var(--color-texto-secundario);
+    text-align: left;
+    margin-top: 4px;
+    min-height: 18px;
+}
+
+/* Success icon */
+.success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+.success-icon svg {
+    width: 48px;
+    height: 48px;
+    color: var(--color-exito, #2ecc71);
+}
+
+/* Error icon */
+.error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.error-icon svg {
+    width: 48px;
+    height: 48px;
+    color: var(--color-error, #e74c3c);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px 10px rgba(46, 204, 113, 0);
+    }
+}
+
+/* Button with icon */
+.btn-primary .btn-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.btn-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    padding: 1rem 2rem;
+    width: auto;
+    margin-top: 1rem;
+}
+
+/* Loading state */
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Error message styling */
+.error-message {
+    color: var(--color-error, #e74c3c);
+    font-size: 0.85rem;
+    text-align: center;
+    min-height: 20px;
+    margin-top: 0.5rem;
+}

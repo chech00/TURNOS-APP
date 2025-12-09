@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restablecer Contraseña</title>
+    <!-- Google Fonts para una tipografía moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/recover.css">
+    <link rel="stylesheet" href="./css/action.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="recover-container">
+        <!-- Lado izquierdo con imagen -->
+        <div class="recover-image"></div>
+
+        <div class="recover-content">
+            <div class="logo">
+                <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo">
+            </div>
+
+            <!-- Reset Password Mode -->
+            <div id="reset-password-section" class="action-section">
+                <h2>Restablecer Contraseña</h2>
+                <p class="recover-description" id="user-email-display">Ingresa tu nueva contraseña</p>
+
+                <form id="reset-password-form" class="recover-form">
+                    <div class="form-group password-group">
+                        <input type="password" id="new-password" placeholder="Nueva Contraseña" required minlength="6">
+                        <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-group password-group">
+                        <input type="password" id="confirm-password" placeholder="Confirmar Contraseña" required
+                            minlength="6">
+                        <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Password strength indicator -->
+                    <div class="password-strength">
+                        <div class="strength-bar" id="strength-bar"></div>
+                    </div>
+                    <p class="strength-text" id="strength-text"></p>
+
+                    <div class="spinner" id="loading-spinner"></div>
+
+                    <button type="submit" id="reset-button" class="btn-primary">
+                        <i data-lucide="lock" class="btn-icon"></i>
+                        Guardar Contraseña
+                    </button>
+
+                    <p id="error-message" class="error-message"></p>
+                </form>
+            </div>
+
+            <!-- Success Section -->
+            <div id="success-section" class="action-section hidden">
+                <div class="success-icon">
+                    <i data-lucide="check-circle"></i>
+                </div>
+                <h2>¡Contraseña Actualizada!</h2>
+                <p class="recover-description">Tu contraseña se ha restablecido exitosamente. Ya puedes iniciar sesión
+                    con tu nueva contraseña.</p>
+                <a href="login.html" class="btn-primary btn-login">
+                    <i data-lucide="log-in" class="btn-icon"></i>
+                    Ir al Login
+                </a>
+            </div>
+
+            <!-- Error Section -->
+            <div id="error-section" class="action-section hidden">
+                <div class="error-icon">
+                    <i data-lucide="alert-circle"></i>
+                </div>
+                <h2>Enlace Inválido</h2>
+                <p class="recover-description">El enlace de recuperación es inválido o ha expirado. Por favor, solicita
+                    un nuevo enlace.</p>
+                <a href="recuperar.html" class="btn-primary btn-login">
+                    <i data-lucide="refresh-cw" class="btn-icon"></i>
+                    Solicitar Nuevo Enlace
+                </a>
+            </div>
+
+            <div class="back-login">
+                <a href="login.html">
+                    <i data-lucide="arrow-left"></i>
+                    Volver al inicio de sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script type="module" src="./js/firebase.js"></script>
+    <script type="module" src="./js/action.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
