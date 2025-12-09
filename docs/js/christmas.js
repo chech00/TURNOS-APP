@@ -1,12 +1,17 @@
 /**
  * Seasonal Themes - Snowfall & Fireworks Animations
  * Reads config from Firestore and applies/removes effects in real-time
+ * Uses localStorage as fallback for unauthenticated pages
  */
 (function () {
     const SNOW_ID = 'snow-container';
     const FIREWORKS_ID = 'fireworks-container';
+    const STORAGE_KEY = 'seasonalAnimations';
     let attempts = 0;
     const maxAttempts = 50; // 10 seconds max wait
+
+    // Try to load from localStorage immediately (for faster initial render)
+    loadFromLocalStorage();
 
     // Wait for Firebase to be fully initialized
     const checkFirebase = setInterval(() => {
@@ -19,33 +24,70 @@
             initSeasonalThemes();
         } else if (attempts >= maxAttempts) {
             clearInterval(checkFirebase);
-            console.warn("🎄 Seasonal Themes: Firebase not available after timeout");
+            console.log("🎄 Seasonal Themes: Using cached settings (Firebase not available)");
         }
     }, 200);
 
+    function loadFromLocalStorage() {
+        try {
+            const cached = localStorage.getItem(STORAGE_KEY);
+            if (cached) {
+                const data = JSON.parse(cached);
+                console.log("🎄 Seasonal Themes: Loading from cache", data);
+                applyAnimations(data);
+            }
+        } catch (e) {
+            // localStorage not available or invalid data
+        }
+    }
+
+    function saveToLocalStorage(data) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            // localStorage not available
+        }
+    }
+
     function initSeasonalThemes() {
         const db = firebase.firestore();
+        const docRef = db.collection('config').doc('animations');
 
-        // Listen to config changes in real-time
-        db.collection('config').doc('animations').onSnapshot((doc) => {
+        // Try to get current value from Firestore
+        docRef.get().then((doc) => {
             const data = doc.data() || {};
+            applyAnimations(data);
+            saveToLocalStorage(data); // Cache for offline/unauthenticated use
+            console.log("🎄 Seasonal Themes: Loaded from Firestore", data);
 
-            // Handle Snow
-            if (data.christmas_snow) {
-                enableSnow();
-            } else {
-                disableSnow();
-            }
-
-            // Handle Fireworks
-            if (data.newyear_fireworks) {
-                enableFireworks();
-            } else {
-                disableFireworks();
-            }
-        }, (error) => {
-            console.warn("Seasonal Themes: Could not sync with DB", error);
+            // Set up real-time listener
+            docRef.onSnapshot((doc) => {
+                const data = doc.data() || {};
+                applyAnimations(data);
+                saveToLocalStorage(data);
+            }, (error) => {
+                console.log("🎄 Seasonal Themes: Real-time sync unavailable");
+            });
+        }).catch((error) => {
+            console.log("🎄 Seasonal Themes: Firestore access denied, using cache");
+            // Already loaded from localStorage at startup
         });
+    }
+
+    function applyAnimations(data) {
+        // Handle Snow
+        if (data.christmas_snow) {
+            enableSnow();
+        } else {
+            disableSnow();
+        }
+
+        // Handle Fireworks
+        if (data.newyear_fireworks) {
+            enableFireworks();
+        } else {
+            disableFireworks();
+        }
     }
 
     // ==========================================
