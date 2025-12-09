@@ -1,8 +1,8 @@
 /**
- * Animaciones Manager - Controls global animation settings
+ * Animaciones Manager - Controls all animation settings
+ * Supports 12 different animation types
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait for Firebase to be ready
     const checkFirebase = setInterval(() => {
         if (window.firebase && firebase.firestore) {
             clearInterval(checkFirebase);
@@ -10,15 +10,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 100);
 
+    // All animation types
+    const ANIMATION_KEYS = [
+        'christmas_snow', 'newyear_fireworks', 'halloween', 'valentine',
+        'easter', 'independence', 'rain', 'autumn', 'bubbles', 'aurora',
+        'matrix', 'particles'
+    ];
+
+    const ANIMATION_NAMES = {
+        christmas_snow: 'Nieve navideña',
+        newyear_fireworks: 'Fuegos artificiales',
+        halloween: 'Halloween',
+        valentine: 'San Valentín',
+        easter: 'Pascua',
+        independence: 'Día de la Independencia',
+        rain: 'Lluvia',
+        autumn: 'Hojas de otoño',
+        bubbles: 'Burbujas',
+        aurora: 'Aurora boreal',
+        matrix: 'Matrix',
+        particles: 'Partículas conectadas'
+    };
+
     function initAnimsManager() {
         const db = firebase.firestore();
         const auth = firebase.auth();
-        const toggleSnow = document.getElementById('toggle-snow');
-        const toggleFireworks = document.getElementById('toggle-fireworks');
+        const docRef = db.collection('config').doc('animations');
 
-        if (!toggleSnow && !toggleFireworks) return;
-
-        // Verificar rol del usuario y mostrar elementos del sidebar
+        // Auth check and role verification
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = "login.html";
@@ -29,14 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userDoc = await db.collection("userRoles").doc(user.uid).get();
                 if (userDoc.exists) {
                     const userRole = userDoc.data().rol;
-
-                    // Mostrar elementos para admin y superadmin
                     if (userRole === "admin" || userRole === "superadmin") {
-                        // Agregar clase is-admin al body (necesario para CSS que usa !important)
                         document.body.classList.add("is-admin");
                     }
-
-                    // Mostrar elementos solo para superadmin
                     if (userRole === "superadmin") {
                         document.querySelectorAll(".superadmin-only").forEach(el => {
                             el.style.display = "block";
@@ -48,66 +62,63 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const docRef = db.collection('config').doc('animations');
-
-        // Load initial state for both toggles
+        // Load initial state for all toggles
         docRef.get().then((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                if (toggleSnow) toggleSnow.checked = data.christmas_snow || false;
-                if (toggleFireworks) toggleFireworks.checked = data.newyear_fireworks || false;
-            } else {
-                // Create default config
-                docRef.set({ christmas_snow: false, newyear_fireworks: false });
-                if (toggleSnow) toggleSnow.checked = false;
-                if (toggleFireworks) toggleFireworks.checked = false;
-            }
+            const data = doc.exists ? doc.data() : {};
+
+            ANIMATION_KEYS.forEach(key => {
+                const toggle = document.getElementById(`toggle-${key}`);
+                if (toggle) {
+                    toggle.checked = data[key] || false;
+                    updateCardState(key, data[key] || false);
+                }
+            });
         }).catch((error) => {
             console.error("Error loading animations config:", error);
         });
 
-        // Handle snow toggle changes
-        if (toggleSnow) {
-            toggleSnow.addEventListener('change', (e) => {
-                const isEnabled = e.target.checked;
-                docRef.set({ christmas_snow: isEnabled }, { merge: true })
-                    .then(() => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Configuración Actualizada',
-                            text: `Animación de nieve ${isEnabled ? 'activada' : 'desactivada'}`,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    })
-                    .catch((error) => {
-                        console.error("Error updating config:", error);
-                        Swal.fire('Error', 'No se pudo actualizar la configuración', 'error');
-                        e.target.checked = !isEnabled; // Revert
-                    });
-            });
-        }
+        // Set up event listeners for all toggles
+        ANIMATION_KEYS.forEach(key => {
+            const toggle = document.getElementById(`toggle-${key}`);
+            if (toggle) {
+                toggle.addEventListener('change', (e) => {
+                    const isEnabled = e.target.checked;
 
-        // Handle fireworks toggle changes
-        if (toggleFireworks) {
-            toggleFireworks.addEventListener('change', (e) => {
-                const isEnabled = e.target.checked;
-                docRef.set({ newyear_fireworks: isEnabled }, { merge: true })
-                    .then(() => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Configuración Actualizada',
-                            text: `Fuegos artificiales ${isEnabled ? 'activados' : 'desactivados'}`,
-                            timer: 1500,
-                            showConfirmButton: false
+                    // Build update object - disable other animations when enabling one
+                    const updateObj = { [key]: isEnabled };
+
+                    docRef.set(updateObj, { merge: true })
+                        .then(() => {
+                            updateCardState(key, isEnabled);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: isEnabled ? '¡Activado!' : 'Desactivado',
+                                text: `${ANIMATION_NAMES[key]} ${isEnabled ? 'activado' : 'desactivado'}`,
+                                timer: 1200,
+                                showConfirmButton: false,
+                                background: 'var(--color-fondo-secundario)',
+                                color: 'var(--color-texto-principal)'
+                            });
+                        })
+                        .catch((error) => {
+                            console.error("Error updating config:", error);
+                            Swal.fire('Error', 'No se pudo actualizar', 'error');
+                            e.target.checked = !isEnabled;
                         });
-                    })
-                    .catch((error) => {
-                        console.error("Error updating config:", error);
-                        Swal.fire('Error', 'No se pudo actualizar la configuración', 'error');
-                        e.target.checked = !isEnabled; // Revert
-                    });
-            });
+                });
+            }
+        });
+    }
+
+    function updateCardState(key, isActive) {
+        const card = document.querySelector(`[data-animation="${key}"]`);
+        if (card) {
+            if (isActive) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
         }
     }
 });

@@ -9,10 +9,8 @@
     <link rel="stylesheet" href="./css/animaciones.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Security -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="./js/security-helpers.js"></script>
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -27,28 +25,22 @@
         </div>
         <nav class="sidebar-menu">
             <ul>
-                <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
-                        <span>Directorio</span></a></li>
-                <li><a href="user.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
-                <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de
-                            Fibra</span></a></li>
-                <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a>
-                </li>
-                <li><a href="noc.html" id="calendar-check"><i data-lucide="calendar-check"></i> <span>Turnos
-                            Noc</span></a></li>
-                <li id="li-empleados" class="admin-only"><a href="gestion_empleados.html"><i data-lucide="user-cog"></i>
-                        <span>Gestionar Empleados</span></a></li>
+                <li><a href="directorio.html"><i data-lucide="users"></i><span>Directorio</span></a></li>
+                <li><a href="user.html"><i data-lucide="calendar"></i><span>Turnos</span></a></li>
+                <li><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de Fibra</span></a></li>
+                <li><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos Noc</span></a></li>
+                <li><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos Noc</span></a></li>
+                <li id="li-empleados" class="admin-only"><a href="gestion_empleados.html"><i
+                            data-lucide="user-cog"></i><span>Gestionar Empleados</span></a></li>
                 <li id="li-usuarios" class="superadmin-only"><a href="gestion_usuarios.html"><i
-                            data-lucide="shield-check"></i>
-                        <span>Cuentas de Sistema</span></a></li>
+                            data-lucide="shield-check"></i><span>Cuentas de Sistema</span></a></li>
                 <li id="li-animaciones" class="superadmin-only"><a href="animaciones.html" class="active"><i
-                            data-lucide="sparkles"></i>
-                        <span>Animaciones</span></a></li>
-                <li id="li-registros" class="superadmin-only"><a href="registros.html"><i data-lucide="file-text"></i>
-                        <span>Registros</span></a></li>
+                            data-lucide="sparkles"></i><span>Animaciones</span></a></li>
+                <li id="li-registros" class="superadmin-only"><a href="registros.html"><i
+                            data-lucide="file-text"></i><span>Registros</span></a></li>
             </ul>
         </nav>
-        <button id="logout-btn" class="primary-btn logout-btn"><i data-lucide="log-out"></i> <span>Cerrar
+        <button id="logout-btn" class="primary-btn logout-btn"><i data-lucide="log-out"></i><span>Cerrar
                 sesión</span></button>
     </div>
 
@@ -58,171 +50,232 @@
             <h1>Gestión de Animaciones</h1>
         </header>
 
-        <!-- Premium Animations Dashboard -->
         <div class="animaciones-dashboard">
-            <!-- Header Section -->
+            <!-- Header -->
             <div class="dashboard-header">
                 <div class="header-content">
-                    <div class="header-icon-wrapper">
-                        <i data-lucide="wand-2" class="header-icon"></i>
-                    </div>
+                    <div class="header-icon-wrapper"><i data-lucide="wand-2" class="header-icon"></i></div>
                     <div class="header-text">
                         <h2>Centro de Control de Animaciones</h2>
-                        <p>Personaliza la experiencia visual de la aplicación con efectos temáticos especiales</p>
-                    </div>
-                </div>
-                <div class="status-badges">
-                    <div class="status-badge" id="snow-status">
-                        <span class="status-dot"></span>
-                        <span>Nieve: Inactiva</span>
-                    </div>
-                    <div class="status-badge" id="fireworks-status">
-                        <span class="status-dot"></span>
-                        <span>Fuegos: Inactivos</span>
+                        <p>12 efectos visuales temáticos para personalizar la experiencia</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Animation Cards Grid -->
-            <div class="animations-grid">
-                <!-- Christmas Snow Card -->
-                <div class="animation-card snow-card" id="snow-card">
-                    <div class="card-preview">
-                        <div class="preview-scene snow-scene">
-                            <div class="mini-snowflake">❄</div>
-                            <div class="mini-snowflake">❅</div>
-                            <div class="mini-snowflake">❆</div>
-                            <div class="mini-snowflake">❄</div>
-                            <div class="mini-snowflake">❅</div>
+            <!-- Festividades Section -->
+            <div class="animation-section">
+                <h3 class="section-title"><i data-lucide="party-popper"></i> Festividades</h3>
+                <div class="animations-grid">
+                    <!-- Snow -->
+                    <div class="animation-card" data-animation="christmas_snow">
+                        <div class="card-preview snow-preview">
+                            <div class="preview-snow">❄</div>
+                            <div class="preview-snow">❅</div>
+                            <div class="preview-snow">❆</div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">❄️</span>
+                            <h4>Navidad</h4>
+                            <p>Copos de nieve</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-christmas_snow"><span
+                                    class="toggle-slider"></span></label>
                         </div>
                     </div>
-                    <div class="card-content">
-                        <div class="card-icon-badge snow-badge">
-                            <i data-lucide="snowflake"></i>
+                    <!-- Fireworks -->
+                    <div class="animation-card" data-animation="newyear_fireworks">
+                        <div class="card-preview fireworks-preview">
+                            <div class="preview-firework"></div>
+                            <div class="preview-firework"></div>
                         </div>
-                        <h3>Modo Navidad</h3>
-                        <p>Copos de nieve cayendo suavemente en el fondo de todas las vistas</p>
-                        <div class="card-footer">
-                            <div class="toggle-container">
-                                <span class="toggle-label">Desactivado</span>
-                                <div class="toggle-switch-premium">
-                                    <input type="checkbox" id="toggle-snow">
-                                    <label for="toggle-snow" class="slider-premium snow-slider"></label>
-                                </div>
-                                <span class="toggle-label">Activado</span>
-                            </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🎆</span>
+                            <h4>Año Nuevo</h4>
+                            <p>Fuegos artificiales</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-newyear_fireworks"><span
+                                    class="toggle-slider"></span></label>
                         </div>
                     </div>
-                </div>
-
-                <!-- New Year Fireworks Card -->
-                <div class="animation-card fireworks-card" id="fireworks-card">
-                    <div class="card-preview">
-                        <div class="preview-scene fireworks-scene">
-                            <div class="mini-firework" style="--delay: 0s; --x: 20%;"></div>
-                            <div class="mini-firework" style="--delay: 0.3s; --x: 50%;"></div>
-                            <div class="mini-firework" style="--delay: 0.6s; --x: 80%;"></div>
+                    <!-- Halloween -->
+                    <div class="animation-card" data-animation="halloween">
+                        <div class="card-preview halloween-preview"><span class="preview-bat">🦇</span><span
+                                class="preview-pumpkin">🎃</span></div>
+                        <div class="card-body">
+                            <span class="card-emoji">🎃</span>
+                            <h4>Halloween</h4>
+                            <p>Murciélagos y calabazas</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-halloween"><span
+                                    class="toggle-slider halloween"></span></label>
                         </div>
                     </div>
-                    <div class="card-content">
-                        <div class="card-icon-badge fireworks-badge">
-                            <i data-lucide="sparkles"></i>
+                    <!-- Valentine -->
+                    <div class="animation-card" data-animation="valentine">
+                        <div class="card-preview valentine-preview"><span class="preview-heart">❤️</span><span
+                                class="preview-heart">💕</span><span class="preview-heart">💖</span></div>
+                        <div class="card-body">
+                            <span class="card-emoji">💕</span>
+                            <h4>San Valentín</h4>
+                            <p>Corazones flotantes</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-valentine"><span
+                                    class="toggle-slider valentine"></span></label>
                         </div>
-                        <h3>Modo Año Nuevo</h3>
-                        <p>Fuegos artificiales coloridos celebrando el nuevo año en todas las vistas</p>
-                        <div class="card-footer">
-                            <div class="toggle-container">
-                                <span class="toggle-label">Desactivado</span>
-                                <div class="toggle-switch-premium">
-                                    <input type="checkbox" id="toggle-fireworks">
-                                    <label for="toggle-fireworks" class="slider-premium fireworks-slider"></label>
-                                </div>
-                                <span class="toggle-label">Activado</span>
-                            </div>
+                    </div>
+                    <!-- Easter -->
+                    <div class="animation-card" data-animation="easter">
+                        <div class="card-preview easter-preview"><span class="preview-egg">🥚</span><span
+                                class="preview-egg">🐣</span><span class="preview-egg">🐰</span></div>
+                        <div class="card-body">
+                            <span class="card-emoji">🐰</span>
+                            <h4>Pascua</h4>
+                            <p>Huevos y conejos</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-easter"><span
+                                    class="toggle-slider easter"></span></label>
+                        </div>
+                    </div>
+                    <!-- Independence -->
+                    <div class="animation-card" data-animation="independence">
+                        <div class="card-preview independence-preview">
+                            <div class="preview-ribbon celeste"></div>
+                            <div class="preview-ribbon white"></div>
+                            <div class="preview-ribbon celeste"></div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🇦🇷</span>
+                            <h4>Independencia</h4>
+                            <p>Cintas patrias</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-independence"><span
+                                    class="toggle-slider independence"></span></label>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Info Footer -->
+            <!-- Ambientales Section -->
+            <div class="animation-section">
+                <h3 class="section-title"><i data-lucide="cloud-sun"></i> Efectos Ambientales</h3>
+                <div class="animations-grid">
+                    <!-- Rain -->
+                    <div class="animation-card" data-animation="rain">
+                        <div class="card-preview rain-preview">
+                            <div class="preview-drop"></div>
+                            <div class="preview-drop"></div>
+                            <div class="preview-drop"></div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🌧️</span>
+                            <h4>Lluvia</h4>
+                            <p>Gotas cayendo</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-rain"><span
+                                    class="toggle-slider rain"></span></label>
+                        </div>
+                    </div>
+                    <!-- Autumn -->
+                    <div class="animation-card" data-animation="autumn">
+                        <div class="card-preview autumn-preview"><span class="preview-leaf">🍂</span><span
+                                class="preview-leaf">🍁</span><span class="preview-leaf">🍃</span></div>
+                        <div class="card-body">
+                            <span class="card-emoji">🍂</span>
+                            <h4>Otoño</h4>
+                            <p>Hojas cayendo</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-autumn"><span
+                                    class="toggle-slider autumn"></span></label>
+                        </div>
+                    </div>
+                    <!-- Bubbles -->
+                    <div class="animation-card" data-animation="bubbles">
+                        <div class="card-preview bubbles-preview">
+                            <div class="preview-bubble"></div>
+                            <div class="preview-bubble"></div>
+                            <div class="preview-bubble"></div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🫧</span>
+                            <h4>Burbujas</h4>
+                            <p>Subiendo suavemente</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-bubbles"><span
+                                    class="toggle-slider bubbles"></span></label>
+                        </div>
+                    </div>
+                    <!-- Aurora -->
+                    <div class="animation-card" data-animation="aurora">
+                        <div class="card-preview aurora-preview">
+                            <div class="preview-aurora"></div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🌌</span>
+                            <h4>Aurora Boreal</h4>
+                            <p>Ondas de luz</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-aurora"><span
+                                    class="toggle-slider aurora"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Section -->
+            <div class="animation-section">
+                <h3 class="section-title"><i data-lucide="cpu"></i> Efectos Tech</h3>
+                <div class="animations-grid">
+                    <!-- Matrix -->
+                    <div class="animation-card" data-animation="matrix">
+                        <div class="card-preview matrix-preview">
+                            <div class="preview-matrix-col">01</div>
+                            <div class="preview-matrix-col">10</div>
+                            <div class="preview-matrix-col">11</div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">💻</span>
+                            <h4>Matrix</h4>
+                            <p>Lluvia de código</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-matrix"><span
+                                    class="toggle-slider matrix"></span></label>
+                        </div>
+                    </div>
+                    <!-- Particles -->
+                    <div class="animation-card" data-animation="particles">
+                        <div class="card-preview particles-preview">
+                            <div class="preview-particle"></div>
+                            <div class="preview-particle"></div>
+                            <div class="preview-particle"></div>
+                            <div class="preview-line"></div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🔗</span>
+                            <h4>Partículas</h4>
+                            <p>Red conectada</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-particles"><span
+                                    class="toggle-slider particles"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="dashboard-footer">
                 <div class="info-box">
-                    <i data-lucide="info" class="info-icon"></i>
-                    <p>Las animaciones se aplican en tiempo real a todas las vistas de la aplicación, incluyendo el
-                        login.</p>
+                    <i data-lucide="info"></i>
+                    <p>Las animaciones se aplican en tiempo real a todas las vistas, incluyendo login. Solo una
+                        animación puede estar activa a la vez para mejor rendimiento.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase Init -->
     <script type="module" src="./js/firebase.js"></script>
     <script defer src="./js/animaciones.js"></script>
-
     <script>
-        // Initialize Icons and Sidebar
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
 
-            // Sidebar toggle
             document.getElementById("menu-toggle")?.addEventListener("click", () => {
                 document.getElementById("sidebar").classList.toggle("expanded");
                 document.querySelector(".main-content").classList.toggle("expanded");
             });
 
-            // Logout
             document.getElementById("logout-btn")?.addEventListener("click", () => {
                 firebase.auth().signOut().then(() => {
                     localStorage.removeItem('userRole');
                     window.location.href = "login.html";
                 });
             });
-
-            // Update card states based on toggle changes
-            const snowToggle = document.getElementById('toggle-snow');
-            const fireworksToggle = document.getElementById('toggle-fireworks');
-            const snowCard = document.getElementById('snow-card');
-            const fireworksCard = document.getElementById('fireworks-card');
-            const snowStatus = document.getElementById('snow-status');
-            const fireworksStatus = document.getElementById('fireworks-status');
-
-            function updateCardStates() {
-                // Snow card
-                if (snowToggle?.checked) {
-                    snowCard?.classList.add('active');
-                    if (snowStatus) {
-                        snowStatus.classList.add('active');
-                        snowStatus.querySelector('span:last-child').textContent = 'Nieve: Activa';
-                    }
-                } else {
-                    snowCard?.classList.remove('active');
-                    if (snowStatus) {
-                        snowStatus.classList.remove('active');
-                        snowStatus.querySelector('span:last-child').textContent = 'Nieve: Inactiva';
-                    }
-                }
-
-                // Fireworks card
-                if (fireworksToggle?.checked) {
-                    fireworksCard?.classList.add('active');
-                    if (fireworksStatus) {
-                        fireworksStatus.classList.add('active');
-                        fireworksStatus.querySelector('span:last-child').textContent = 'Fuegos: Activos';
-                    }
-                } else {
-                    fireworksCard?.classList.remove('active');
-                    if (fireworksStatus) {
-                        fireworksStatus.classList.remove('active');
-                        fireworksStatus.querySelector('span:last-child').textContent = 'Fuegos: Inactivos';
-                    }
-                }
-            }
-
-            snowToggle?.addEventListener('change', updateCardStates);
-            fireworksToggle?.addEventListener('change', updateCardStates);
-
-            // Initial state update after a short delay (wait for animaciones.js to load values)
-            setTimeout(updateCardStates, 1000);
         });
     </script>
 </body>
