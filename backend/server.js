@@ -8,7 +8,37 @@ const rateLimit = require("express-rate-limit");
 
 // Firebase Admin
 const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json");
+
+// En producción, usar variables de entorno; en desarrollo, usar archivo JSON
+let serviceAccount;
+
+// Intentar cargar credenciales desde diferentes variables de entorno
+const credentialsEnvVar = process.env.FIREBASE_CREDENTIALS ||
+  process.env.FIREBASE_SERVICE_ACCOUNT ||
+  process.env["serviceAccountKey.json"];
+
+if (credentialsEnvVar) {
+  try {
+    // Producción: credenciales desde variable de entorno (JSON string)
+    serviceAccount = JSON.parse(credentialsEnvVar);
+    console.log("✅ Credenciales de Firebase cargadas desde variable de entorno");
+  } catch (parseError) {
+    console.error("❌ Error al parsear credenciales de Firebase:", parseError.message);
+    console.error("   Asegúrate de que el valor sea un JSON válido");
+    process.exit(1);
+  }
+} else {
+  // Desarrollo local: intentar usar archivo JSON
+  try {
+    serviceAccount = require("./serviceAccountKey.json");
+    console.log("✅ Credenciales de Firebase cargadas desde archivo local");
+  } catch (fileError) {
+    console.error("❌ No se encontraron credenciales de Firebase.");
+    console.error("   Configura la variable de entorno FIREBASE_CREDENTIALS con el JSON de las credenciales.");
+    process.exit(1);
+  }
+}
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
