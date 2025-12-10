@@ -1234,55 +1234,72 @@ td.pendiente {
   transform: scale(1.1);
 }
 
-/* Botón de menú hamburguesa - Premium Redesign */
+/* Botón de menú hamburguesa - Morphing Glass Design */
 .menu-btn {
-  font-size: 1.8rem;
-  background: transparent;
-  /* Subtle glass background */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  /* Subtle border */
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  /* Subtle glass */
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  /* Soft square */
   color: var(--color-texto-principal);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Spring effect */
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* Gradient Background Overlay */
+.menu-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-acento-primario), var(--color-acento-secundario));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
 }
 
 .menu-btn:hover {
-  background: var(--color-acento-primario);
-  color: #fff;
-  transform: scale(1.05) rotate(90deg);
-  /* Rotate effect on hover */
-  box-shadow: 0 0 15px rgba(119, 150, 203, 0.6);
-  /* Glow effect */
-  border-color: transparent;
+  border-radius: 50%;
+  /* Morph to circle */
+  transform: rotate(15deg) scale(1.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.menu-btn:hover::before {
+  opacity: 1;
+  /* Fade in gradient */
 }
 
 .menu-btn:active {
-  transform: scale(0.95) rotate(90deg);
+  transform: scale(0.95);
 }
 
-/* Ajustar el tamaño y color del icono */
-/* Ajustar el tamaño y color del icono */
 .menu-btn i,
 .menu-btn svg,
 .menu-btn [data-lucide] {
+  position: relative;
+  z-index: 1;
+  /* On top of gradient */
   width: 24px;
   height: 24px;
-  stroke-width: 2;
-  transition: stroke 0.3s ease;
   stroke: currentColor;
-  /* Ensure it inherits color */
+  stroke-width: 2;
+  transition: transform 0.5s ease, stroke 0.3s ease;
 }
 
-.menu-btn:hover i,
 .menu-btn:hover svg,
 .menu-btn:hover [data-lucide] {
+  transform: rotate(-195deg);
+  /* Counter-rotation + extra spin */
   stroke: #fff;
 }
 
