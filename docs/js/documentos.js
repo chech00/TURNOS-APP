@@ -77,6 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.body.classList.remove("is-admin");
                     }
                     configureView();
+                } else {
+                    // Si el rol es el mismo, igual recargamos los archivos para asegurar
+                    // que usamos el token fresco (evita error 401 por race condition)
+                    console.log("Rol confirmado (sin cambios), recargando archivos...");
+                    loadFiles();
                 }
             } else {
                 // Si no tiene rol, limpiar caché
@@ -239,8 +244,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos (Render Cold Start Safe)
 
         try {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                console.log("Auth no listo aún, esperando onAuthStateChanged...");
+                return;
+            }
+
             console.log("Realizando fetch a:", `${API_BASE_URL}/files`);
-            const token = await firebase.auth().currentUser?.getIdToken();
+            const token = await user.getIdToken();
             const headers = token ? { "Authorization": `Bearer ${token}` } : {};
 
             const response = await fetch(`${API_BASE_URL}/files?t=${Date.now()}`, {
@@ -249,7 +260,18 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             clearTimeout(timeoutId);
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    const errorData = await response.json();
+                    if (errorData.error === "Session expired by inactivity") {
+                        console.warn("Sesión expirada. Redirigiendo al login...");
+                        alert("Tu sesión ha expirado por inactividad. Por favor ingresa nuevamente.");
+                        window.location.href = "login.html";
+                        return;
+                    }
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
 

@@ -70,18 +70,24 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
       return;
     }
 
-    // 3) Guardar log de inicio de sesión (esperar a que se complete)
+    // 3) Guardar log de inicio de sesión y ACTUALIZAR lastActivity (Critical for Backend Session)
     try {
-      console.log("📝 Guardando log de inicio de sesión...");
-      await db.collection("loginLogs").add({
-        email: user.email,
-        rol: userRole,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      console.log("✅ Log de sesión guardado correctamente");
+      console.log("📝 Guardando log de sesión y actualizando lastActivity...");
+
+      const now = Date.now();
+      await Promise.all([
+        db.collection("loginLogs").add({
+          email: user.email,
+          rol: userRole,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }),
+        db.collection("userRoles").doc(user.uid).update({ lastActivity: now })
+      ]);
+
+      console.log("✅ Log guardado y Session Timer reseteado.");
     } catch (logError) {
-      // No bloqueamos el login si falla el log, pero lo reportamos
-      console.error("⚠️ Error guardando log de sesión:", logError);
+      // No bloqueamos el login si falla, pero es crítico saberlo
+      console.error("⚠️ Error guardando log o actualizando lastActivity:", logError);
     }
 
     // 4) Redirigir después de guardar el log
