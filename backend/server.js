@@ -61,7 +61,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5000',
   'http://127.0.0.1:5000',
   'http://127.0.0.1:5500', // Live Server Default
-  'http://localhost:5500' // Live Server Alternative
+  'http://localhost:5500', // Live Server Alternative
+  'https://chech00.github.io' // GitHub Pages Production
 ];
 
 const corsOptions = {
