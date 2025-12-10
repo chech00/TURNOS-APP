@@ -161,20 +161,40 @@
     // ==========================================
     // 1. SNOW ❄️
     // ==========================================
+    // ==========================================
+    // 1. SNOW ❄️ (Enhanced Realistic Version)
+    // ==========================================
     function enableSnow() {
         const container = createContainer('snow');
         if (!container) return;
 
-        const symbols = ['❄', '❅', '❆', '•'];
-        for (let i = 0; i < 50; i++) {
+        const symbols = ['❄', '❅', '❆', '•', '.'];
+        // Increased count for better density
+        const count = 150;
+
+        for (let i = 0; i < count; i++) {
             const flake = document.createElement('div');
             flake.className = 'snowflake';
-            flake.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-            flake.style.left = `${Math.random() * 100}vw`;
-            flake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+            flake.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+
+            // Random horizontal position
+            const leftPos = Math.random() * 100;
+            flake.style.left = `${leftPos}vw`;
+
+            // Varied duration for depth perception (smaller = slower/farther, bigger = faster/closer)
+            const duration = Math.random() * 5 + 5; // 5s to 10s
+            flake.style.animationDuration = `${duration}s`;
+
+            // Random delay so they don't all start at once
             flake.style.animationDelay = `${Math.random() * 5}s`;
-            flake.style.fontSize = `${Math.random() * 1 + 0.5}rem`;
-            flake.style.opacity = Math.random() * 0.3 + 0.1;
+
+            // Varied opacity
+            flake.style.opacity = Math.random() * 0.7 + 0.3;
+
+            // Varied size
+            const size = Math.random() * 1.5 + 0.5; // 0.5rem to 2rem
+            flake.style.fontSize = `${size}rem`;
+
             container.appendChild(flake);
         }
     }
@@ -182,27 +202,28 @@
     // ==========================================
     // 2. FIREWORKS 🎆 (Realistic Version)
     // ==========================================
+    // ==========================================
+    // 2. FIREWORKS 🎆 (Realistic Version + Physics)
+    // ==========================================
     function enableFireworks() {
         const container = createContainer('fireworks');
         if (!container) return;
 
         const colors = [
-            ['#ff1744', '#ff5252', '#ff8a80'],     // Red
-            ['#ffab00', '#ffd740', '#ffe57f'],     // Gold
-            ['#00e676', '#69f0ae', '#b9f6ca'],     // Green
-            ['#2979ff', '#448aff', '#82b1ff'],     // Blue
-            ['#d500f9', '#e040fb', '#ea80fc'],     // Purple
-            ['#00e5ff', '#18ffff', '#84ffff'],     // Cyan
-            ['#ff6d00', '#ff9100', '#ffab40'],     // Orange
-            ['#fff', '#ffd700', '#fffacd'],        // White/Gold
+            ['#ff1744', '#ff5252'],     // Red
+            ['#ffab00', '#ffd740'],     // Gold
+            ['#00e676', '#69f0ae'],     // Green
+            ['#2979ff', '#448aff'],     // Blue
+            ['#d500f9', '#e040fb'],     // Purple
+            ['#00e5ff', '#18ffff'],     // Cyan
         ];
 
         function launchFirework() {
+            if (!document.getElementById('fireworks-container')) return;
+
             const startX = Math.random() * 80 + 10; // 10-90%
-            const startY = 100; // Start at bottom
             const targetY = Math.random() * 40 + 15; // Explode at 15-55% from top
             const colorSet = colors[Math.floor(Math.random() * colors.length)];
-            const mainColor = colorSet[0];
 
             // Create rocket
             const rocket = document.createElement('div');
@@ -212,96 +233,78 @@
             container.appendChild(rocket);
 
             // Rocket go up animation
-            const riseTime = 800 + Math.random() * 400;
-            rocket.animate([
-                { bottom: '0%', opacity: 1 },
-                { bottom: `${100 - targetY}%`, opacity: 1 }
+            const riseTime = 1000 + Math.random() * 500;
+
+            // We use Web Animations API for the rocket ascent
+            const animation = rocket.animate([
+                { bottom: '0%', opacity: 1, transform: 'scale(1)' },
+                { bottom: `${100 - targetY}%`, opacity: 1, transform: 'scale(0.8)' }
             ], {
                 duration: riseTime,
                 easing: 'ease-out',
                 fill: 'forwards'
             });
 
-            // Explode after rising
-            setTimeout(() => {
+            animation.onfinish = () => {
                 rocket.remove();
                 createExplosion(startX, targetY, colorSet);
-            }, riseTime);
+            };
         }
 
         function createExplosion(x, y, colorSet) {
             const mainColor = colorSet[0];
-            const secondaryColor = colorSet[1];
-            const tertiaryColor = colorSet[2];
 
-            const firework = document.createElement('div');
-            firework.className = 'firework exploded';
-            firework.style.left = `${x}%`;
-            firework.style.top = `${y}%`;
-            container.appendChild(firework);
-
-            // Flash effect
+            // 1. Flash burst
             const flash = document.createElement('div');
             flash.className = 'firework-flash';
-            flash.style.background = `radial-gradient(circle, ${mainColor} 0%, rgba(255,255,255,0.8) 30%, transparent 70%)`;
-            firework.appendChild(flash);
+            flash.style.left = `${x}%`;
+            flash.style.top = `${y}%`;
+            flash.style.background = `radial-gradient(circle, ${mainColor} 0%, transparent 70%)`;
+            container.appendChild(flash);
+            setTimeout(() => flash.remove(), 200);
 
-            // Main particles (24 in a circle)
-            const particleCount = 24;
+            // 2. Explosion Particles
+            const particleCount = 40; // More particles
             for (let i = 0; i < particleCount; i++) {
-                const angle = (360 / particleCount) * i;
+                const angle = (360 / particleCount) * i + Math.random() * 10;
                 const rad = angle * (Math.PI / 180);
-                const distance = 60 + Math.random() * 40;
+
+                // Random distance for "spherical" look opacity
+                const distance = 80 + Math.random() * 80; // Bigger explosion
                 const xDist = Math.cos(rad) * distance;
                 const yDist = Math.sin(rad) * distance;
 
                 const particle = document.createElement('div');
                 particle.className = 'firework-particle';
-                particle.style.setProperty('--color', i % 2 === 0 ? mainColor : secondaryColor);
-                particle.style.setProperty('--x', xDist);
-                particle.style.setProperty('--y', yDist);
-                particle.style.setProperty('--size', `${3 + Math.random() * 3}px`);
-                particle.style.setProperty('--duration', `${1.2 + Math.random() * 0.5}s`);
-                firework.appendChild(particle);
+                particle.style.setProperty('--color', mainColor);
+                particle.style.setProperty('--x', `${xDist}px`);
+                particle.style.setProperty('--y', `${yDist}px`);
+                particle.style.setProperty('--duration', `${1.5 + Math.random() * 1}s`);
+
+                particle.style.left = `${x}%`;
+                particle.style.top = `${y}%`;
+
+                container.appendChild(particle);
+
+                // Cleanup
+                setTimeout(() => particle.remove(), 2500);
             }
-
-            // Falling sparks (16)
-            for (let i = 0; i < 16; i++) {
-                const angle = Math.random() * 360;
-                const rad = angle * (Math.PI / 180);
-                const distance = 30 + Math.random() * 50;
-                const xDist = Math.cos(rad) * distance;
-                const yDist = Math.sin(rad) * distance;
-
-                const spark = document.createElement('div');
-                spark.className = 'firework-spark';
-                spark.style.setProperty('--color', tertiaryColor);
-                spark.style.setProperty('--x', xDist);
-                spark.style.setProperty('--y', yDist);
-                spark.style.setProperty('--duration', `${1.5 + Math.random() * 1}s`);
-                spark.style.setProperty('--delay', `${Math.random() * 0.3}s`);
-                firework.appendChild(spark);
-            }
-
-            // Remove after animation
-            setTimeout(() => firework.remove(), 3000);
         }
 
-        // Launch fireworks at random intervals
+        // Launch loop
         function scheduleNext() {
-            const delay = 300 + Math.random() * 1200;
+            if (!document.getElementById('fireworks-container')) return;
+            const delay = 500 + Math.random() * 1500;
             setTimeout(() => {
                 launchFirework();
-                if (container.parentNode) {
-                    scheduleNext();
-                }
+                scheduleNext();
             }, delay);
         }
 
-        // Initial burst
+        // Improved Start: Launch 3 immediately
         launchFirework();
-        setTimeout(launchFirework, 200);
-        setTimeout(launchFirework, 500);
+        setTimeout(launchFirework, 300);
+        setTimeout(launchFirework, 600);
         scheduleNext();
     }
 
@@ -495,20 +498,44 @@
     // ==========================================
     // 5. EASTER 🐰
     // ==========================================
+    // ==========================================
+    // 5. EASTER 🐰 (Enhanced version)
+    // ==========================================
     function enableEaster() {
         const container = createContainer('easter');
         if (!container) return;
 
-        const eggs = ['🥚', '🐣', '🐰', '🌸', '🌷'];
-        for (let i = 0; i < 20; i++) {
-            const egg = document.createElement('div');
-            egg.className = 'easter-egg';
-            egg.innerHTML = eggs[Math.floor(Math.random() * eggs.length)];
-            egg.style.left = `${Math.random() * 100}vw`;
-            egg.style.animationDuration = `${Math.random() * 6 + 4}s`;
-            egg.style.animationDelay = `${Math.random() * 5}s`;
-            egg.style.fontSize = `${Math.random() * 1.2 + 0.8}rem`;
-            container.appendChild(egg);
+        const symbols = ['🥚', '🐣', '🐰', '🌸', '🌷', '🍫'];
+        const count = 40; // Increased count
+
+        for (let i = 0; i < count; i++) {
+            const element = document.createElement('div');
+            element.className = 'easter-element';
+
+            // Inner wrapper for bounce effect
+            const inner = document.createElement('span');
+            inner.className = 'easter-inner';
+            inner.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+            element.appendChild(inner);
+
+            const leftPos = Math.random() * 100;
+            element.style.left = `${leftPos}vw`;
+
+            // Random sway distance
+            const sway = (Math.random() - 0.5) * 200; // -100px to +100px
+            element.style.setProperty('--sway', `${sway}px`);
+
+            // Duration: 8s to 15s (Slow floating)
+            const duration = Math.random() * 7 + 8;
+            element.style.setProperty('--duration', `${duration}s`);
+
+            element.style.animationDelay = `${Math.random() * 10}s`;
+
+            // Random size
+            const size = Math.random() * 1.5 + 1; // 1rem to 2.5rem
+            element.style.fontSize = `${size}rem`;
+
+            container.appendChild(element);
         }
     }
 

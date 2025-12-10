@@ -44,6 +44,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Init Slider Logic
+            const opacitySlider = document.getElementById('sidebar-opacity');
+            const opacityValue = document.getElementById('opacity-value');
+
+            if (opacitySlider) {
+                // Load saved value
+                const saved = localStorage.getItem('sidebarOpacity');
+                if (saved) {
+                    opacitySlider.value = saved;
+                    if (opacityValue) opacityValue.textContent = saved;
+                    document.documentElement.style.setProperty('--sidebar-opacity', saved);
+                }
+
+                // Listen for changes
+                opacitySlider.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    document.documentElement.style.setProperty('--sidebar-opacity', val);
+                    if (opacityValue) opacityValue.textContent = val;
+                    localStorage.setItem('sidebarOpacity', val);
+                });
+            }
+
             try {
                 const userDoc = await db.collection("userRoles").doc(user.uid).get();
                 if (userDoc.exists) {

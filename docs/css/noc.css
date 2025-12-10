@@ -1645,3 +1645,43 @@ body.is-admin .admin-only {
   /* Disable transition during drag */
   opacity: 0.9;
 }
+
+/* Overtime Notification Styles */
+.reminder-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(231, 76, 60, 0.15);
+  /* Soft red background */
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+  /* Red text */
+  font-size: 0.85rem;
+  border-radius: 8px;
+  animation: fadeIn 0.5s ease;
+}
+
+.reminder-tooltip i {
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes pulse-reminder {
+  0% {
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(231, 76, 60, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+  }
+}
+
+animation: pulse-reminder 2s infinite;
+border-color: rgba(231, 76, 60, 0.5) !important;
+}

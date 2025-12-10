@@ -1469,12 +1469,57 @@ function todosLosDiasRellenos() {
 // CALCULO DE HORAS EXTRAS
 // -----------------------------------------------------------------------------
 // Mapeo de Turnos a Empleados (Configurable)
+// Mapeo de Turnos a Empleados (Configurable)
 const SHIFT_MAP = {
   "S": "Sergio Castillo",
   "I": "Ignacio Aburto",
   "M": "Manuel (Demo)", // Ejemplo de escalabilidad
   "J": "Julio (Demo)"
 };
+
+// FACTOR LEGAL CHILENO (Jornada 45h)
+const FACTOR_HORA_EXTRA = 0.0077777;
+
+// Cache de salarios
+let salariosCache = {};
+
+// Cargar salarios desde Firestore (Solo Superadmin)
+async function cargarSalarios() {
+  try {
+    const userRole = localStorage.getItem('userRole');
+    if (userRole !== 'superadmin') return {};
+
+    const doc = await db.collection("Config").doc("salarios_noc").get();
+    if (doc.exists) {
+      salariosCache = doc.data();
+      return salariosCache;
+    }
+  } catch (error) {
+    console.warn("No se pudieron cargar los salarios (posible falta de permisos):", error);
+  }
+  return {};
+}
+
+// Guardar salario (Solo Superadmin)
+async function actualizarSalario(nombre, nuevoSueldo) {
+  try {
+    const userRole = localStorage.getItem('userRole');
+    if (userRole !== 'superadmin') throw new Error("No autorizado");
+
+    salariosCache[nombre] = parseInt(nuevoSueldo);
+
+    // Guardar en Firestore con merge para no borrar otros
+    await db.collection("Config").doc("salarios_noc").set({
+      [nombre]: parseInt(nuevoSueldo)
+    }, { merge: true });
+
+    return true;
+  } catch (error) {
+    console.error("Error al guardar salario:", error);
+    Swal.fire("Error", "No se pudo guardar el sueldo.", "error");
+    return false;
+  }
+}
 
 async function calcularHorasExtras(date) {
   const currentYear = date.getFullYear();
@@ -1573,6 +1618,11 @@ async function calcularHorasExtras(date) {
     reportData[name].hours = reportData[name].count * 5; // 5 horas por turno
   });
 
+  // Pre-cargar salarios si es superadmin
+  if (localStorage.getItem('userRole') === 'superadmin') {
+    await cargarSalarios();
+  }
+
   // Renderizar la nueva tabla
   renderOvertimeTable(reportData, date);
 
@@ -1580,9 +1630,12 @@ async function calcularHorasExtras(date) {
 }
 
 // Renderizar la Nueva Tabla de Reporte (Premium Dashboard)
-function renderOvertimeTable(data, date) {
+async function renderOvertimeTable(data, date) {
   const container = document.getElementById("overtime-report-container");
   if (!container) return;
+
+  const isSuperAdmin = localStorage.getItem('userRole') === 'superadmin';
+  const currentSalaries = isSuperAdmin ? salariosCache : {};
 
   // Calcular periodo para el título
   const currentYear = date.getFullYear();
@@ -1600,13 +1653,26 @@ function renderOvertimeTable(data, date) {
   let totalTurnosGlobal = 0;
   let topContributorName = "N/A";
   let topContributorHours = -1;
+  let totalDineroGlobal = 0; // $$$
 
   const validEntries = [];
   const empleadosPrincipales = ["Sergio Castillo", "Ignacio Aburto"];
 
   Object.entries(data).forEach(([name, stats]) => {
     if (stats.count > 0 || empleadosPrincipales.includes(name)) {
-      validEntries.push({ name, ...stats });
+      // Calculo monetario (Si aplica)
+      let dinero = 0;
+      let sueldoBase = 0;
+
+      if (isSuperAdmin) {
+        sueldoBase = currentSalaries[name] || 0;
+        // Formula: Base * Factor * Horas
+        dinero = Math.round(sueldoBase * FACTOR_HORA_EXTRA * stats.hours);
+        totalDineroGlobal += dinero;
+      }
+
+      validEntries.push({ name, ...stats, dinero, sueldoBase });
+
       totalHorasGlobal += stats.hours;
       totalTurnosGlobal += stats.count;
 
@@ -1625,21 +1691,41 @@ function renderOvertimeTable(data, date) {
   // -------------------------
 
   // 1. Header
+  const today = new Date();
+  const currentDay = today.getDate();
+  const isReminderPeriod = currentDay >= 23 && currentDay <= 25;
+
+  let notificationHTML = '';
+  if (isReminderPeriod) {
+    notificationHTML = `<div class="reminder-tooltip"><i data-lucide="bell-ring"></i> Recordatorio: Descargar reporte antes del 25</div>`;
+  }
+
+  // Header Style Update for "Authorized View"
+  const securityBadge = isSuperAdmin
+    ? `<span style="font-size:0.7em; background:#2c3e50; color:#4cd137; padding:2px 8px; border-radius:12px; border:1px solid #4cd137; margin-left:10px;">
+         <i data-lucide="shield-check" style="width:12px; vertical-align:middle"></i> VISTA FINANCIERA
+       </span>`
+    : '';
+
   let html = `
     <div class="report-header">
       <div class="report-title-group">
         <h3>
           <i data-lucide="bar-chart-2" style="color: #7796cb;"></i>
           Control de Horas Extras
+          ${securityBadge}
         </h3>
         <span class="report-period">
           <i data-lucide="calendar" style="width: 14px; display: inline-block; vertical-align: middle;"></i> 
           ${periodoStr}
         </span>
       </div>
-      <button onclick="exportarReporteHorasExtras()" class="btn-premium-export">
-        <i data-lucide="file-down"></i> Exportar PDF
-      </button>
+      <div style="display:flex; flex-direction:column; align-items:flex-end;">
+        <button onclick="exportarReporteHorasExtras()" class="btn-premium-export ${isReminderPeriod ? 'pulse-reminder' : ''}">
+          <i data-lucide="file-down"></i> Exportar PDF ${isSuperAdmin ? '(Seguro)' : ''}
+        </button>
+        ${notificationHTML}
+      </div>
     </div>
   `;
 
@@ -1655,8 +1741,25 @@ function renderOvertimeTable(data, date) {
         <div class="card-value">${totalHorasGlobal}</div>
         <div class="card-subtext">Horas acumuladas este periodo</div>
       </div>
+  `;
 
-      <!-- Card 2: Top Contributor -->
+  // Card 2: Contextual (Dinero para Superadmin, Top Contributor para Admin)
+  if (isSuperAdmin) {
+    const dineroFormat = '$ ' + totalDineroGlobal.toLocaleString('es-CL');
+    html += `
+      <!-- Card 2: Dinero (Superadmin Only) -->
+      <div class="summary-card accent-blue">
+        <div class="card-header">
+          <div class="card-icon"><i data-lucide="dollar-sign"></i></div>
+          <span class="card-label">Total a Pagar</span>
+        </div>
+        <div class="card-value" style="color: #4cd137;">${dineroFormat}</div>
+        <div class="card-subtext">Estimado (Factor Legal)</div>
+      </div>
+    `;
+  } else {
+    html += `
+      <!-- Card 2: Top Contributor (Admin) -->
       <div class="summary-card accent-blue">
         <div class="card-header">
           <div class="card-icon"><i data-lucide="award"></i></div>
@@ -1665,7 +1768,11 @@ function renderOvertimeTable(data, date) {
         <div class="card-value" style="font-size: 1.5rem;">${topContributorName.split(" ")[0]}</div>
         <div class="card-subtext">${topContributorHours > 0 ? topContributorHours + ' horas registradas' : 'Sin registros'}</div>
       </div>
+    `;
+  }
 
+  // Card 3: Total Turnos
+  html += `
       <!-- Card 3: Total Turnos -->
       <div class="summary-card accent-green">
         <div class="card-header">
@@ -1679,15 +1786,20 @@ function renderOvertimeTable(data, date) {
   `;
 
   // 3. Premium Table
+  // Columnas dinámicas
+  const colWidth = isSuperAdmin ? '15%' : '20%';
+
   html += `
     <div class="premium-table-container">
       <table class="premium-table">
         <thead>
           <tr>
-            <th style="width: 40%;">Empleado</th>
-            <th style="width: 20%; text-align: center;">Turnos</th>
-            <th style="width: 20%; text-align: center;">Horas</th>
-            <th style="width: 20%; text-align: center;">Estado</th>
+            <th style="width: ${isSuperAdmin ? '25%' : '40%'};">Empleado</th>
+            <th style="width: ${colWidth}; text-align: center;">Turnos</th>
+            <th style="width: ${colWidth}; text-align: center;">Horas</th>
+            ${isSuperAdmin ? `<th style="width: 20%; text-align: center;">Sueldo Base</th>` : ''}
+            ${isSuperAdmin ? `<th style="width: 20%; text-align: center; color: #4cd137;">A Pagar (50%)</th>` : ''}
+            <th style="width: ${colWidth}; text-align: center;">Estado</th>
           </tr>
         </thead>
         <tbody>
@@ -1699,17 +1811,27 @@ function renderOvertimeTable(data, date) {
     // Determinar badge
     let badgeClass = "normal";
     let badgeText = "Normal";
-    let icon = "check-circle"; // default
+    let icon = "check-circle";
 
-    if (entry.hours >= 20) {
+    if (entry.hours >= 40) {
       badgeClass = "critical";
       badgeText = "Crítico";
       icon = "alert-circle";
-    } else if (entry.hours >= 10) {
+    } else if (entry.hours >= 20) {
       badgeClass = "high";
       badgeText = "Alto";
       icon = "alert-triangle";
     }
+
+    // Funcionalidad OnClick para editar sueldo (Solo Superadmin)
+    const editOnClick = isSuperAdmin
+      ? `onclick="editarSueldoBase('${entry.name}', ${entry.sueldoBase})"`
+      : '';
+
+    // Cursor pointer para indicar interactividad
+    const sueldoStyle = isSuperAdmin
+      ? `cursor: pointer; text-decoration: underline; text-decoration-style: dotted;`
+      : '';
 
     html += `
       <tr>
@@ -1730,6 +1852,21 @@ function renderOvertimeTable(data, date) {
         <td style="text-align: center;">
           <span class="metric-value" style="color: #fff;">${entry.hours}</span><span class="metric-unit"> hrs</span>
         </td>
+        
+        ${isSuperAdmin ? `
+          <td style="text-align: center;" ${editOnClick} title="Clic para editar sueldo base">
+            <span class="metric-value" style="color: #a5b1c2; ${sueldoStyle}">
+              $ ${entry.sueldoBase.toLocaleString('es-CL')}
+            </span>
+            ${entry.sueldoBase === 0 ? '<i data-lucide="alert-circle" style="width:12px; color:orange;"></i>' : ''}
+          </td>
+          <td style="text-align: center;">
+            <span class="metric-value" style="color: #4cd137; font-weight:bold;">
+              $ ${entry.dinero.toLocaleString('es-CL')}
+            </span>
+          </td>
+        ` : ''}
+
         <td style="text-align: center;">
           <span class="premium-badge ${badgeClass}">
             <i data-lucide="${icon}" style="width: 12px;"></i> ${badgeText}
@@ -1745,6 +1882,14 @@ function renderOvertimeTable(data, date) {
     </div>
   `;
 
+  if (isSuperAdmin) {
+    html += `
+      <div style="text-align: right; margin-top: 10px; font-size: 0.8rem; color: #666;">
+        <i data-lucide="info" style="width:12px;"></i> Cálculo: Sueldo Base * 0.0077777 * Horas Extras
+      </div>
+    `;
+  }
+
   container.innerHTML = html;
 
   // Refrescar iconos
@@ -1753,17 +1898,84 @@ function renderOvertimeTable(data, date) {
   }
 }
 
+// Función auxiliar para editar sueldo (Global)
+window.editarSueldoBase = async (nombre, salarioActual) => {
+  const { value: nuevoSalario } = await Swal.fire({
+    title: `Sueldo Base: ${nombre}`,
+    input: 'number',
+    inputLabel: 'Ingrese el sueldo base mensual (CLP)',
+    inputValue: salarioActual,
+    showCancelButton: true,
+    confirmButtonText: 'Guardar',
+    cancelButtonText: 'Cancelar',
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Debes ingresar un monto.';
+      }
+    }
+  });
+
+  if (nuevoSalario) {
+    const success = await actualizarSalario(nombre, nuevoSalario);
+    if (success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Actualizado',
+        text: `El nuevo sueldo base es $${parseInt(nuevoSalario).toLocaleString('es-CL')}`,
+        timer: 1500,
+        showConfirmButton: false
+      });
+      // Recalcular
+      const date = new Date(document.getElementById('current-month').textContent); // Hacky re-read or use global currentDate if available
+      // Mejor re-usar la fecha global si existe, o usar la actual
+      calcularHorasExtras(window.currentDate || new Date());
+    }
+  }
+};
+
 // Expose globally for onclick
 window.exportarReporteHorasExtras = exportarReporteHorasExtras;
 
 // -----------------------------------------------------------------------------
 // EXPORTAR REPORTE PDF (HORAS EXTRAS)
 // -----------------------------------------------------------------------------
+// Helper para verificar imágenes
+const getBase64ImageFromURL = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL("image/png");
+      resolve(dataURL);
+    };
+    img.onerror = error => {
+      console.warn("No se pudo cargar la imagen para el PDF (CORS o 404).", error);
+      resolve(null); // Resolve null to continue without logo
+    };
+    img.src = url;
+  });
+};
+
 async function exportarReporteHorasExtras() {
   if (!window.jspdf) {
     Swal.fire("Error", "Librería PDF no cargada.", "error");
     return;
   }
+
+  // Notificar carga
+  const swalLoading = Swal.fire({
+    title: 'Generando Reporte...',
+    text: 'Procesando datos y gráficos corporativos',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
 
   try {
     const { jsPDF } = window.jspdf;
@@ -1789,35 +2001,52 @@ async function exportarReporteHorasExtras() {
     // Recalcular datos frescos (Premium)
     const data = await calcularHorasExtras(currentDate);
 
-    // ---------------------------------------------------------
-    // 1. ENCABEZADO CORPORATIVO
-    // ---------------------------------------------------------
-    const colorPrimary = [44, 62, 80];
-    const colorBg = [245, 247, 250];
+    // Cargar Logo
+    const logoUrl = "https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png";
+    const logoBase64 = await getBase64ImageFromURL(logoUrl);
 
-    // Fondo del header
-    doc.setFillColor(...colorPrimary);
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // ---------------------------------------------------------
+    // 1. ENCABEZADO CORPORATIVO (Elegante / Minimalista)
+    // ---------------------------------------------------------
+    const colorCorpBlue = [0, 51, 102]; // #003366 (Dark Blue)
+    const colorCorpYellow = [244, 180, 0]; // #F4B400 (Accent)
+    const colorTextMain = [60, 60, 60]; // Dark Grey for text
+    const colorBg = [255, 255, 255];
 
-    // Título Principal
+    // Fondo blanco limpio (sin rectángulos pesados)
+
+    // Logo (Más pequeño y sobre blanco)
+    if (logoBase64) {
+      const logoW = 35; // Reducido de 50 a 35
+      const logoH = 8.5;
+      doc.addImage(logoBase64, 'PNG', 14, 15, logoW, logoH);
+    } else {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(...colorCorpBlue);
+      doc.text("PatagoniaIP", 14, 22);
+    }
+
+    // Título Principal (Alineado a la derecha, color corporativo)
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text("REPORTE DE HORAS EXTRAS", 14, 25);
+    doc.setTextColor(...colorCorpBlue);
+    doc.setFontSize(20);
+    doc.text("REPORTE DE HORAS EXTRAS", pageWidth - 14, 20, { align: 'right' });
+
+    // Línea de acento sutil (Debajo del título)
+    doc.setDrawColor(...colorCorpYellow);
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - 14, 23, pageWidth - 120, 23);
 
     // Subtítulo / Departamento
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(200, 200, 200);
-    doc.text("DEPARTAMENTO DE OPERACIONES NOC", 14, 32);
-
-    // Logo
-    doc.setFontSize(16);
-    doc.setTextColor(255, 255, 255);
-    doc.text("NOC", pageWidth - 25, 25, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text("DEPARTAMENTO DE OPERACIONES NOC", pageWidth - 14, 29, { align: 'right' });
+    doc.text(periodoStr.toUpperCase(), pageWidth - 14, 34, { align: 'right' });
 
     // ---------------------------------------------------------
-    // 2. RESUMEN EJECUTIVO
+    // 2. RESUMEN EJECUTIVO (Tarjetas Minimalistas)
     // ---------------------------------------------------------
     let totalHoras = 0;
     let totalTurnos = 0;
@@ -1839,53 +2068,70 @@ async function exportarReporteHorasExtras() {
           name,
           stats.count,
           stats.hours + " hrs",
-          stats.hours >= 20 ? "CRÍTICO" : (stats.hours >= 10 ? "ALTO" : "NORMAL")
+          stats.hours >= 40 ? "CRÍTICO" : (stats.hours >= 20 ? "ALTO" : "NORMAL")
         ]);
       }
     });
 
-    // Dibujar cajitas de resumen
+    // Dibujar cajitas de resumen (Estilo 'Outline' limpio)
     const startY = 50;
     const boxWidth = (pageWidth - 28 - 10) / 3;
-    const boxHeight = 25;
+    const boxHeight = 22;
 
-    const drawCard = (x, label, value) => {
-      doc.setFillColor(...colorBg);
-      doc.setDrawColor(200, 200, 200);
-      doc.roundedRect(x, startY, boxWidth, boxHeight, 3, 3, 'FD');
+    const drawCard = (x, label, value, accentColor) => {
+      // Borde suave
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.1);
+      doc.roundedRect(x, startY, boxWidth, boxHeight, 2, 2, 'S');
+
+      // Indicador de color lateral (muy fino)
+      doc.setFillColor(...accentColor);
+      doc.rect(x, startY + 4, 1.5, boxHeight - 8, 'F');
+
+      // Valor
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(...colorPrimary);
-      doc.text(value.toString(), x + 10, startY + 12);
+      doc.setFontSize(12);
+      doc.setTextColor(...colorCorpBlue);
+      doc.text(value.toString(), x + 8, startY + 10);
+
+      // Etiqueta
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text(label.toUpperCase(), x + 10, startY + 20);
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(label.toUpperCase(), x + 8, startY + 17);
     };
 
-    drawCard(14, "Total Horas", totalHoras + " hrs");
-    drawCard(14 + boxWidth + 5, "Total Turnos", totalTurnos);
-    drawCard(14 + (boxWidth + 5) * 2, "Mayor Colaborador", topEmp.split(" ")[0]);
+    drawCard(14, "Total Horas", totalHoras + " hrs", colorCorpBlue);
+    drawCard(14 + boxWidth + 5, "Total Turnos", totalTurnos, colorCorpYellow);
+    drawCard(14 + (boxWidth + 5) * 2, "Mayor Colaborador", topEmp.split(" ")[0], colorCorpBlue);
 
-    // Información del Periodo
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(...colorPrimary);
-    doc.text("DETALLE DEL PERIODO", 14, startY + boxHeight + 15);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Rango: ${periodoStr}`, 14, startY + boxHeight + 22);
-    doc.text(`Generado: ${fechaReporte}`, 14, startY + boxHeight + 27);
+    // Información del Periodo (Texto flotante sutil)
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`Generado: ${fechaReporte}`, 14, startY + boxHeight + 6);
 
     // ---------------------------------------------------------
     // 3. TABLA DE DETALLE
     // ---------------------------------------------------------
     doc.autoTable({
-      startY: startY + boxHeight + 35,
+      startY: startY + boxHeight + 15,
       head: [['EMPLEADO', 'TURNOS', 'HORAS TOTALES', 'ESTADO']],
       body: rows,
       theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 6, lineColor: [230, 230, 230], lineWidth: 0.1 },
-      headStyles: { fillColor: colorPrimary, textColor: 255, fontStyle: 'bold', halign: 'center' },
+      styles: {
+        fontSize: 10,
+        cellPadding: 6,
+        lineColor: [230, 230, 230],
+        lineWidth: 0.1,
+        font: "helvetica"
+      },
+      headStyles: {
+        fillColor: colorCorpBlue,
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
       bodyStyles: { textColor: 50 },
       columnStyles: {
         0: { cellWidth: 'auto', fontStyle: 'bold' },
@@ -1893,36 +2139,33 @@ async function exportarReporteHorasExtras() {
         2: { halign: 'center', cellWidth: 40 },
         3: { halign: 'center', cellWidth: 40, fontStyle: 'bold' }
       },
-      alternateRowStyles: { fillColor: [250, 252, 255] },
+      alternateRowStyles: { fillColor: [245, 247, 250] }, // Alternado suave
       didParseCell: function (data) {
         if (data.section === 'body' && data.column.index === 3) {
           const text = data.cell.raw;
+          // Colores de estado
           if (text === 'CRÍTICO') data.cell.styles.textColor = [231, 76, 60];
-          else if (text === 'ALTO') data.cell.styles.textColor = [241, 196, 15];
+          else if (text === 'ALTO') data.cell.styles.textColor = [241, 196, 15]; // Yellow styled
           else data.cell.styles.textColor = [46, 204, 113];
         }
       }
     });
 
     // -----------------------------------------------------------------------------
-    // 4. PIE DE PÁGINA (Sin firmas)
+    // 4. PIE DE PÁGINA
     // -----------------------------------------------------------------------------
-    const finalY = doc.lastAutoTable.finalY || 150;
+    const finalY = doc.lastAutoTable.finalY + 10;
 
-    // Línea de cierre
-    doc.setDrawColor(...colorPrimary);
-    doc.setLineWidth(0.5);
-    doc.line(14, finalY + 10, pageWidth - 14, finalY + 10);
-
+    // Logo pequeño o texto en footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text("Este documento es generado automáticamente por el sistema de gestión NOC.", 14, finalY + 18);
-    doc.text("Confidencial - Uso Interno", pageWidth - 14, finalY + 18, { align: 'right' });
+    doc.text("PatagoniaIP - Conexión que transforma realidades", pageWidth / 2, finalY + 10, { align: 'center' });
 
-    // Guardar
+    swalLoading.close();
     doc.save(`Reporte_NOC_${yearReport}_${monthReport + 1}.pdf`);
 
   } catch (error) {
+    swalLoading.close();
     console.error("Error al generar PDF:", error);
     Swal.fire("Error", "No se pudo generar el reporte PDF: " + error.message, "error");
   }

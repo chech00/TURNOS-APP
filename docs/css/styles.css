@@ -24,6 +24,9 @@
   --font-primary: 'Nunito', sans-serif;
   --font-secondary: 'Inter', sans-serif;
   --transition-speed: 0.3s;
+
+  --sidebar-opacity: 0.4;
+  /* Default opacity */
 }
 
 
@@ -167,10 +170,12 @@ header {
   height: 80px;
   min-height: 80px;
   padding: 0 2rem;
-  background: linear-gradient(180deg, var(--color-fondo-secundario) 0%, rgba(30, 30, 46, 0.95) 100%);
+  background: rgba(35, 39, 46, var(--sidebar-opacity));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--color-texto-principal);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 10;
   box-sizing: border-box;
 }
@@ -875,19 +880,7 @@ button:disabled {
   background: var(--color-acento-secundario);
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--color-fondo-secundario);
-  padding: 1rem 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
 
-header h1 {
-  font-family: var(--font-secondary);
-  color: var(--color-texto-principal);
-}
 
 .primary-btn {
   background: var(--color-acento-primario);
@@ -1058,7 +1051,7 @@ td.pendiente {
   /* Mini width (collapsed) */
   height: 100%;
   /* Glassmorphism Background */
-  background: rgba(35, 39, 46, 0.6);
+  background: rgba(35, 39, 46, var(--sidebar-opacity));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -3219,4 +3212,163 @@ div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
 
 #particles-canvas {
   display: block;
+}
+
+/* ===========================================
+   GLOBAL ANIMATIONS (Snow & Fireworks)
+   Copied from animaciones.css for global usage
+   =========================================== */
+
+/* SNOW */
+.snowflake {
+  position: fixed;
+  top: -20px;
+  color: #fff;
+  user-select: none;
+  pointer-events: none;
+  z-index: 9999;
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+  will-change: transform;
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(calc(10vw - 20px), 110vh);
+    opacity: 0.2;
+  }
+}
+
+/* FIREWORKS */
+.firework-rocket {
+  position: absolute;
+  width: 4px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fff, 0 0 20px #fff;
+  will-change: transform, opacity;
+  z-index: 9999;
+}
+
+.firework-rocket::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), transparent);
+  filter: blur(1px);
+}
+
+.firework-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color);
+  box-shadow: 0 0 10px var(--color), 0 0 20px var(--color);
+  will-change: transform, opacity;
+  animation: firework-explode var(--duration) ease-out forwards;
+  z-index: 9999;
+}
+
+@keyframes firework-explode {
+  0% {
+    transform: translate(0, 0) scale(1.5);
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(var(--x), calc(var(--y) + 100px)) scale(0.1);
+    opacity: 0;
+  }
+}
+
+.firework-flash {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: flash-fade 0.2s ease-out forwards;
+  z-index: 9998;
+  pointer-events: none;
+}
+
+@keyframes flash-fade {
+  0% {
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* ===========================================
+   EASTER ANIMATION (HOPPING)
+   =========================================== */
+.easter-element {
+  position: fixed;
+  user-select: none;
+  pointer-events: none;
+  z-index: 9999;
+  /* Move from bottom to top of screen */
+  animation: easter-float var(--duration) linear infinite;
+  bottom: -100px;
+  will-change: transform;
+}
+
+/* Inner element handles the bounce/rotation */
+.easter-inner {
+  display: block;
+  animation: easter-bounce 1s ease-in-out infinite;
+}
+
+@keyframes easter-float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    /* Move UP (-120vh) and sway */
+    transform: translateY(-120vh) translateX(var(--sway));
+    opacity: 0;
+  }
+}
+
+@keyframes easter-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(10deg);
+  }
 }

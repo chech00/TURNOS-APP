@@ -120,6 +120,12 @@ async function cargarFeriadosScript() {
 document.addEventListener("DOMContentLoaded", () => {
   cargarFeriadosScript();
 
+  // Load Sidebar Opacity preference
+  const savedOpacity = localStorage.getItem('sidebarOpacity');
+  if (savedOpacity) {
+    document.documentElement.style.setProperty('--sidebar-opacity', savedOpacity);
+  }
+
   // Optimistic Loading: Sidebar
   const cachedRole = localStorage.getItem("userRole");
   if (cachedRole === "superadmin") {
