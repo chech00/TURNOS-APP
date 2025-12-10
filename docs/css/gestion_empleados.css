@@ -156,6 +156,34 @@
     border: 1px solid rgba(161, 169, 181, 0.3);
 }
 
+/* Tipo de Turno Badges */
+.tipo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.tipo-badge.diurno {
+    background: rgba(232, 194, 126, 0.2);
+    color: #f7c866;
+    border: 1px solid rgba(232, 194, 126, 0.3);
+}
+
+.tipo-badge.nocturno {
+    background: rgba(119, 150, 203, 0.2);
+    color: #7796cb;
+    border: 1px solid rgba(119, 150, 203, 0.3);
+}
+
+.tipo-badge i {
+    width: 14px;
+    height: 14px;
+}
+
 .acciones-cell {
     display: flex;
     gap: 0.5rem;
@@ -226,6 +254,7 @@
         flex-wrap: wrap;
     }
 }
+
 /* Responsive */
 @media (max-width: 768px) {
     .empleados-header {
@@ -234,7 +263,10 @@
     }
 
     /* Mobile Card View */
-    .tabla-empleados, .tabla-empleados tbody, .tabla-empleados tr, .tabla-empleados td {
+    .tabla-empleados,
+    .tabla-empleados tbody,
+    .tabla-empleados tr,
+    .tabla-empleados td {
         display: block;
         width: 100%;
     }

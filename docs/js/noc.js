@@ -191,13 +191,26 @@ const DEFAULT_EMPLOYEES_NAMES = [
 ];
 
 async function cargarEmpleadosDeFirestore() {
+  // Critical Fix: Wait for DB if not ready
+  if (!db) {
+    if (window.db) db = window.db; // Try to grab from global
+    else {
+      console.warn("[NOC] DB no lista al cargar empleados. Se reintentará en el ciclo de sincronización.");
+      return []; // Return empty, will be retired by main sync loop
+    }
+  }
+
   let loadedList = [];
   try {
     const doc = await db.collection("Config").doc("empleados_noc").get();
     if (doc.exists) {
       const data = doc.data();
       if (data.lista && Array.isArray(data.lista)) {
-        loadedList = data.lista.map(e => ({ nombre: e.nombre, turnos: [] }));
+        loadedList = data.lista.map(e => ({
+          nombre: e.nombre,
+          tipoTurno: e.tipoTurno || "diurno", // Load tipoTurno field with fallback
+          turnos: []
+        }));
       }
     }
   } catch (error) {
@@ -208,7 +221,7 @@ async function cargarEmpleadosDeFirestore() {
   DEFAULT_EMPLOYEES_NAMES.forEach(defName => {
     if (!loadedList.some(e => e.nombre === defName)) {
       console.log(`[NOC] Agregando empleado faltante al calendario: ${defName}`);
-      loadedList.push({ nombre: defName, turnos: [] });
+      loadedList.push({ nombre: defName, tipoTurno: "diurno", turnos: [] });
     }
   });
 
@@ -637,6 +650,14 @@ function sincronizarTablasConEmpleados() {
   let newBodyHTML = "";
 
   empleados.forEach((empleado, index) => {
+    // FILTRO: Solo empleados DIURNOS en el calendario general
+    // Empleados nocturnos aparecen en el calendario nocturno
+    const tipoTurno = empleado.tipoTurno || "diurno"; // Default diurno para migración
+    if (tipoTurno === "nocturno") {
+      console.log(`[SYNC] Saltando empleado nocturno: ${empleado.nombre}`);
+      return; // Skip nocturno employees
+    }
+
     if (existingRows[empleado.nombre]) {
       // Si ya existe, usamos la fila guardada (preserva los turnos)
       newBodyHTML += existingRows[empleado.nombre];
@@ -709,6 +730,62 @@ function sincronizarTablasConEmpleados() {
   tbody.innerHTML = newBodyHTML;
 }
 
+// Sincroniza la tabla del calendario NOCTURNO con empleados nocturnos
+function sincronizarCalendarioNocturno() {
+  const tablaNocturno = document.getElementById("nocturno-calendar");
+  if (!tablaNocturno) return;
+
+  const tbody = tablaNocturno.querySelector("tbody");
+  if (!tbody) return;
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // 1. Obtener filas existentes
+  const existingRows = {};
+  tbody.querySelectorAll("tr").forEach(row => {
+    const firstCell = row.querySelector("td");
+    if (firstCell) {
+      const name = firstCell.textContent.trim();
+      existingRows[name] = row.outerHTML;
+    }
+  });
+
+  // 2. Reconstruir tabla con empleados nocturnos
+  let newBodyHTML = "";
+  const empleadosNocturnos = empleados.filter(emp => (emp.tipoTurno || "diurno") === "nocturno");
+
+  empleadosNocturnos.forEach((empleado) => {
+    if (existingRows[empleado.nombre]) {
+      newBodyHTML += existingRows[empleado.nombre];
+      delete existingRows[empleado.nombre];
+    } else {
+      // Generar fila nueva con turnos por defecto
+      let rowHTML = `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const fecha = new Date(year, month, day);
+        const esFeriado = feriadosChile.includes(dateStr);
+        const dayOfWeek = fecha.getDay();
+
+        let turno = "", turnoClass = "";
+        if (esFeriado) { turno = "F"; turnoClass = "feriado"; }
+        else if (dayOfWeek === 0) { turno = "DL"; turnoClass = "domingo-libre"; }
+        else if (dayOfWeek === 6) { turno = "L"; turnoClass = "dia-libre"; }
+        else { turno = "N"; turnoClass = "nocturno"; }
+
+        rowHTML += `<td><button data-date="${dateStr}" data-empleado="${empleado.nombre}" data-day="${day}" class="calendar-day w-full h-full ${turnoClass}">${turno}</button></td>`;
+      }
+      rowHTML += "</tr>";
+      newBodyHTML += rowHTML;
+    }
+  });
+
+  tbody.innerHTML = newBodyHTML;
+}
+
+
 // Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
 // si no existen o están incompletos, se construye desde cero.
 // Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
@@ -777,6 +854,10 @@ function renderCalendar(date = currentDate) {
   lucide.createIcons();
   fixShiftTextColors();
   calcularHorasExtras(date);
+
+  // 44-Hour Global Check on Load
+  const generalRows = document.querySelectorAll("#general-calendar tbody tr");
+  generalRows.forEach(row => checkWeeklyHours(row));
 
   // Actualizar UI de bloqueo al final (después de cargar estado desde localStorage)
   updateLockUI();
@@ -861,19 +942,200 @@ function aplicarAsignacionesSimples(tableId, shifts) {
 // Helper para actualizar visualmente un botón
 function actualizarBotonTurno(btn, shift) {
   btn.textContent = shift === "V" ? "" : shift;
+
+  // Mapa de colores hardcoded (Fallback robusto)
+  const DEFAULT_COLORS = {
+    "M0": "#648c9b", "M0A": "#7b69a5", "M1": "#557a5f", "M1A": "#c49f87",
+    "M1B": "#ffaaa5", "M2": "#ffcc99", "M2A": "#d4a5a5", "M2B": "#b5e7a0",
+    "M3": "#996a7f", "V": "#88C0A6", "L": "#8FBCBB", "DL": "#D77A7A",
+    "N": "#cccccc", "S": "#4A90E2", "I": "#2C3E50"
+  };
+
+  // Construir mapa de colores dinámicamente si no existe
+  if (!window.SHIFT_COLORS) {
+    window.SHIFT_COLORS = { ...DEFAULT_COLORS };
+    document.querySelectorAll('.btn-turno').forEach(b => {
+      const t = b.getAttribute('data-turno');
+      const c = b.getAttribute('data-color');
+      if (t && c) window.SHIFT_COLORS[t] = c;
+    });
+    console.log("[NOC] Color Map Built:", window.SHIFT_COLORS);
+  }
+
+  // Detect context: Is this the Night Shift Calendar?
+  const isNocturno = btn.closest('#nocturno-calendar');
+
   if (shift === "V") {
     btn.innerHTML = '<i data-lucide="tree-palm"></i>';
+    btn.style.backgroundColor = window.SHIFT_COLORS["V"];
+    btn.style.color = "#000";
+    btn.setAttribute("title", "Vacaciones");
+  } else {
+    // Reset basic style
+    btn.removeAttribute("style");
+    btn.removeAttribute("title");
+
+    // Apply Color from Map ONLY if NOT Nocturno AND NOT DL/F (CSS handled)
+    // Nocturno calendar relies on CSS classes for Dark Theme
+    if (!isNocturno && shift !== "DL" && shift !== "F" && window.SHIFT_COLORS[shift]) {
+      btn.style.backgroundColor = window.SHIFT_COLORS[shift];
+      btn.style.color = "#000";
+    }
   }
 
   // Reset clases
   btn.className = "calendar-day w-full h-full";
 
   // Aplicar clases según turno
-  if (shift === "DL") btn.classList.add("domingo-libre");
-  else if (shift === "F") btn.classList.add("feriado");
+  if (shift === "DL") {
+    btn.classList.add("domingo-libre");
+    // Let CSS handle the background/text color for DL (Dark Theme)
+    btn.style.backgroundColor = "";
+    btn.style.color = "";
+  }
+  else if (shift === "F") {
+    btn.classList.add("feriado");
+    btn.style.backgroundColor = ""; // Feriados gestionados por CSS
+  }
   else if (shift === "N") btn.classList.add("nocturno");
-  else if (shift === "L") btn.classList.add("dia-libre");
-  else if (shift === "V") btn.classList.add("vacaciones"); // Asumiendo que existe o se maneja genérico
+  else if (shift === "L") {
+    btn.classList.add("dia-libre");
+    // Ensure L has color in General, but let CSS handle Nocturno
+    if (!isNocturno) {
+      btn.style.backgroundColor = window.SHIFT_COLORS["L"];
+      btn.style.color = "#000";
+    }
+  }
+
+  // Ensure text color logic runs for explicitly colored cells (M1, M2...)
+  if (btn.style.backgroundColor) {
+    btn.style.color = "#000";
+  }
+
+  // Real-time 44h Check
+  const row = btn.closest("tr");
+  if (row) {
+    checkWeeklyHours(row);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 44-HOUR WEEK LOGIC
+// -----------------------------------------------------------------------------
+// EFFECTIVE work hours per shift (after subtracting 1h lunch break)
+const SHIFT_HOURS = {
+  "M0": 9, "M0A": 9,       // 10h - 1h = 9h
+  "M1": 8, "M1A": 9, "M1B": 9,  // M1: 9h-1h=8h, others: 10h-1h=9h
+  "M2": 8, "M2A": 9, "M2B": 9,  // M2: 9h-1h=8h, others: 10h-1h=9h
+  "M3": 9,                 // 10h - 1h = 9h
+  "N": 9,                  // Night Shift (10h - 1h)
+  "S": 11, "I": 11,        // Weekend/Special (12h - 1h)
+  "V": 0, "L": 0, "DL": 0, "F": 0  // No work
+};
+
+function checkWeeklyHours(row) {
+  if (!row) return;
+  const nameCell = row.querySelector("td:first-child");
+  if (!nameCell) return;
+
+  // Clear previous warnings
+  const existingWarning = nameCell.querySelector(".warning-icon");
+  if (existingWarning) existingWarning.remove();
+  nameCell.classList.remove("text-warning");
+
+  const buttons = row.querySelectorAll("button.calendar-day");
+  if (buttons.length === 0) return;
+
+  // Identify Employee for Logic Fork
+  const employeeName = nameCell.textContent.trim();
+  const isExcludedSunday = (employeeName === "Sergio Castillo" || employeeName === "Ignacio Aburto");
+
+  // ROBUST: Read headers to determine day of week (LUN, MAR, etc)
+  // This avoids desync between global currentDate and visible table
+  const table = row.closest("table");
+  const headers = table.querySelectorAll("thead th div:first-child"); // The name div (Lun, Mar...)
+  // Headers index 0 is "Empleado". So day 1 is at index 1.
+
+  let weeklySum = 0;
+  let hasViolation = false;
+  let violationWeeks = [];
+  let currentWeekNumber = 1; // logical week counter
+
+  buttons.forEach((btn, index) => {
+    // Determine Day from Header text
+    let dayName = "";
+    // Header index starts at 0 for Day 1 because querySelectorAll skipped "Empleado" th
+    if (headers[index]) {
+      dayName = headers[index].textContent.trim().toLowerCase();
+    }
+
+    // Map Spanish short days to 0-6 (Sun-Sat)
+    // headers are usually: 'lun.', 'mar.', 'mié.', 'jue.' ... or just 'lun', 'mar'
+    let dayOfWeek = -1;
+    if (dayName.includes("lun")) dayOfWeek = 1;
+    else if (dayName.includes("mar")) dayOfWeek = 2;
+    else if (dayName.includes("mié") || dayName.includes("mie")) dayOfWeek = 3;
+    else if (dayName.includes("jue")) dayOfWeek = 4;
+    else if (dayName.includes("vie")) dayOfWeek = 5;
+    else if (dayName.includes("sáb") || dayName.includes("sab")) dayOfWeek = 6;
+    else if (dayName.includes("dom")) dayOfWeek = 0;
+
+    const shift = btn.textContent.trim();
+
+    // Reset on Monday (Start of new week)
+    if (dayOfWeek === 1) {
+      if (weeklySum > 44) {
+        hasViolation = true;
+        violationWeeks.push(currentWeekNumber);
+        console.log(`[44h Violation] ${employeeName} Week ${currentWeekNumber} Sum: ${weeklySum}`);
+      }
+      weeklySum = 0;
+      currentWeekNumber++;
+    }
+
+    let hours = SHIFT_HOURS[shift] || 0;
+
+    // RULE: Friday = -1 hour
+    if (dayOfWeek === 5 && hours > 0) {
+      hours -= 1;
+    }
+
+    // RULE: Saturday Specifics
+    if (dayOfWeek === 6) {
+      if (shift === "M1" || shift === "M2") {
+        hours = 5; // Reduced Saturday hours
+      }
+    }
+
+    // RULE: Employee Specific Sunday Exclusion
+    if (dayOfWeek === 0 && isExcludedSunday) {
+      hours = 0; // Sundays do not count
+    }
+
+    // Manual adjustments for specific known logic could go here
+    weeklySum += hours;
+
+    // Check Sunday (End of week) or Last Day of Month
+    if (dayOfWeek === 0 || index === buttons.length - 1) {
+      if (weeklySum > 44) {
+        hasViolation = true;
+        violationWeeks.push(currentWeekNumber); // Use currentWeekNumber
+        console.log(`[44h Violation] ${employeeName} Week End Sum: ${weeklySum}`);
+        weeklySum = 0;
+      }
+    }
+  });
+
+  if (hasViolation) {
+    console.log(`[44h DEBUG] Adding warning icon for ${employeeName}. Weeks: ${violationWeeks.join(",")}`);
+    const icon = document.createElement("span");
+    icon.textContent = " ⚠️"; // Warning Icon
+    icon.className = "warning-icon";
+    icon.title = `Excede 44 hrs en semana(s): ${violationWeeks.join(", ")}`;
+    icon.style.cssText = "cursor:help; margin-left:5px; color: #e74c3c; font-size: 1.2em;"; // Inline style backup
+    nameCell.appendChild(icon);
+    console.log(`[44h DEBUG] Icon appended. nameCell.innerHTML now:`, nameCell.innerHTML);
+  }
 }
 
 // Helper para restaurar empleados eliminados (visualización histórica)
@@ -993,8 +1255,9 @@ function renderCalendarDesdeCero(date) {
   // ---------- CUERPO CALENDARIO GENERAL ----------
   let generalHTML = "";
   empleados.forEach((empleado) => {
-    // Exclude 'Cristian Oyarzo' from general calendar (he has his own table)
-    if (empleado.nombre === "Cristian Oyarzo") return;
+    // FILTRO: Solo empleados DIURNOS en calendario general
+    const tipoTurno = empleado.tipoTurno || "diurno";
+    if (tipoTurno === "nocturno") return;
 
     const nombreSeguro = escapeHtml(empleado.nombre);
     generalHTML += `<tr><td class="text-left p-2">${nombreSeguro}</td>`;
@@ -1060,54 +1323,64 @@ function renderCalendarDesdeCero(date) {
     console.error("No se encontró el tbody de la tabla general");
   }
 
-  // ---------- CALENDARIO NOCTURNO (CRISTIAN OYARZO) ----------
+  // ---------- CALENDARIO NOCTURNO (DINÁMICO - TODOS LOS EMPLEADOS NOCTURNOS) ----------
   let nocturnoHTML = "";
-  const cristianTurnos = [];
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const fecha = new Date(year, month, day);
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-    const esFeriado = feriadosChile.includes(dateStr);
-    const dayOfWeek = fecha.getDay();
+  // Filtrar solo empleados con tipoTurno === "nocturno"
+  const empleadosNocturnos = empleados.filter(emp => {
+    const tipo = emp.tipoTurno || "diurno";
+    return tipo === "nocturno";
+  });
 
-    if (esFeriado) {
-      cristianTurnos[day - 1] = "F";
-    } else if (dayOfWeek === 0) {
-      cristianTurnos[day - 1] = "DL";
-    } else if (dayOfWeek === 6) {
-      cristianTurnos[day - 1] = "L";
-    } else {
-      cristianTurnos[day - 1] = "N";
+  console.log(`[NOCTURNO] Empleados nocturnos encontrados: ${empleadosNocturnos.length}`, empleadosNocturnos.map(e => e.nombre));
+
+  // Renderizar un TR por cada empleado nocturno
+  empleadosNocturnos.forEach(empleado => {
+    const turnos = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const fecha = new Date(year, month, day);
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const esFeriado = feriadosChile.includes(dateStr);
+      const dayOfWeek = fecha.getDay();
+
+      if (esFeriado) {
+        turnos[day - 1] = "F";
+      } else if (dayOfWeek === 0) {
+        turnos[day - 1] = "DL";
+      } else if (dayOfWeek === 6) {
+        turnos[day - 1] = "L";
+      } else {
+        turnos[day - 1] = "N";
+      }
     }
-  }
 
-  nocturnoHTML += `<tr><td class="text-left p-2">Cristian Oyarzo</td>`;
-  for (let day = 1; day <= daysInMonth; day++) {
-    const turno = cristianTurnos[day - 1];
-    let turnoClass = "";
+    nocturnoHTML += `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const turno = turnos[day - 1];
+      let turnoClass = "";
 
-    if (turno === "DL") turnoClass = "domingo-libre";
-    else if (turno === "L") turnoClass = "dia-libre";
-    else if (turno === "N") turnoClass = "nocturno";
+      if (turno === "DL") turnoClass = "domingo-libre";
+      else if (turno === "L") turnoClass = "dia-libre";
+      else if (turno === "N") turnoClass = "nocturno";
 
-    const claseFeriado = turno === "F" ? "feriado" : "";
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const claseFeriado = turno === "F" ? "feriado" : "";
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    nocturnoHTML += `
-      <td>
-        <button 
-          data-date="${dateStr}"
-          data-empleado="Cristian Oyarzo"
-          data-day="${day}"
-          class="calendar-day w-full h-full ${turnoClass} ${claseFeriado}">
-          ${turno}
-        </button>
-      </td>
-    `;
-  }
-  nocturnoHTML += `</tr>`;
+      nocturnoHTML += `
+        <td>
+          <button 
+            data-date="${dateStr}"
+            data-empleado="${empleado.nombre}"
+            data-day="${day}"
+            class="calendar-day w-full h-full ${turnoClass} ${claseFeriado}">
+            ${turno}
+          </button>
+        </td>
+      `;
+    }
+    nocturnoHTML += `</tr>`;
+  });
 
   const tbodyNocturno = tablaNocturno.querySelector("tbody");
   if (tbodyNocturno) {
@@ -1970,7 +2243,177 @@ function mostrarEstadisticas() {
 }
 
 // -----------------------------------------------------------------------------
-// 7) GRÁFICOS CON CHART.JS
+// ANÁLISIS HISTÓRICO PARA AUTO-ASIGNACIÓN INTELIGENTE
+// -----------------------------------------------------------------------------
+async function analizarHistorialTurnos() {
+  console.log("[ANÁLISIS] Iniciando análisis de historial...");
+
+  const employeeProfiles = {};
+  const dayNames = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
+
+  try {
+    // 1. Obtener todos los calendarios de Firestore
+    const snapshot = await db.collection("calendarios").get();
+    console.log(`[ANÁLISIS] Encontrados ${snapshot.size} meses de datos`);
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const monthId = doc.id; // ej: "enero 2025"
+
+      // Intentar parsear el mes/año del ID
+      let year, month;
+      const parts = monthId.toLowerCase().split(" ");
+      if (parts.length === 2) {
+        const monthNames = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
+          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        month = monthNames.indexOf(parts[0]);
+        year = parseInt(parts[1]);
+      }
+
+      if (isNaN(year) || month < 0) {
+        console.warn(`[ANÁLISIS] No se pudo parsear mes: ${monthId}`);
+        return;
+      }
+
+      // 2. Parsear datos (formato JSON nuevo o HTML antiguo)
+      let assignments = {};
+
+      if (data.assignments && typeof data.assignments === 'object') {
+        // Formato JSON nuevo
+        assignments = data.assignments;
+      } else if (data.generalHTML) {
+        // Formato HTML antiguo - parsear
+        const parser = new DOMParser();
+        const htmlDoc = parser.parseFromString(data.generalHTML, "text/html");
+        htmlDoc.querySelectorAll("tbody tr").forEach(row => {
+          const nameCell = row.querySelector("td:first-child");
+          if (!nameCell) return;
+          const name = nameCell.textContent.trim();
+          if (name === "Encargado de Bitácora") return;
+
+          assignments[name] = {};
+          row.querySelectorAll("button.calendar-day").forEach(btn => {
+            const day = btn.getAttribute("data-day");
+            let shift = btn.textContent.trim();
+            if (btn.innerHTML.includes("tree-palm") || btn.innerHTML.includes("lucide")) {
+              shift = "V";
+            }
+            if (shift && day) {
+              assignments[name][day] = shift;
+            }
+          });
+        });
+      }
+
+      // 3. Procesar asignaciones y construir perfiles
+      Object.entries(assignments).forEach(([employeeName, shifts]) => {
+        if (!employeeProfiles[employeeName]) {
+          employeeProfiles[employeeName] = {
+            totalDays: 0,
+            shiftCounts: {},  // { "M2": 45, "M1": 12, ... }
+            dayPatterns: {},  // { "lun": { "M2": 30, "M1": 5 }, ... }
+            weeklyPatterns: [] // Array of week objects
+          };
+        }
+
+        const profile = employeeProfiles[employeeName];
+
+        Object.entries(shifts).forEach(([dayStr, shiftData]) => {
+          const dayNum = parseInt(dayStr);
+          if (isNaN(dayNum)) return;
+
+          // Manejar formato V1 (string) vs V2 (object)
+          const shift = (typeof shiftData === 'object') ? shiftData.code : shiftData;
+          if (!shift || shift === "" || shift === "V" || shift === "L" || shift === "DL" || shift === "F") return;
+
+          // Calcular día de la semana
+          const dateObj = new Date(year, month, dayNum);
+          const dayOfWeek = dayNames[dateObj.getDay()];
+
+          // Actualizar conteos
+          profile.totalDays++;
+          profile.shiftCounts[shift] = (profile.shiftCounts[shift] || 0) + 1;
+
+          if (!profile.dayPatterns[dayOfWeek]) {
+            profile.dayPatterns[dayOfWeek] = {};
+          }
+          profile.dayPatterns[dayOfWeek][shift] = (profile.dayPatterns[dayOfWeek][shift] || 0) + 1;
+        });
+      });
+    });
+
+    // 4. Calcular probabilidades y turnos preferidos
+    Object.entries(employeeProfiles).forEach(([name, profile]) => {
+      // Turnos más frecuentes (top 3)
+      const sortedShifts = Object.entries(profile.shiftCounts)
+        .sort((a, b) => b[1] - a[1]);
+      profile.preferredShifts = sortedShifts.slice(0, 3).map(s => s[0]);
+
+      // Convertir conteos a probabilidades por día
+      profile.dayProbabilities = {};
+      Object.entries(profile.dayPatterns).forEach(([day, shifts]) => {
+        const total = Object.values(shifts).reduce((a, b) => a + b, 0);
+        profile.dayProbabilities[day] = {};
+        Object.entries(shifts).forEach(([shift, count]) => {
+          profile.dayProbabilities[day][shift] = count / total;
+        });
+      });
+    });
+
+    console.log("[ANÁLISIS] Perfiles generados:", employeeProfiles);
+
+    // Guardar en window para uso global
+    window.EMPLOYEE_PROFILES = employeeProfiles;
+
+    return employeeProfiles;
+
+  } catch (error) {
+    console.error("[ANÁLISIS] Error analizando historial:", error);
+    return {};
+  }
+}
+
+// Función para elegir turno basado en perfil histórico
+function elegirTurnoPorPerfil(employeeName, dayOfWeek, turnosDisponibles) {
+  const profiles = window.EMPLOYEE_PROFILES || {};
+  const profile = profiles[employeeName];
+
+  if (!profile || !profile.dayProbabilities || !profile.dayProbabilities[dayOfWeek]) {
+    // Sin datos, elegir de los favoritos generales o aleatorio
+    if (profile && profile.preferredShifts && profile.preferredShifts.length > 0) {
+      const available = profile.preferredShifts.filter(s => turnosDisponibles.includes(s));
+      if (available.length > 0) {
+        return available[Math.floor(Math.random() * available.length)];
+      }
+    }
+    return turnosDisponibles[Math.floor(Math.random() * turnosDisponibles.length)];
+  }
+
+  // Usar probabilidades del día específico
+  const probs = profile.dayProbabilities[dayOfWeek];
+  const rand = Math.random();
+  let cumulative = 0;
+
+  // Filtrar solo turnos disponibles
+  const availableProbs = Object.entries(probs)
+    .filter(([shift]) => turnosDisponibles.includes(shift));
+
+  if (availableProbs.length === 0) {
+    return turnosDisponibles[Math.floor(Math.random() * turnosDisponibles.length)];
+  }
+
+  // Normalizar probabilidades
+  const totalProb = availableProbs.reduce((sum, [, p]) => sum + p, 0);
+
+  for (const [shift, prob] of availableProbs) {
+    cumulative += prob / totalProb;
+    if (rand <= cumulative) {
+      return shift;
+    }
+  }
+
+  return availableProbs[0][0];
+}
 // -----------------------------------------------------------------------------
 let chartBarras;
 let chartPastel;
@@ -2142,8 +2585,15 @@ function subscribeCalendar() {
         isMonthLocked = !!data.locked;
         updateLockUI();
 
-        // Sincronizar empleados después de cargar desde Firestore
-        // sincronizarTablasConEmpleados(); // Function not defined, causing crash
+        // IMPORTANTE: Solo sincronizar empleados en meses ABIERTOS
+        // Los meses cerrados mantienen su estado histórico intacto
+        if (!isMonthLocked) {
+          console.log("[SYNC] Mes abierto - sincronizando empleados nuevos");
+          sincronizarTablasConEmpleados(); // Calendario general (diurnos)
+          sincronizarCalendarioNocturno(); // Calendario nocturno (nocturnos)
+        } else {
+          console.log("[SYNC] Mes cerrado - manteniendo estado histórico (no se agregan empleados nuevos)");
+        }
 
         lucide.createIcons();
         // fixShiftTextColors(); // Removed: function not defined
@@ -2153,6 +2603,10 @@ function subscribeCalendar() {
 
         // Recalcular horas extras tras cargar el DOM
         calcularHorasExtras(currentDate);
+
+        // Re-run 44-Hour Check after Firestore sync
+        const generalRows = document.querySelectorAll("#general-calendar tbody tr");
+        generalRows.forEach(row => checkWeeklyHours(row));
 
         // 2. Restaurar selección (solo la que estaba activa en esta sesión)
         selectedDays = [];
@@ -2257,8 +2711,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!usuarioEsAdmin) return;
 
         Swal.fire({
-          title: "Analizando turnos...",
-          text: "Función en Beta, puede contener errores. Esto puede tardar unos segundos.",
+          title: "Analizando patrones históricos...",
+          text: "Esto puede tardar unos segundos. Analizando 14 meses de datos.",
           showConfirmButton: false,
           allowOutsideClick: false,
           willOpen: () => {
@@ -2268,204 +2722,172 @@ document.addEventListener("DOMContentLoaded", function () {
 
         try {
           const turnoColorMapping = {
-            // Turnos normales
-            M0: "#648c9b",
-            M0A: "#7b69a5",
-            M1: "#557a5f",
-            M1A: "#c49f87",
-            M1B: "#ffaaa5",
-            M2: "#ffcc99",
-            M2A: "#d4a5a5",
-            M2B: "#b5e7a0",
-            M3: "#996a7f",
-            V: "#88C0A6",
-            L: "#8FBCBB",
-            DL: "#D77A7A",
-            N: "#cccccc",
-            // Turnos especiales feriados/fines de semana
-            S: "#4A90E2",
-            I: "#2C3E50"
+            M0: "#648c9b", M0A: "#7b69a5", M1: "#557a5f", M1A: "#c49f87",
+            M1B: "#ffaaa5", M2: "#ffcc99", M2A: "#d4a5a5", M2B: "#b5e7a0",
+            M3: "#996a7f", L: "#8FBCBB", DL: "#D77A7A", N: "#cccccc",
+            S: "#4A90E2", I: "#2C3E50"
           };
 
+          // NO incluir "V" (Vacaciones) - esas se asignan manualmente
           const turnosDisponibles = [
-            "M0",
-            "M0A",
-            "M1",
-            "M1A",
-            "M1B",
-            "M2",
-            "M2A",
-            "M2B",
-            "M3",
-            "V"
+            "M0", "M0A", "M1", "M1A", "M1B", "M2", "M2A", "M2B", "M3"
           ];
 
-          const currentMonth = document
-            .getElementById("current-month")
-            .textContent.trim();
-          // console.log("Mes actual detectado:", currentMonth);
+          const dayNames = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 
-          const snapshot = await db.collection("calendarios").get();
-          let historialTurnos = {};
-          snapshot.forEach((doc) => {
-            historialTurnos[doc.id] = doc.data();
-          });
-          // console.log("Historial de turnos:", historialTurnos);
+          // 1. ANALIZAR HISTORIAL PRIMERO
+          await analizarHistorialTurnos();
+          console.log("[AUTO-ASIGNAR] Perfiles cargados:", window.EMPLOYEE_PROFILES);
 
           const year = currentDate.getFullYear();
           const month = currentDate.getMonth();
           const lastDay = new Date(year, month + 1, 0);
           const daysInMonth = lastDay.getDate();
 
-          const tabla = document
-            .getElementById("general-calendar")
-            .querySelector("tbody");
+          const tabla = document.getElementById("general-calendar").querySelector("tbody");
           const filas = tabla.querySelectorAll("tr");
 
           let empleadosAsignados = {};
 
-          // Asignación inicial por empleado usando Markov
+          // 2. ASIGNACIÓN BASADA EN SEMANAS COMPLETAS
+          // Reglas:
+          // - Un turno por semana (Lun-Vie mismo turno)
+          // - Sábado: M1 si turno semanal es M2, sino mismo turno
+          // - Máximo 1 M1B por semana (global)
+
+          // Identificar semanas del mes (Lun-Dom)
+          const weeks = [];
+          let currentWeek = { start: 1, days: [] };
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const dateObj = new Date(year, month, day);
+            const dayOfWeek = dateObj.getDay();
+
+            // Si es lunes y ya tenemos días, guardar semana anterior
+            if (dayOfWeek === 1 && currentWeek.days.length > 0) {
+              weeks.push(currentWeek);
+              currentWeek = { start: day, days: [] };
+            }
+
+            currentWeek.days.push({ day, dayOfWeek, dayName: dayNames[dayOfWeek] });
+          }
+          // Agregar última semana
+          if (currentWeek.days.length > 0) {
+            weeks.push(currentWeek);
+          }
+
+          console.log("[AUTO-ASIGNAR] Semanas identificadas:", weeks);
+
+          // Asignar por semana para cada empleado
           for (let fila of filas) {
             const firstCell = fila.querySelector("td");
             if (!firstCell) continue;
-
-            const empleado = firstCell.textContent.trim();
+            const empleado = firstCell.textContent.replace(/⚠️/g, "").trim();
             if (empleado === "Encargado de Bitácora") continue;
 
             empleadosAsignados[empleado] = new Array(daysInMonth).fill("");
 
-            let matriz = await obtenerMatrizTransiciones(empleado);
+            // Obtener turno preferido del empleado (el más frecuente históricamente)
+            const profile = window.EMPLOYEE_PROFILES?.[empleado];
+            const preferredShift = profile?.preferredShifts?.[0] || "M2";
 
-            for (let day = 1; day <= daysInMonth; day++) {
-              const dateObj = new Date(year, month, day);
+            for (let weekIdx = 0; weekIdx < weeks.length; weekIdx++) {
+              const week = weeks[weekIdx];
 
-              // Domingo: DL para Sergio/Ignacio, L para el resto
-              if (dateObj.getDay() === 0) {
-                empleadosAsignados[empleado][day - 1] =
-                  empleado === "Sergio Castillo" ||
-                    empleado === "Ignacio Aburto"
-                    ? "DL"
-                    : "L";
-              } else {
-                if (day > 1) {
-                  let turnoAnterior = empleadosAsignados[empleado][day - 2];
-                  let turnoElegido = elegirSiguienteTurnoMarkov(
-                    matriz,
-                    turnoAnterior,
-                    turnosDisponibles
-                  );
-                  empleadosAsignados[empleado][day - 1] = turnoElegido;
+              // Elegir turno semanal basado en perfil
+              // Excluir M1B si ya hay uno esta semana
+              let availableShifts = [...turnosDisponibles];
+
+              // Verificar si M1B ya está asignada esta semana
+              const m1bThisWeek = Object.entries(empleadosAsignados).some(([emp, shifts]) => {
+                return week.days.some(d => shifts[d.day - 1] === "M1B");
+              });
+              if (m1bThisWeek) {
+                availableShifts = availableShifts.filter(s => s !== "M1B");
+              }
+
+              // Elegir turno semanal ROTANDO entre preferencias
+              // Semana 1: preferencia #1, Semana 2: preferencia #2, etc.
+              let turnoSemanal;
+              if (profile?.preferredShifts && profile.preferredShifts.length > 0) {
+                // Rotar a través de los turnos preferidos (ciclo)
+                const rotationIndex = weekIdx % profile.preferredShifts.length;
+                const rotatedShift = profile.preferredShifts[rotationIndex];
+
+                // Si el turno rotado está disponible, usarlo
+                if (availableShifts.includes(rotatedShift)) {
+                  turnoSemanal = rotatedShift;
                 } else {
+                  // Buscar el siguiente disponible
+                  const available = profile.preferredShifts.filter(s => availableShifts.includes(s));
+                  turnoSemanal = available[0] || availableShifts[Math.floor(Math.random() * availableShifts.length)];
+                }
+              } else {
+                // Sin historial, rotar aleatoriamente pero diferente cada semana
+                turnoSemanal = availableShifts[weekIdx % availableShifts.length];
+              }
+
+              console.log(`[AUTO] ${empleado} Semana ${weekIdx + 1}: ${turnoSemanal}`);
+
+              // Asignar a cada día de la semana
+              for (const dayInfo of week.days) {
+                const { day, dayOfWeek, dayName } = dayInfo;
+                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const esFeriado = feriadosChile.includes(dateStr);
+
+                // DOMINGO
+                if (dayOfWeek === 0) {
                   empleadosAsignados[empleado][day - 1] =
-                    turnosDisponibles[
-                    Math.floor(Math.random() * turnosDisponibles.length)
-                    ];
+                    (empleado === "Sergio Castillo" || empleado === "Ignacio Aburto")
+                      ? "DL" : "L";
                 }
-              }
-            }
-          }
-
-          // console.log("Asignación inicial:", empleadosAsignados);
-
-          // Reglas adicionales para M1 / M1B: no más de 1 por semana
-          for (let empleado in empleadosAsignados) {
-            let asignacion = empleadosAsignados[empleado];
-            let weekStart = 0;
-
-            while (weekStart < asignacion.length) {
-              let weekEnd = weekStart;
-              while (weekEnd < asignacion.length) {
-                let dia = weekEnd + 1;
-                let fecha = new Date(year, month, dia);
-                if (fecha.getDay() === 0) {
-                  weekEnd++;
-                  break;
+                // FERIADO (Sergio/Ignacio)
+                else if (esFeriado && (empleado === "Sergio Castillo" || empleado === "Ignacio Aburto")) {
+                  empleadosAsignados[empleado][day - 1] = "F";
                 }
-                weekEnd++;
-              }
-
-              let countM1 = 0,
-                countM1B = 0;
-              for (let i = weekStart; i < weekEnd; i++) {
-                let turno = asignacion[i];
-                if (turno === "M1") countM1++;
-                if (turno === "M1B") countM1B++;
-              }
-
-              let total = countM1 + countM1B;
-              if (total > 1) {
-                let extra = total - 1;
-                for (let i = weekStart; i < weekEnd && extra > 0; i++) {
-                  if (asignacion[i] === "M1" || asignacion[i] === "M1B") {
-                    let alternativas = turnosDisponibles.filter(
-                      (t) => t !== "M1" && t !== "M1B"
-                    );
-                    asignacion[i] =
-                      alternativas[
-                      Math.floor(Math.random() * alternativas.length)
-                      ];
-                    extra--;
+                // SÁBADO - Turno reducido
+                else if (dayOfWeek === 6) {
+                  // Si turno semanal es M2, sábado es M1 (jornada corta mañana)
+                  // Si turno semanal es M1, sábado sigue M1
+                  if (turnoSemanal === "M2" || turnoSemanal === "M2A" || turnoSemanal === "M2B") {
+                    empleadosAsignados[empleado][day - 1] = "M1";
+                  } else {
+                    empleadosAsignados[empleado][day - 1] = turnoSemanal;
                   }
                 }
+                // LUNES A VIERNES - Mismo turno toda la semana
+                else {
+                  empleadosAsignados[empleado][day - 1] = turnoSemanal;
+                }
               }
-
-              weekStart = weekEnd;
             }
           }
 
-          console.log(
-            "Asignación final tras reglas adicionales:",
-            empleadosAsignados
-          );
+          console.log("Asignación semanal:", empleadosAsignados);
 
-          // Pintar en el calendario general
+          // 3. PINTAR EN EL CALENDARIO
           filas.forEach((fila) => {
             const firstCell = fila.querySelector("td");
             if (!firstCell) return;
-            const empleado = firstCell.textContent.trim();
+            const empleado = firstCell.textContent.replace(/⚠️/g, "").trim();
             if (empleado === "Encargado de Bitácora") return;
 
             const botones = fila.querySelectorAll("td button.calendar-day");
             botones.forEach((boton, index) => {
               const turnoAsignado = empleadosAsignados[empleado][index];
               if (turnoAsignado && turnoAsignado !== "") {
-                if (turnoAsignado === "V") {
-                  boton.innerHTML = vacationIcon;
-                  boton.setAttribute("title", "Vacaciones");
-                } else {
-                  boton.textContent = turnoAsignado;
-                  boton.removeAttribute("title");
+                actualizarBotonTurno(boton, turnoAsignado);
+                if (turnoColorMapping[turnoAsignado]) {
+                  boton.style.backgroundColor = turnoColorMapping[turnoAsignado];
+                  boton.style.color = "#000";
                 }
-                boton.style.backgroundColor =
-                  turnoColorMapping[turnoAsignado] || "#7796cb";
-                boton.style.color = "#000";
               }
             });
           });
 
-          // Actualizar modelo de Markov con lo recién asignado
-          for (let empleado in empleadosAsignados) {
-            let asignacion = empleadosAsignados[empleado];
-            for (let day = 2; day <= daysInMonth; day++) {
-              let turnoAnterior = asignacion[day - 2];
-              let turnoActual = asignacion[day - 1];
-              if (
-                turnoActual !== "DL" &&
-                turnoActual !== "L" &&
-                turnoActual !== "F"
-              ) {
-                await actualizarTransicion(
-                  empleado,
-                  turnoAnterior,
-                  turnoActual
-                );
-              }
-            }
-          }
-
           Swal.fire(
             "Éxito",
-            "Turnos asignados y el modelo actualizado.",
+            "Turnos asignados usando patrones históricos de cada empleado.",
             "success"
           );
 
@@ -3207,5 +3629,172 @@ document.addEventListener("DOMContentLoaded", function () {
     // Call it
     initFloatingPalette();
 
+    // -----------------------------------------------------------------------------
+    // 13) SISTEMA DE BACKUP JSON (GENERAL ONLY)
+    // -----------------------------------------------------------------------------
+
+    // Exportar - V2 (Color Aware)
+    const btnExportarGeneral = document.getElementById("btnExportarGeneral");
+    if (btnExportarGeneral) {
+      btnExportarGeneral.addEventListener("click", () => {
+        const currentMonthElement = document.getElementById("current-month");
+        const generalTable = document.getElementById("general-calendar");
+        const mesTexto = currentMonthElement.textContent.trim().replace(/\s+/g, "_");
+
+        const backupData = {
+          type: "backup_general_v2", // V2
+          version: "2.0",
+          mes: currentMonthElement.textContent,
+          timestamp: new Date().toISOString(),
+          assignments: {}
+        };
+
+        // Extraer solo del General Calendar
+        if (generalTable) {
+          generalTable.querySelectorAll("tbody tr").forEach(row => {
+            const nameCell = row.querySelector("td:first-child");
+            if (!nameCell) return;
+            const name = nameCell.textContent.replace(/\s*\(Ex\)\s*$/, "").trim();
+            if (name === "Encargado de Bitácora" || name === "Cristian Oyarzo") return;
+
+            const shifts = {};
+            row.querySelectorAll("button.calendar-day").forEach(btn => {
+              const day = btn.getAttribute("data-day");
+              let shift = btn.textContent.trim();
+              let color = btn.style.backgroundColor;
+
+              // Preservar vacaciones e íconos y color
+              const isVacation = btn.querySelector('[data-lucide="tree-palm"]') || btn.querySelector('svg.lucide-tree-palm');
+              if (isVacation) shift = "V";
+
+              if (shift) {
+                // Save as Object: { code: "M1", color: "rgb(0,0,0)" }
+                shifts[day] = { code: shift, color: color };
+              }
+            });
+
+            if (Object.keys(shifts).length > 0) {
+              backupData.assignments[name] = shifts;
+            }
+          });
+        }
+
+        // Crear Blob y Descargar
+        const dataStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Respaldo_General_${mesTexto}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Respaldo Generado (V2)',
+          text: 'Se ha descargado el archivo con los colores exactos.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      });
+    }
+
+    // Importar
+    const btnImportarGeneral = document.getElementById("btnImportarGeneral");
+    const jsonInput = document.getElementById("jsonInput");
+
+    if (btnImportarGeneral && jsonInput) {
+      btnImportarGeneral.addEventListener("click", () => {
+        jsonInput.click();
+      });
+
+      jsonInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const jsonData = JSON.parse(event.target.result);
+
+            // Validaciones Básicas (+ V2)
+            const isValid = (jsonData.type === "backup_general" || jsonData.type === "backup_general_v2");
+            if (!isValid || !jsonData.assignments) {
+              throw new Error("Formato de archivo inválido.");
+            }
+
+            // Advertencia de Sobreescritura
+            Swal.fire({
+              title: '¿Restaurar Turnos Generales?',
+              text: `Se cargarán los turnos del archivo "${file.name}". Esto sobrescribirá lo que hay en pantalla (Solo Planilla General).`,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3498db',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Sí, Restaurar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                // Usar V2 helper (Color Aware)
+                aplicarAsignacionesV2(jsonData.assignments);
+
+                // Recalcular
+                calcularHorasExtras(currentDate);
+                guardarCalendarioEnLocalStorage();
+                scheduleFirestoreUpdate(); // Auto-Guardar en Base de Datos
+
+                Swal.fire('Restaurado!', 'Los turnos se han cargado y guardado automáticamente.', 'success');
+              }
+              // Reset input
+              jsonInput.value = '';
+            });
+
+          } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'No se pudo leer el archivo: ' + error.message, 'error');
+            jsonInput.value = '';
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
   });
 }); // Close DOMContentLoaded
+
+// Nueva función de aplicación con soporte de colores V2
+function aplicarAsignacionesV2(assignments) {
+  const table = document.getElementById("general-calendar");
+  if (!table) return;
+
+  // Re-fetch current employees list just in case
+  const empleadosActuales = new Set((window.empleados || []).map(e => e.nombre));
+
+  Object.entries(assignments).forEach(([name, shifts]) => {
+    // Strict Scope: Only find row in General Calendar
+    const row = Array.from(table.querySelectorAll("tbody tr")).find(tr =>
+      tr.querySelector("td")?.textContent.trim() === name
+    );
+
+    if (row) {
+      Object.entries(shifts).forEach(([day, shiftData]) => {
+        const btn = row.querySelector(`button[data-day="${day}"]`);
+        if (btn) {
+          // Handle v1 (string) vs v2 (object)
+          const code = (typeof shiftData === 'object') ? shiftData.code : shiftData;
+          const color = (typeof shiftData === 'object') ? shiftData.color : null;
+
+          // Apply standard logic first (text code)
+          actualizarBotonTurno(btn, code);
+
+          // Force Exact Color Override if captured
+          if (color) {
+            btn.style.backgroundColor = color;
+            btn.style.color = "#000";
+          }
+        }
+      });
+    }
+  });
+}

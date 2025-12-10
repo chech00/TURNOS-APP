@@ -11,7 +11,9 @@
 
   <!-- Estilos -->
   <link rel="stylesheet" href="./css/styles.css">
-  <link rel="stylesheet" href="./css/documentos.css?v=5.6">
+  <link rel="stylesheet" href="./css/documentos.css?v=6.3">
+  <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <script defer src="./js/user-profile-header.js"></script>
 
   <!-- Librerías -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -39,7 +41,7 @@
     <nav class="sidebar-menu">
       <ul>
         <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
-        <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li><a href="user.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
         <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
         <li><a href="documentos.html" id="menu-doc" class="active"><i data-lucide="dock"></i> <span>Documentos
               Noc</span></a></li>
@@ -83,21 +85,38 @@
       </button>
       <h1>Documentos NOC</h1>
 
-      <!-- Acciones del Header -->
-      <div class="header-actions">
-        <div class="search-box">
-          <i data-lucide="search"></i>
-          <input type="text" id="search-input" placeholder="Buscar documentos...">
+      <!-- Premium User Profile Header -->
+      <div class="user-profile-header">
+        <div class="user-avatar">
+          <i data-lucide="user"></i>
         </div>
-        <button id="open-upload-modal-btn" class="primary-btn" style="display: none;"> <!-- Oculto por defecto -->
-          <i data-lucide="cloud-upload"></i>
-          <span>Subir Nuevo</span>
-        </button>
+        <div class="user-details">
+          <span class="user-name" id="user-display-name">Usuario</span>
+          <span class="user-email" id="user-display-email">email@example.com</span>
+        </div>
+        <div class="user-role-badge" id="user-role-badge">
+          <i data-lucide="shield"></i>
+          <span id="user-role-text">Usuario</span>
+        </div>
       </div>
     </header>
 
     <main>
       <div class="documentos-container">
+
+        <!-- Barra de Herramientas (Buscador y Subida) -->
+        <div class="docs-toolbar">
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" id="search-input" placeholder="Buscar documentos...">
+          </div>
+
+          <button id="open-upload-modal-btn" class="primary-btn" style="display: none;"> <!-- Oculto por defecto -->
+            <i data-lucide="cloud-upload"></i>
+            <span>Subir Nuevo</span>
+          </button>
+        </div>
+
         <!-- Grid de Archivos -->
         <div class="files-grid-container">
           <div id="files-grid" class="files-grid">

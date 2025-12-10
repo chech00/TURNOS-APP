@@ -14,6 +14,8 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="./css/styles.css">
   <link rel="stylesheet" href="./css/noc.css" />
+  <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <script defer src="./js/user-profile-header.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer
     src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
@@ -76,6 +78,20 @@
         <i data-lucide="panel-left"></i>
       </button>
       <h1>Turnos Noc</h1>
+      <!-- Premium User Profile Header -->
+      <div class="user-profile-header">
+        <div class="user-avatar">
+          <i data-lucide="user"></i>
+        </div>
+        <div class="user-details">
+          <span class="user-name" id="user-display-name">Usuario</span>
+          <span class="user-email" id="user-display-email">email@example.com</span>
+        </div>
+        <div class="user-role-badge" id="user-role-badge">
+          <i data-lucide="shield"></i>
+          <span id="user-role-text">Usuario</span>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -197,35 +213,62 @@
           </div>
 
           <div class="backup-container">
-            <h2>Backup</h2>
+            <h2>Panel de Control</h2>
             <select id="selectMeses" class="select-meses">
               <option value="">-- Seleccione un mes guardado --</option>
             </select>
 
-            <div class="backup-controls">
-              <button id="btnCargar" class="btn-cargar"><i data-lucide="upload"></i> Cargar
-                Calendario</button>
-              <button id="btnVerHorarios" class="btn-horarios"><i data-lucide="clock"></i> Ver Horarios de
-                Turnos</button>
-              <button id="btnGuardar" class="btn-guardar admin-only"><i data-lucide="save"></i> Guardar
-                Calendario</button>
-              <button id="btnEliminar" class="btn-horarios admin-only" style="background-color: #e74c3c;"><i
-                  data-lucide="trash-2"></i> Eliminar</button>
-              <button id="btnVerEstadisticas" class="btn-horarios admin-only"><i data-lucide="bar-chart-3"></i> Ver
-                Estadísticas</button>
-              <button id="btnVerSugerencias" class="btn-horarios admin-only"><i data-lucide="lightbulb"></i> Ver
-                Sugerencias</button>
+            <!-- SECCIÓN: DATOS -->
+            <div class="control-section">
+              <h4 class="control-section-title"><i data-lucide="database"></i> Datos</h4>
+              <div class="backup-controls">
+                <button id="btnCargar" class="btn-cargar"><i data-lucide="refresh-cw"></i> Recargar Calendario</button>
+                <button id="btnGuardar" class="btn-guardar admin-only"><i data-lucide="save"></i> Guardar
+                  Cambios</button>
+                <input type="file" id="jsonInput" accept=".json" style="display: none;" />
+                <button id="btnImportarGeneral" class="btn-horarios admin-only"
+                  style="background-color: #3498db; color: white;">
+                  <i data-lucide="upload"></i> Importar
+                </button>
+                <button id="btnExportarGeneral" class="btn-horarios admin-only"
+                  style="background-color: #2ecc71; color: white;">
+                  <i data-lucide="download"></i> Exportar
+                </button>
+              </div>
             </div>
 
-            <button id="btnAutoAsignar" class="btn-cargar admin-only"
-              style="background-color: #7796cb; width: 100%; margin-top: 10px;">
-              <i data-lucide="wand-2"></i> Auto-Asignar Turnos
-            </button>
+            <!-- SECCIÓN: VISUALIZACIÓN -->
+            <div class="control-section">
+              <h4 class="control-section-title"><i data-lucide="eye"></i> Visualización</h4>
+              <div class="backup-controls">
+                <button id="btnVerHorarios" class="btn-horarios"><i data-lucide="clock"></i> Horarios</button>
+                <button id="btnVerEstadisticas" class="btn-horarios admin-only"><i data-lucide="bar-chart-3"></i>
+                  Estadísticas</button>
+                <button id="btnVerSugerencias" class="btn-horarios admin-only"><i data-lucide="lightbulb"></i>
+                  Sugerencias</button>
+              </div>
+            </div>
 
-            <button id="btnToggleLock" class="btn-horarios superadmin-only"
-              style="display:none; align-items: center; gap: 5px; width: 100%; margin-top: 5px;">
-              <i data-lucide="lock"></i> Cerrar Mes
-            </button>
+            <!-- SECCIÓN: ACCIONES ESPECIALES -->
+            <div class="control-section admin-only">
+              <h4 class="control-section-title"><i data-lucide="wand-2"></i> Acciones</h4>
+              <button id="btnAutoAsignar" class="btn-cargar admin-only" style="background-color: #7796cb; width: 100%;">
+                <i data-lucide="wand-2"></i> Auto-Asignar Turnos
+              </button>
+              <button id="btnToggleLock" class="btn-horarios superadmin-only"
+                style="display:none; align-items: center; gap: 5px; width: 100%; margin-top: 5px;">
+                <i data-lucide="lock"></i> Cerrar Mes
+              </button>
+            </div>
+
+            <!-- SECCIÓN: ZONA DE PELIGRO -->
+            <div class="control-section danger-zone admin-only">
+              <h4 class="control-section-title" style="color: #e74c3c;"><i data-lucide="alert-triangle"></i> Zona de
+                Peligro</h4>
+              <button id="btnEliminar" class="btn-horarios admin-only" style="background-color: #e74c3c; width: 100%;">
+                <i data-lucide="trash-2"></i> Eliminar Calendario
+              </button>
+            </div>
 
             <!-- Modal para Sugerencias -->
             <div id="modalSugerencias" class="modal-horarios">

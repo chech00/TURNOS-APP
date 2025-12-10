@@ -480,11 +480,14 @@ function renderEmployees(employees) {
     }
 
     grid.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     filtered.forEach((emp, index) => {
         const card = createEmployeeCard(emp, index);
-        grid.appendChild(card);
+        fragment.appendChild(card);
     });
+
+    grid.appendChild(fragment);
 
     if (window.lucide) lucide.createIcons();
 

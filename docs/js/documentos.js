@@ -296,77 +296,66 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            files.forEach(file => {
-                const fileCard = document.createElement("div");
-                fileCard.classList.add("file-card");
+            filesGrid.innerHTML = files.map((file, index) => {
+                const getFileIcon = (url) => {
+                    if (/\.(doc|docx)$/i.test(url)) return 'file-type-2';
+                    if (/\.(xls|xlsx)$/i.test(url)) return 'sheet';
+                    if (/\.(ppt|pptx)$/i.test(url)) return 'presentation';
+                    return 'file'; // Default
+                };
 
-                // Miniatura
-                const thumbnail = document.createElement("div");
-                thumbnail.classList.add("file-thumbnail");
+                const isImage = /\.(png|jpg|jpeg|gif)$/i.test(file.url);
+                const isPdf = /\.pdf$/i.test(file.url);
+                const delay = Math.min(index * 60, 800); // Max delay 800ms to ensure snappiness
 
-                if (/\.(png|jpg|jpeg|gif)$/i.test(file.url)) {
-                    thumbnail.innerHTML = `<img src="${file.url}" alt="${file.name}" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\\'image-off\\'></i>'; lucide.createIcons();">`;
-                } else if (/\.pdf$/i.test(file.url)) {
-                    // Thumbnail de PDF usando iframe optimizado
-                    thumbnail.innerHTML = `
+                // Thumbnail Content Logic
+                let thumbnailContent = '';
+                if (isImage) {
+                    thumbnailContent = `<img src="${file.url}" alt="${file.name}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<i data-lucide=\\'image-off\\'></i>'; lucide.createIcons();">`;
+                } else if (isPdf) {
+                    thumbnailContent = `
                         <iframe 
                             src="${file.url}#view=FitH&toolbar=0&navpanes=0&scrollbar=0" 
                             loading="lazy" 
-                            style="width: 100%; height: 100%; border: none; pointer-events: none; overflow: hidden;"
+                            style="width: 100%; height: 100%; border: none; pointer-events: none;"
                             scrolling="no"
-                        ></iframe>
-                    `;
-                } else if (/\.(doc|docx)$/i.test(file.url)) {
-                    thumbnail.innerHTML = `<i data-lucide="file-type-2" style="color: #3b82f6;"></i>`;
-                } else if (/\.(xls|xlsx)$/i.test(file.url)) {
-                    thumbnail.innerHTML = `<i data-lucide="sheet" style="color: #10b981;"></i>`;
+                        ></iframe>`;
                 } else {
-                    thumbnail.innerHTML = `<i data-lucide="file"></i>`;
+                    const iconName = getFileIcon(file.url);
+                    const color = iconName === 'sheet' ? '#10b981' : (iconName === 'file-type-2' ? '#3b82f6' : 'var(--color-texto-secundario)');
+                    thumbnailContent = `<i data-lucide="${iconName}" style="color: ${color}; transform: scale(1.5);"></i>`;
                 }
 
-                // Info
-                const info = document.createElement("div");
-                info.classList.add("file-details");
-
-                const fileName = document.createElement("div");
-                fileName.classList.add("file-name");
-                fileName.textContent = file.name;
-                fileName.title = file.name;
-
-                const actions = document.createElement("div");
-                actions.classList.add("file-actions");
-
-                const viewBtn = document.createElement("button");
-                viewBtn.innerHTML = `<i data-lucide="eye"></i>`;
-                viewBtn.classList.add("action-btn", "view-btn");
-                viewBtn.title = "Ver";
-                viewBtn.addEventListener("click", () => previewFile(file.url));
-                actions.appendChild(viewBtn);
-
-                const downloadLink = document.createElement("a");
-                downloadLink.innerHTML = `<i data-lucide="download"></i>`;
-                downloadLink.href = file.url;
-                downloadLink.download = file.name;
-                downloadLink.classList.add("action-btn", "download-btn");
-                downloadLink.title = "Descargar";
-                actions.appendChild(downloadLink);
-
+                // Delete Button Logic (Admin Only)
+                let deleteButton = '';
                 if (currentUserRole === "admin" || currentUserRole === "superadmin") {
-                    const deleteBtn = document.createElement("button");
-                    deleteBtn.innerHTML = `<i data-lucide="trash-2"></i>`;
-                    deleteBtn.classList.add("action-btn", "delete-btn");
-                    deleteBtn.title = "Eliminar";
-                    deleteBtn.addEventListener("click", () => deleteFile(file.name));
-                    actions.appendChild(deleteBtn);
+                    deleteButton = `
+                        <button onclick="deleteFile('${file.name}')" class="delete-btn" title="Eliminar">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    `;
                 }
 
-                info.appendChild(fileName);
-                info.appendChild(actions);
-
-                fileCard.appendChild(thumbnail);
-                fileCard.appendChild(info);
-                filesGrid.appendChild(fileCard);
-            });
+                return `
+                    <div class="file-card animate-entry" style="animation-delay: ${delay}ms">
+                        <div class="file-thumbnail">
+                            ${thumbnailContent}
+                        </div>
+                        <div class="file-details">
+                            <h3 class="file-name" title="${file.name}">${file.name}</h3>
+                            <div class="file-actions">
+                                <button onclick="previewFile('${file.url}')" class="view-btn" title="Ver">
+                                    <i data-lucide="eye"></i>
+                                </button>
+                                <a href="${file.url}" download="${file.name}" class="download-btn" title="Descargar" target="_blank">
+                                    <i data-lucide="download"></i>
+                                </a>
+                                ${deleteButton}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             if (window.lucide) lucide.createIcons();
 
@@ -445,6 +434,11 @@ document.addEventListener("DOMContentLoaded", () => {
     window.previewFile = (url) => {
         const modal = document.getElementById("preview-modal");
         const content = document.getElementById("modal-preview-content");
+
+        // Reset Animation
+        content.classList.remove("modal-zoom-in");
+        void content.offsetWidth; // Force Reflow
+        content.classList.add("modal-zoom-in");
 
         // Limpiar y agregar botón de cierre
         content.innerHTML = '<span class="close-button" id="modal-close-preview">&times;</span>';

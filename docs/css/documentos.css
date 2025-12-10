@@ -3,51 +3,53 @@
 .documentos-container {
     padding: 2rem;
     min-height: calc(100vh - 100px);
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 /* Header hereda de styles.css */
+/* Removed .header-actions that was here previously as it is no longer used in header */
 
-.header-actions {
+/* Nueva Barra de Herramientas */
+.docs-toolbar {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    height: 100%;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    padding: 1.25rem;
+    background: rgba(30, 30, 45, 0.4);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
 }
 
 .search-box {
     position: relative;
-    width: 250px;
-    height: 42px;
-    transition: width 0.3s ease;
+    flex: 1;
+    max-width: 450px;
+    height: 46px;
     display: flex;
-    /* Ensure alignment */
     align-items: center;
 }
 
 .search-box i {
     position: absolute;
-    left: 12px;
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--color-texto-secundario);
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     z-index: 2;
     pointer-events: none;
-    /* Let clicks pass through to input */
-}
-
-.search-box:focus-within {
-    width: 300px;
-    /* Expandir al escribir */
 }
 
 .search-box input {
     width: 100%;
     height: 100%;
-    padding: 0 1rem 0 2.5rem;
-    /* Left padding for icon */
-    background: var(--color-fondo-secundario);
+    padding: 0 1rem 0 3rem;
+    background: rgba(20, 20, 30, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     color: var(--color-texto-principal);
@@ -55,12 +57,58 @@
     font-size: 0.95rem;
     transition: all 0.3s ease;
     outline: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
 }
 
 .search-box input:focus {
-    border-color: var(--color-acento-primario);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 0 3px rgba(119, 150, 203, 0.15);
+    border-color: rgba(119, 150, 203, 0.5);
+    background: rgba(30, 30, 45, 0.9);
+    box-shadow: 0 0 0 4px rgba(119, 150, 203, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium Upload Button */
+#open-upload-modal-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    padding: 0 1.5rem;
+    height: 46px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    font-family: var(--font-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#open-upload-modal-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+#open-upload-modal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+}
+
+#open-upload-modal-btn:hover::before {
+    left: 100%;
 }
 
 /* Grid de Archivos - Layout Ancho (Restaurado) */
@@ -71,8 +119,8 @@
 
 .files-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    /* Ancho para tarjetas tipo "wide" */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    /* Compact "Dashboard" Style */
     gap: 1.5rem;
 }
 
@@ -106,29 +154,55 @@
     font-family: var(--font-secondary);
 }
 
-/* Tarjeta de Archivo - Estilo Ancho */
+/* Animation Keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-entry {
+    animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    opacity: 0;
+    /* Important: Start hidden */
+}
+
+/* Tarjeta de Archivo - Premium Neon Glass */
 .file-card {
-    background: var(--color-fondo-secundario);
+    background: rgba(20, 20, 30, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     flex-direction: column;
     height: 100%;
     position: relative;
+    transform-style: preserve-3d;
 }
 
 .file-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-    border-color: var(--color-acento-primario);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(119, 150, 203, 0.4);
+    /* Border Glow */
+    border-color: transparent;
+    z-index: 10;
 }
 
 .file-thumbnail {
-    height: 140px;
-    background: rgba(0, 0, 0, 0.2);
+    height: 120px;
+    /* Reduced height for balance */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,16 +262,16 @@
 .file-actions button,
 .file-actions a {
     flex: 1;
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: none;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
     color: var(--color-texto-secundario);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .file-actions button:hover,
@@ -205,6 +279,8 @@
     background: rgba(255, 255, 255, 0.1);
     color: var(--color-texto-principal);
     transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .view-btn:hover {
@@ -317,6 +393,22 @@
     justify-content: center;
 }
 
+@keyframes modalZoomIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-zoom-in {
+    animation: modalZoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
 #modal-preview-content img,
 #modal-preview-content iframe {
     max-width: 100%;
@@ -371,13 +463,20 @@
         align-items: stretch;
     }
 
-    .header-actions {
-        flex-direction: column;
-        width: 100%;
+    .docs-toolbar {
+        flex-direction: column-reverse;
+        gap: 1rem;
+        padding: 1rem;
     }
 
     .search-box {
         width: 100%;
+        max-width: 100%;
+    }
+
+    #open-upload-modal-btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .files-grid {

@@ -17,6 +17,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/gestion_usuarios.css" />
+    <link rel="stylesheet" href="./css/user-profile-header.css" />
+    <script defer src="./js/user-profile-header.js"></script>
     <script defer src="./js/christmas.js"></script>
 </head>
 
@@ -72,6 +74,20 @@
                 <i data-lucide="panel-left"></i>
             </button>
             <h1>Gestión de Cuentas</h1>
+            <!-- Premium User Profile Header -->
+            <div class="user-profile-header">
+                <div class="user-avatar">
+                    <i data-lucide="user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name" id="user-display-name">Usuario</span>
+                    <span class="user-email" id="user-display-email">email@example.com</span>
+                </div>
+                <div class="user-role-badge" id="user-role-badge">
+                    <i data-lucide="shield"></i>
+                    <span id="user-role-text">Usuario</span>
+                </div>
+            </div>
         </header>
 
         <main>

@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="./css/styles.css">
   <!-- Estilo propio para esta vista -->
   <link rel="stylesheet" href="./css/registros.css">
+  <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <script defer src="./js/user-profile-header.js"></script>
   <!-- Librerías -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -68,6 +70,20 @@
         <i data-lucide="panel-left"></i>
       </button>
       <h1>Registros de Inicios de Sesión</h1>
+      <!-- Premium User Profile Header -->
+      <div class="user-profile-header">
+        <div class="user-avatar">
+          <i data-lucide="user"></i>
+        </div>
+        <div class="user-details">
+          <span class="user-name" id="user-display-name">Usuario</span>
+          <span class="user-email" id="user-display-email">email@example.com</span>
+        </div>
+        <div class="user-role-badge" id="user-role-badge">
+          <i data-lucide="shield"></i>
+          <span id="user-role-text">Usuario</span>
+        </div>
+      </div>
     </header>
 
     <main>

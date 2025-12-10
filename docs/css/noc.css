@@ -498,6 +498,69 @@ main {
   transform: translateY(-2px);
 }
 
+/* Alerts and Indicators */
+.warning-icon {
+  display: inline-block;
+  color: #e74c3c;
+  font-size: 1.2em;
+  font-weight: bold;
+  animation: pulse-warning 2s infinite;
+  vertical-align: middle;
+}
+
+@keyframes pulse-warning {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Control Panel Sections */
+.control-section {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.control-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-texto-secundario);
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.control-section-title i,
+.control-section-title svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.danger-zone {
+  background: rgba(231, 76, 60, 0.08);
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+/* Modals */
 /* =========================================
    MODALS
    ========================================= */
@@ -551,6 +614,22 @@ main {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Horarios Modal - Wider and more compact */
+#modalHorarios .modal-horarios-content {
+  max-width: 800px;
+  padding: 1.5rem;
+}
+
+#modalHorarios .tabla-horarios {
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+#modalHorarios .tabla-horarios td,
+#modalHorarios .tabla-horarios th {
+  padding: 0.5rem 0.75rem;
 }
 
 .close,
@@ -752,9 +831,10 @@ main {
 /* Fix for first column width and sticky positioning */
 .calendar th:first-child,
 .calendar td:first-child {
-  width: 120px;
-  min-width: 120px;
-  max-width: 120px;
+  width: 160px;
+  min-width: 160px;
+  max-width: 180px;
+  /* Increased for Warning Icon */
   text-align: left;
   padding-left: 1rem;
   position: sticky;
@@ -763,6 +843,8 @@ main {
   background: rgba(35, 39, 46, 0.95);
   /* Match background color */
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: visible;
+  /* Allow Icon to be seen */
 }
 
 .calendar th:first-child {

@@ -49,7 +49,8 @@ async function loadAllUsers() {
         rolesSnapshot.forEach(doc => {
             const userData = doc.data();
             const uid = doc.id;
-            const lastLogin = null; // Simplificado
+            // Leer lastLogin del documento (puede ser Timestamp o null)
+            const lastLogin = userData.lastLogin?.toDate?.() || null;
 
             allUsersData.push({
                 uid: uid,

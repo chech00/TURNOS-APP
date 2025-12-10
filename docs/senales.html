@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="stylesheet" href="./css/senales-nap-v7.css" />
   <link rel="stylesheet" href="./css/senales.css" />
+  <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <script defer src="./js/user-profile-header.js"></script>
   <!-- Patch removed to avoid conflicts -->
 
   <!-- Librerías externas -->
@@ -38,7 +40,7 @@
     <nav class="sidebar-menu">
       <ul>
         <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
-        <li><a href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li><a href="user.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
         <li><a href="senales.html" id="menu-fibra" class="active"><i data-lucide="waypoints"></i> <span>Señal de
               Fibra</span></a></li>
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
@@ -80,6 +82,20 @@
         <i data-lucide="panel-left"></i>
       </button>
       <h1>Red de Fibra Óptica</h1>
+      <!-- Premium User Profile Header -->
+      <div class="user-profile-header">
+        <div class="user-avatar">
+          <i data-lucide="user"></i>
+        </div>
+        <div class="user-details">
+          <span class="user-name" id="user-display-name">Usuario</span>
+          <span class="user-email" id="user-display-email">email@example.com</span>
+        </div>
+        <div class="user-role-badge" id="user-role-badge">
+          <i data-lucide="shield"></i>
+          <span id="user-role-text">Usuario</span>
+        </div>
+      </div>
     </header>
 
     <main>

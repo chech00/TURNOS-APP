@@ -122,6 +122,11 @@ async function renderTablaEmpleados() {
         const posicion = index + 1;
         const tienePrivilegios = posicion <= 2;
         const nombreSeguro = escapeHtml(emp.nombre); // Sanitizar nombre
+        const tipoTurno = emp.tipoTurno || "diurno"; // Default diurno para migración
+
+        const tipoBadge = tipoTurno === "nocturno"
+            ? '<span class="tipo-badge nocturno"><i data-lucide="moon"></i> Nocturno</span>'
+            : '<span class="tipo-badge diurno"><i data-lucide="sun"></i> Diurno</span>';
 
         return `
       <tr data-index="${index}">
@@ -129,6 +134,7 @@ async function renderTablaEmpleados() {
           <span class="posicion-numero ${tienePrivilegios ? 'privilegiado' : ''}">${posicion}</span>
         </td>
         <td>${nombreSeguro}</td>
+        <td>${tipoBadge}</td>
         <td>
           <span class="privilegios-badge ${tienePrivilegios ? 'activo' : 'inactivo'}">
             ${tienePrivilegios ? '✓ DL + Feriados' : '— Sin privilegios'}
@@ -157,31 +163,51 @@ async function renderTablaEmpleados() {
 function agregarEmpleado() {
     Swal.fire({
         title: "Agregar Empleado",
-        input: "text",
-        inputLabel: "Nombre del empleado",
-        inputPlaceholder: "Ej: Juan Pérez",
+        html: `
+            <div style="text-align: left;">
+                <label style="display:block; margin-bottom: 5px; font-weight: 600;">Nombre del empleado:</label>
+                <input id="swal-input-nombre" class="swal2-input" placeholder="Ej: Juan Pérez" style="width: 100%; margin: 0 0 15px 0;">
+                
+                <label style="display:block; margin-bottom: 5px; font-weight: 600;">Tipo de turno:</label>
+                <select id="swal-input-tipo" class="swal2-select" style="width: 100%; margin: 0;">
+                    <option value="diurno" selected>Diurno (Calendario General)</option>
+                    <option value="nocturno">Nocturno (Calendario Nocturno)</option>
+                </select>
+            </div>
+        `,
         showCancelButton: true,
         confirmButtonText: "Agregar",
         cancelButtonText: "Cancelar",
-        inputValidator: (value) => {
-            if (!value || value.trim() === "") {
-                return "Debes ingresar un nombre";
+        focusConfirm: false,
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-input-nombre').value;
+            const tipoTurno = document.getElementById('swal-input-tipo').value;
+
+            if (!nombre || nombre.trim() === "") {
+                Swal.showValidationMessage('Debes ingresar un nombre');
+                return false;
             }
+
+            return { nombre: nombre.trim(), tipoTurno: tipoTurno };
         }
     }).then(async (result) => {
         if (result.isConfirmed && result.value) {
             Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
 
             const empleados = await cargarEmpleados();
-            empleados.push({ nombre: result.value.trim() });
+            empleados.push({
+                nombre: result.value.nombre,
+                tipoTurno: result.value.tipoTurno
+            });
 
             const success = await guardarEmpleados(empleados);
             if (success) {
                 await renderTablaEmpleados();
+                const tipo = result.value.tipoTurno === "nocturno" ? "nocturno" : "diurno";
                 Swal.fire({
                     icon: "success",
                     title: "Empleado agregado",
-                    text: `${result.value.trim()} ha sido agregado exitosamente.`,
+                    text: `${result.value.nombre} ha sido agregado como empleado ${tipo}.`,
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -196,24 +222,45 @@ async function editarEmpleado(index) {
 
     if (!empleado) return;
 
+    // Asegurar que tenga tipoTurno (migración automática)
+    const tipoActual = empleado.tipoTurno || "diurno";
+
     Swal.fire({
         title: "Editar Empleado",
-        input: "text",
-        inputLabel: "Nombre del empleado",
-        inputValue: empleado.nombre,
+        html: `
+            <div style="text-align: left;">
+                <label style="display:block; margin-bottom: 5px; font-weight: 600;">Nombre del empleado:</label>
+                <input id="swal-input-nombre" class="swal2-input" value="${empleado.nombre}" style="width: 100%; margin: 0 0 15px 0;">
+                
+                <label style="display:block; margin-bottom: 5px; font-weight: 600;">Tipo de turno:</label>
+                <select id="swal-input-tipo" class="swal2-select" style="width: 100%; margin: 0;">
+                    <option value="diurno" ${tipoActual === "diurno" ? "selected" : ""}>Diurno (Calendario General)</option>
+                    <option value="nocturno" ${tipoActual === "nocturno" ? "selected" : ""}>Nocturno (Calendario Nocturno)</option>
+                </select>
+            </div>
+        `,
         showCancelButton: true,
         confirmButtonText: "Guardar",
         cancelButtonText: "Cancelar",
-        inputValidator: (value) => {
-            if (!value || value.trim() === "") {
-                return "Debes ingresar un nombre";
+        focusConfirm: false,
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-input-nombre').value;
+            const tipoTurno = document.getElementById('swal-input-tipo').value;
+
+            if (!nombre || nombre.trim() === "") {
+                Swal.showValidationMessage('Debes ingresar un nombre');
+                return false;
             }
+
+            return { nombre: nombre.trim(), tipoTurno: tipoTurno };
         }
     }).then(async (result) => {
         if (result.isConfirmed && result.value) {
             Swal.fire({ title: 'Actualizando...', didOpen: () => Swal.showLoading() });
 
-            empleados[index].nombre = result.value.trim();
+            empleados[index].nombre = result.value.nombre;
+            empleados[index].tipoTurno = result.value.tipoTurno;
+
             const success = await guardarEmpleados(empleados);
 
             if (success) {

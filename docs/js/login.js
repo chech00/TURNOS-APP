@@ -81,7 +81,10 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
           rol: userRole,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }),
-        db.collection("userRoles").doc(user.uid).update({ lastActivity: now })
+        db.collection("userRoles").doc(user.uid).update({
+          lastActivity: now,
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        })
       ]);
 
       console.log("✅ Log guardado y Session Timer reseteado.");
