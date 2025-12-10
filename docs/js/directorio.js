@@ -2,14 +2,13 @@
 // DIRECTORIO DE EMPLEADOS - Funcionalidad principal
 // ===========================================================================
 
-const DEFAULT_EMPLOYEES = [
-    { nombre: "Sergio Castillo", cargo: "Operador NOC", telefono: "", email: "", telegram: "" },
-    { nombre: "Ignacio Aburto", cargo: "Operador NOC", telefono: "", email: "", telegram: "" },
-    { nombre: "Claudio Bustamante", cargo: "Operador NOC", telefono: "", email: "", telegram: "" },
-    { nombre: "Julio Oliva", cargo: "Operador NOC", telefono: "", email: "", telegram: "" },
-    { nombre: "Gabriel Trujillo", cargo: "Operador NOC", telefono: "", email: "", telegram: "" },
-    { nombre: "Cristian Oyarzo", cargo: "Operador NOC", telefono: "", email: "", telegram: "" }
-];
+const CONFIG = {
+    names: {
+        nightShiftSpecial: "Cristian Oyarzo",
+        holidaySpecial1: "Sergio Castillo",
+        holidaySpecial2: "Ignacio Aburto"
+    }
+};
 
 let allEmployees = [];
 let currentFilter = 'all';
@@ -52,13 +51,18 @@ async function loadEmployees() {
                     employeesList = configDoc.data().lista;
                 }
 
-                // FIX: Merge DEFAULT_EMPLOYEES to ensure no one is missing (e.g., Cristian Oyarzo)
-                DEFAULT_EMPLOYEES.forEach(def => {
-                    if (!employeesList.some(e => e.nombre === def.nombre)) {
-                        console.log(`[DIRECTORIO] Agregando empleado faltante: ${def.nombre}`);
-                        employeesList.push(def);
-                    }
-                });
+
+                // Ensure Night Shift Special Employee (Cristian Oyarzo) is always present
+                if (!employeesList.some(e => e.nombre === CONFIG.names.nightShiftSpecial)) {
+                    console.log(`[DIRECTORIO] Agregando empleado especial faltante: ${CONFIG.names.nightShiftSpecial}`);
+                    employeesList.push({
+                        nombre: CONFIG.names.nightShiftSpecial,
+                        cargo: "Operador NOC (Noche)",
+                        telefono: "",
+                        email: "",
+                        telegram: ""
+                    });
+                }
 
                 const empleadosSnapshot = await window.db.collection("empleados").get();
                 const empleadosMap = {};
@@ -77,7 +81,8 @@ async function loadEmployees() {
         }
 
         if (employeesList.length === 0) {
-            employeesList = DEFAULT_EMPLOYEES;
+            console.warn("[DIRECTORIO] No employees found in database.");
+            // Do NOT fallback to defaults, show empty state instead to avoid confusion
         }
 
         // 2. Load Calendar Data (Centralized)
@@ -195,7 +200,7 @@ function getEmployeeStatus(employeeName, calendarData) {
         let employeeShifts;
 
         // Special handling for Cristian Oyarzo (Nocturno Calendar)
-        if (employeeName === "Cristian Oyarzo") {
+        if (employeeName === CONFIG.names.nightShiftSpecial) {
             employeeShifts = calendarData.nocturno;
         } else {
             employeeShifts = calendarData.assignments[employeeName];
@@ -235,8 +240,8 @@ function getEmployeeStatus(employeeName, calendarData) {
                 let isAssignedHoliday = false;
 
                 // User request: S = Sergio, I = Ignacio
-                if (feriadoShift === 'S' && employeeName === 'Sergio Castillo') isAssignedHoliday = true;
-                if (feriadoShift === 'I' && employeeName === 'Ignacio Aburto') isAssignedHoliday = true;
+                if (feriadoShift === 'S' && employeeName === CONFIG.names.holidaySpecial1) isAssignedHoliday = true;
+                if (feriadoShift === 'I' && employeeName === CONFIG.names.holidaySpecial2) isAssignedHoliday = true;
 
                 if (isAssignedHoliday) {
                     // Holiday night shift logic
@@ -318,9 +323,72 @@ function getEmployeeStatus(employeeName, calendarData) {
             }
         }
 
-        // Implicit Fix: If Cristian Oyarzo is "Empty", he is Free (as per user request: Sat/Sun/Hol/Empty = Free)
-        if (employeeName === "Cristian Oyarzo") {
-            return { status: 'free', shift: 'Descanso' };
+        // FIX: Night Shift Special Logic (Cristian Oyarzo)
+        // He works Mon-Fri 21:00 to 07:00.
+        // He is "Working" if:
+        // 1. It is Mon-Fri AND time is >= 21:00 (Starts shift) - UNLESS it's a holiday
+        // 2. It is Tue-Sat AND time is < 07:00 (Finishing shift from previous day) - UNLESS yesterday was holiday
+        if (employeeName === CONFIG.names.nightShiftSpecial) {
+            const now = new Date();
+            const hour = now.getHours();
+            const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+            // Check if currently working (approximate logic without checking specific "N" assignment per day to be safer/simpler if calendar is missing)
+            // Real logic should rely on calendarData.nocturno ideally, but user description is strict Rule-based.
+            // "Trabaja de lunes a viernes de 21 a 07".
+
+            // Check "Current Shift" (Started today at 21:00)
+            // Must be Mon(1) - Fri(5)
+            // Not a holiday today
+            const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+            const isStartShiftTime = hour >= 21;
+
+            // Check "Ending Shift" (Started yesterday, ending today at 07:00)
+            // If today is Tue(2) - Sat(6), then yesterday was Mon-Fri.
+            const isEndShiftDay = dayOfWeek >= 2 && dayOfWeek <= 6;
+            const isEndShiftTime = hour < 7;
+
+            // Holiday Check
+            let isHolidayToday = false;
+            let isHolidayYesterday = false;
+
+            if (calendarData && calendarData.feriados) {
+                const dString = now.getDate().toString();
+                const dPad = dString.padStart(2, '0');
+                if (calendarData.feriados[dString] || calendarData.feriados[dPad]) isHolidayToday = true;
+
+                // Check yesterday for ending shift
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                const yString = yesterday.getDate().toString();
+                const yPad = yString.padStart(2, '0');
+                if (calendarData.feriados[yString] || calendarData.feriados[yPad]) isHolidayYesterday = true;
+            }
+
+            let status = 'free';
+            let label = 'Libre';
+            let icon = 'coffee';
+
+            // CASE 1: Working NOW (Late night start)
+            if (isWeekday && isStartShiftTime && !isHolidayToday) {
+                status = 'night'; // or 'working'
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            }
+            // CASE 2: Working NOW (Early morning end)
+            else if (isEndShiftDay && isEndShiftTime && !isHolidayYesterday) {
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            }
+            // CASE 3: Upcoming tonight
+            else if (isWeekday && hour >= 19 && hour < 21 && !isHolidayToday) {
+                status = 'upcoming';
+                label = 'Entra 21:00';
+                icon = 'clock';
+            }
+
+            return { status, shift: '21:00 - 07:00', customLabel: label, customIcon: icon };
         }
 
         // Debug: Show keys if shift is empty to see what keys exist
@@ -340,7 +408,7 @@ function getNextVacation(employeeName, calendarData) {
     if (!calendarData) return null;
 
     let shifts;
-    if (employeeName === "Cristian Oyarzo") {
+    if (employeeName === CONFIG.names.nightShiftSpecial) {
         shifts = calendarData.nocturno;
     } else if (calendarData.assignments) {
         shifts = calendarData.assignments[employeeName];
@@ -365,35 +433,7 @@ function getNextVacation(employeeName, calendarData) {
     return null;
 }
 
-// Helper: Find next vacation in CURRENT month
-function getNextVacation(employeeName, calendarData) {
-    if (!calendarData) return null;
 
-    let shifts;
-    if (employeeName === "Cristian Oyarzo") {
-        shifts = calendarData.nocturno;
-    } else if (calendarData.assignments) {
-        shifts = calendarData.assignments[employeeName];
-    }
-
-    if (!shifts) return null;
-
-    const today = new Date();
-    const currentDay = today.getDate();
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-
-    // Look ahead from tomorrow until end of month
-    for (let day = currentDay + 1; day <= daysInMonth; day++) {
-        const dayStr = day.toString();
-        const dayPad = dayStr.padStart(2, '0');
-        const shift = shifts[dayStr] || shifts[dayPad];
-
-        if (shift === 'V') {
-            return `${dayPad}/${(today.getMonth() + 1).toString().padStart(2, '0')}`;
-        }
-    }
-    return null;
-}
 
 // Render employee cards
 function renderEmployees(employees) {
@@ -714,6 +754,11 @@ async function saveEmployeeData(originalName, data) {
         const fb = window.firebase || firebase;
         if (!fb) throw new Error("Firebase SDK no cargado.");
 
+        // CRITICAL: Ensure DB is connected
+        if (!window.db) {
+            throw new Error("No hay conexión con la base de datos (window.db undefined).");
+        }
+
         let photoURL = data.photoPreviewSrc;
 
         // 1. Upload photo if changed (and if file provided)
@@ -724,7 +769,10 @@ async function saveEmployeeData(originalName, data) {
                 try {
                     const storageRef = fb.storage().ref();
                     const safeName = data.nombre.replace(/[^a-zA-Z0-9]/g, '_');
-                    const photoRef = storageRef.child(`empleados/${safeName}_${Date.now()}.jpg`);
+
+                    // FIX: Get original extension (e.g. .png, .jpg)
+                    const fileExt = data.photoFile.name.split('.').pop().toLowerCase() || 'jpg';
+                    const photoRef = storageRef.child(`empleados/${safeName}_${Date.now()}.${fileExt}`);
 
                     await photoRef.put(data.photoFile);
                     photoURL = await photoRef.getDownloadURL();

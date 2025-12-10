@@ -659,27 +659,49 @@
    EXPANDABLE CARDS
    ========================================================================== */
 .employee-card .expand-content {
-    display: none;
-    padding: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    background: rgba(0, 0, 0, 0.1);
-    animation: expandIn 0.3s ease forwards;
-}
-
-.employee-card.expanded .expand-content {
+    /* Base state: Hidden but present for transition */
     display: block;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 16px;
+    margin: 0;
+    border-top: 1px solid transparent;
+    /* Hide border when collapsed */
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Smooth eased transition */
 }
 
-@keyframes expandIn {
-    from {
-        opacity: 0;
-        max-height: 0;
+/* Hover State (Desktop only) */
+@media (hover: hover) {
+    .employee-card:hover .expand-content {
+        max-height: 500px;
+        /* Large enough to fit content */
+        opacity: 1;
+        padding: 16px;
+        border-top-color: rgba(255, 255, 255, 0.1);
     }
 
-    to {
-        opacity: 1;
-        max-height: 200px;
+    /* Rotate chevron on hover too */
+    .employee-card:hover .expand-toggle i {
+        transform: rotate(180deg);
+        stroke: var(--color-texto-principal);
     }
+
+    /* Slight lift boost on hover */
+    .employee-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Click Expanded State (Mobile/Fallback) */
+.employee-card.expanded .expand-content {
+    max-height: 500px;
+    opacity: 1;
+    padding: 16px;
+    border-top-color: rgba(255, 255, 255, 0.1);
 }
 
 .expand-content .detail-row {
@@ -793,11 +815,58 @@
 .employee-card .favorite-star {
     position: absolute;
     top: 10px;
-    left: 38px;
-    font-size: 14px;
-    opacity: 0.3;
-    cursor: pointer;
-    transition: all 0.2s ease;
+
+    /* Live Pulse Animation */
+    @keyframes pulse-live {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+        }
+
+        70% {
+            transform: scale(1.1);
+            opacity: 0.8;
+            box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+        }
+    }
+
+    @keyframes pulse-night {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(103, 58, 183, 0.7);
+        }
+
+        70% {
+            transform: scale(1.1);
+            opacity: 0.8;
+            box-shadow: 0 0 0 6px rgba(103, 58, 183, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(103, 58, 183, 0);
+        }
+    }
+
+    .employee-status.working i {
+        animation: pulse-live 2s infinite;
+        border-radius: 50%;
+        /* Needed for box-shadow pulse to look round */
+    }
+
+    .employee-status.night i {
+        animation: pulse-night 2s infinite;
+        border-radius: 50%;
+    }
 }
 
 .employee-card .favorite-star:hover,

@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join('');
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos (Render Cold Start Safe)
 
         try {
             console.log("Realizando fetch a:", `${API_BASE_URL}/files`);
@@ -350,12 +350,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
             console.error("Error al cargar archivos:", error);
+
+            let errorMsg = "Hubo un problema al conectar con el servidor.";
+            let errorTitle = "Error al cargar archivos";
+
+            // Handle Timeout specifically
+            if (error.name === 'AbortError') {
+                errorTitle = "Servidor Iniciando...";
+                errorMsg = "El servidor está despertando (Cold Start). Por favor, espera unos segundos y reintenta.";
+            } else if (error.message === 'Failed to fetch') {
+                errorTitle = "Error de Conexión / CORS";
+                errorMsg = "No se pudo conectar con el servidor.<br><br>" +
+                    "<b>Si estás en Localhost:</b> Es probable que el servidor (Render) esté bloqueando la conexión por seguridad (CORS).<br>" +
+                    "<b>Si estás en Producción:</b> Verifica tu conexión a internet o el estado del servidor.";
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
             filesGrid.innerHTML = `
                 <div class="empty-state" style="color: var(--color-error);">
-                    <i data-lucide="alert-circle"></i>
-                    <h3>Error al cargar archivos</h3>
-                    <p>${error.message || "Hubo un problema al conectar con el servidor."}</p>
+                    <i data-lucide="server-off"></i>
+                    <h3>${errorTitle}</h3>
+                    <p>${errorMsg}</p>
                     <button onclick="location.reload()" class="primary-btn" style="margin-top: 1rem;">Reintentar</button>
+                    <small style="display:block; margin-top:10px; opacity:0.7;">(Render Free Tier puede tardar hasta 60s en despertar)</small>
                 </div>
             `;
             if (window.lucide) lucide.createIcons();

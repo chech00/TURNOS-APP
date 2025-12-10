@@ -59,7 +59,9 @@ const ALLOWED_ORIGINS = [
   'https://asignacionturnos-cc578.firebaseapp.com',
   'http://localhost:3000',
   'http://localhost:5000',
-  'http://127.0.0.1:5000'
+  'http://127.0.0.1:5000',
+  'http://127.0.0.1:5500', // Live Server Default
+  'http://localhost:5500' // Live Server Alternative
 ];
 
 const corsOptions = {
