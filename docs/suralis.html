@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificaciones Suralis</title>
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/suralis.css">
+    <link rel="stylesheet" href="./css/user-profile-header.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.7/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.7/dist/sweetalert2.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script type="module" src="./js/firebase.js"></script>
+    <script type="module" src="./js/script.js"></script>
+    <script type="module" src="./js/suralis.js"></script>
+    <script defer src="./js/user-profile-header.js"></script>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo" class="logo-sidebar" />
+        </div>
+        <nav class="sidebar-menu">
+            <ul>
+                <li><a href="directorio.html"><i data-lucide="users"></i><span>Directorio</span></a></li>
+                <li id="li-turnos" class="admin-only" style="display:none;"><a href="index.html"><i
+                            data-lucide="calendar"></i><span>Turnos</span></a></li>
+                <li><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de Fibra</span></a></li>
+                <li><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos Noc</span></a></li>
+                <li><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos Noc</span></a></li>
+                <li><a href="suralis.html" class="active"><i data-lucide="send"></i><span>Notificaciones</span></a></li>
+                <li id="li-empleados" class="admin-only"><a href="gestion_empleados.html"><i
+                            data-lucide="user-cog"></i><span>Gestionar Empleados</span></a></li>
+                <li id="li-usuarios" class="superadmin-only"><a href="gestion_usuarios.html"><i
+                            data-lucide="shield-check"></i><span>Cuentas de Sistema</span></a></li>
+                <li id="li-animaciones" class="superadmin-only"><a href="animaciones.html"><i
+                            data-lucide="sparkles"></i><span>Animaciones</span></a></li>
+                <li id="li-registros" style="display:none;"><a href="registros.html"><i
+                            data-lucide="file-text"></i><span>Registros</span></a></li>
+            </ul>
+        </nav>
+        <button id="logout-btn" class="primary-btn logout-btn">
+            <i data-lucide="log-out"></i> <span>Cerrar sesión</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="main-content">
+        <header>
+            <button id="menu-toggle" class="menu-btn"><i data-lucide="panel-left"></i></button>
+            <h1>Notificaciones Suralis</h1>
+            <!-- Premium User Profile Header -->
+            <div class="user-profile-header">
+                <div class="user-avatar">
+                    <i data-lucide="user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name" id="user-display-name">Usuario</span>
+                    <span class="user-email" id="user-display-email">email@example.com</span>
+                </div>
+                <div class="user-role-badge" id="user-role-badge">
+                    <i data-lucide="shield"></i>
+                    <span id="user-role-text">Usuario</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="suralis-main">
+
+            <!-- ========== STEP 1: SELECT SERVICES ========== -->
+            <section class="step-section" id="step-select">
+                <div class="step-header">
+                    <span class="step-badge">1</span>
+                    <h2>Selecciona los servicios afectados</h2>
+                </div>
+
+                <!-- Selected Services Summary -->
+                <div class="selected-summary" id="selectedSummary">
+                    <span class="summary-placeholder">Ningún servicio seleccionado</span>
+                </div>
+
+                <!-- Collapsible Categories -->
+                <div class="categories-container" id="categoriesContainer">
+                    <!-- JS Populated -->
+                </div>
+
+                <!-- Admin: Populate Data -->
+                <div class="superadmin-only" style="margin-top:1rem;text-align:center;">
+                    <button id="forcePopulateBtn"
+                        style="padding:0.5rem 1rem;background:rgba(232,194,126,0.15);border:1px solid rgba(232,194,126,0.3);color:var(--color-advertencia);border-radius:8px;font-size:0.85rem;cursor:pointer;">
+                        <i class="fas fa-database"></i> Cargar/Reiniciar servicios en Firestore
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========== STEP 2: PREVIEW EMAIL ========== -->
+            <section class="step-section" id="step-preview">
+                <div class="step-header">
+                    <span class="step-badge">2</span>
+                    <h2>Revisa el contenido del correo</h2>
+                </div>
+
+                <!-- Preview Tabs -->
+                <div class="preview-tabs">
+                    <button class="preview-tab active" data-target="previewCaida">
+                        <i class="fas fa-exclamation-triangle"></i> Reporte de Caída
+                    </button>
+                    <button class="preview-tab" data-target="previewOnline">
+                        <i class="fas fa-check-circle"></i> Reporte de Normalización
+                    </button>
+                </div>
+
+                <!-- Preview Panels -->
+                <div class="preview-panel active" id="previewCaida">
+                    <div class="email-container">
+                        <div class="email-header-fields">
+                            <div class="email-field recipients-field">
+                                <span class="field-label">Para:</span>
+                                <span class="field-value" id="recipientsDisplayCaida">Cargando destinatarios...</span>
+                                <button class="manage-recipients-btn superadmin-only" id="manageRecipientsBtn"
+                                    title="Gestionar destinatarios">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </div>
+                            <div class="email-field">
+                                <span class="field-label">Asunto:</span>
+                                <span class="field-value field-subject-caida"><i class="fas fa-exclamation-circle"></i>
+                                    Caída de Enlaces - Suralis</span>
+                            </div>
+                        </div>
+                        <div class="email-body" id="emailContentDiv" contenteditable="true"></div>
+                    </div>
+                </div>
+
+                <div class="preview-panel" id="previewOnline">
+                    <div class="email-container">
+                        <div class="email-header-fields">
+                            <div class="email-field recipients-field">
+                                <span class="field-label">Para:</span>
+                                <span class="field-value" id="recipientsDisplayOnline">Cargando destinatarios...</span>
+                            </div>
+                            <div class="email-field">
+                                <span class="field-label">Asunto:</span>
+                                <span class="field-value field-subject-online"><i class="fas fa-check-circle"></i>
+                                    Enlaces Normalizados - Suralis</span>
+                            </div>
+                        </div>
+                        <div class="email-body" id="onlineContentDiv" contenteditable="true"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== STEP 3: SIGNATURE & SEND ========== -->
+            <section class="step-section" id="step-signature">
+                <div class="step-header">
+                    <span class="step-badge">3</span>
+                    <h2>Confirma y envía</h2>
+                </div>
+
+                <!-- Hidden signature data (used by JS) -->
+                <div id="signaturesData" style="display: none;">
+                    <span data-email="sergio.castillo@patagoniaip.cl" data-url="https://i.ibb.co/0jPKWLSF/sergio.png"
+                        data-name="Sergio"></span>
+                    <span data-email="sergio.cb87@gmail.com" data-url="https://i.ibb.co/0jPKWLSF/sergio.png"
+                        data-name="Sergio"></span>
+                    <span data-email="ignacio.aburto@patagoniaip.cl" data-url="https://i.ibb.co/FbmzkH2C/IGNACIO.png"
+                        data-name="Ignacio"></span>
+                    <span data-email="cristian.oyarzo@patagoniaip.cl"
+                        data-url="https://i.ibb.co/s9x6H3nV/Whats-App-Image-2025-12-01-at-9-10-14-PM.png"
+                        data-name="Cristian"></span>
+                    <span data-email="claudio.bustamente@patagoniaip.cl"
+                        data-url="https://i.ibb.co/Z162xtMT/CLAUDIO.png" data-name="Claudio"></span>
+                    <span data-email="carolina.gonzalez@patagoniaip.cl"
+                        data-url="https://i.ibb.co/JRcQK4zg/CAROLINA.png" data-name="Carolina"></span>
+                    <span data-email="gabriel.trujillo@patagoniaip.cl" data-url="https://i.ibb.co/LDMbsCjF/gabriel.png"
+                        data-name="Gabriel"></span>
+                    <span data-email="joliva@patagoniaip.cl" data-url="https://i.ibb.co/nqJBBGvG/JULIO.png"
+                        data-name="Julio"></span>
+                </div>
+
+                <!-- Current Report Type Indicator -->
+                <div class="report-type-indicator" id="reportTypeIndicator">
+                    <div class="indicator-content indicator-caida" id="indicatorCaida">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Modo: <strong>Reporte de Caída</strong></span>
+                    </div>
+                    <div class="indicator-content indicator-online" id="indicatorOnline" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Modo: <strong>Reporte de Normalización</strong></span>
+                    </div>
+                </div>
+
+                <div class="send-buttons-row">
+                    <button class="send-btn send-btn-danger" id="enviarReporteButton">
+                        <i class="fas fa-paper-plane"></i> <span id="sendButtonText">Enviar Reporte de Caída</span>
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <!-- Modal: Add New Service -->
+    <div id="addServiceModal" class="suralis-modal">
+        <div class="suralis-modal-content">
+            <div class="suralis-modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Agregar Servicio</h3>
+                <button class="modal-close-btn" id="closeAddServiceModal">&times;</button>
+            </div>
+            <div class="suralis-modal-body">
+                <p class="modal-category-label">Categoría: <strong id="modalCategoryName"></strong></p>
+                <input type="text" id="newServiceName" placeholder="Nombre del servicio (ej: Nodo Nuevo - Enlace 5)"
+                    autocomplete="off">
+            </div>
+            <div class="suralis-modal-footer">
+                <button class="modal-cancel-btn" id="cancelAddService">Cancelar</button>
+                <button class="modal-save-btn" id="saveNewService"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Manage Recipients (Superadmin Only) -->
+    <div id="recipientsModal" class="suralis-modal">
+        <div class="suralis-modal-content recipients-modal-content">
+            <div class="suralis-modal-header">
+                <h3><i class="fas fa-envelope"></i> Gestionar Destinatarios</h3>
+                <button class="modal-close-btn" id="closeRecipientsModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="suralis-modal-body">
+                <p class="modal-info">Estos correos recibirán todas las notificaciones de Suralis.</p>
+
+                <div class="recipients-list" id="recipientsList">
+                    <!-- Recipients will be rendered here -->
+                </div>
+
+                <div class="add-recipient-form">
+                    <input type="email" id="newRecipientEmail" class="recipient-input"
+                        placeholder="Agregar correo (ej: nombre@empresa.cl)">
+                    <button class="add-recipient-btn" id="addRecipientBtn"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+            <div class="suralis-modal-footer">
+                <button class="modal-cancel-btn" id="cancelRecipients">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) window.lucide.createIcons();
+
+            // Tab Switching Logic with Send Button Update
+            const tabs = document.querySelectorAll('.preview-tab');
+            const panels = document.querySelectorAll('.preview-panel');
+            const sendBtn = document.getElementById('enviarReporteButton');
+            const sendBtnText = document.getElementById('sendButtonText');
+            const indicatorCaida = document.getElementById('indicatorCaida');
+            const indicatorOnline = document.getElementById('indicatorOnline');
+
+            // Track current mode
+            window.currentReportMode = 'caida'; // Default
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.target).classList.add('active');
+
+                    // Update send button and indicator based on active tab
+                    if (tab.dataset.target === 'previewCaida') {
+                        window.currentReportMode = 'caida';
+                        sendBtn.classList.remove('send-btn-success');
+                        sendBtn.classList.add('send-btn-danger');
+                        sendBtnText.textContent = 'Enviar Reporte de Caída';
+                        indicatorCaida.style.display = 'flex';
+                        indicatorOnline.style.display = 'none';
+                    } else {
+                        window.currentReportMode = 'online';
+                        sendBtn.classList.remove('send-btn-danger');
+                        sendBtn.classList.add('send-btn-success');
+                        sendBtnText.textContent = 'Enviar Reporte de Normalización';
+                        indicatorCaida.style.display = 'none';
+                        indicatorOnline.style.display = 'flex';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

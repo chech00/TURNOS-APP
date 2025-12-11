@@ -31,11 +31,14 @@
     </div>
     <nav class="sidebar-menu">
       <ul>
+
         <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
-        <li><a href="index.html"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li id="li-turnos" class="admin-only" style="display:none;"><a href="index.html"><i data-lucide="calendar"></i>
+            <span>Turnos</span></a></li>
         <li><a href="senales.html"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
         <li><a href="documentos.html"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
         <li><a href="noc.html"><i data-lucide="calendar-check"></i> <span>Turnos Noc</span></a></li>
+        <li><a href="suralis.html"><i data-lucide="send"></i><span>Notificaciones</span></a></li>
         <li id="li-empleados" class="admin-only">
           <a href="gestion_empleados.html">
             <i data-lucide="user-cog"></i>
@@ -89,14 +92,39 @@
     <main>
       <section class="registros-container glass-container">
         <div class="table-header">
-          <h2>Historial de Accesos</h2>
-          <div class="table-actions">
-            <button id="btnDownloadBackup" class="btn-action btn-backup admin-only" title="Descargar Backup Completo">
-              <i data-lucide="download-cloud"></i> <span>Backup</span>
+          <h2><i data-lucide="shield-alert"></i> Historial de Accesos</h2>
+          <div class="header-actions">
+            <button id="btnDownloadBackup" class="btn-action btn-backup admin-only" title="Descargar Reporte">
+              <i data-lucide="download-cloud"></i> <span>Exportar</span>
             </button>
             <button id="btnCleanLogs" class="btn-action btn-cleanup admin-only" title="Limpiar Logs Antiguos">
-              <i data-lucide="archive"></i> <span>Limpiar Logs</span>
+              <i data-lucide="trash-2"></i>
             </button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filters-container glass-panel">
+          <div class="filter-group">
+            <label for="filter-date-start">Desde:</label>
+            <input type="date" id="filter-date-start" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="filter-date-end">Hasta:</label>
+            <input type="date" id="filter-date-end" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="filter-role">Rol:</label>
+            <select id="filter-role" class="filter-select">
+              <option value="all">Todos</option>
+              <option value="superadmin">Super Admin</option>
+              <option value="admin">Admin</option>
+              <option value="user">Usuario</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button id="btn-apply-filters" class="primary-btn small-btn"><i data-lucide="filter"></i> Filtrar</button>
+            <button id="btn-reset-filters" class="secondary-btn small-btn"><i data-lucide="x"></i></button>
           </div>
         </div>
 
@@ -106,6 +134,7 @@
               <tr>
                 <th><i data-lucide="mail"></i> Email</th>
                 <th><i data-lucide="shield"></i> Rol</th>
+                <th><i data-lucide="key-round"></i> Método</th>
                 <th><i data-lucide="clock"></i> Fecha/Hora</th>
               </tr>
             </thead>

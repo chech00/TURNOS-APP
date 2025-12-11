@@ -56,9 +56,12 @@
     line-height: 1;
 }
 
-/* EMAIL - HIDDEN */
+/* EMAIL - VISIBLE */
 .user-email {
-    display: none !important;
+    font-size: 0.7rem;
+    color: var(--color-texto-secundario, #a1a9b5);
+    line-height: 1.2;
+    margin-top: 2px;
 }
 
 /* ROLE BADGE - Minimized text */

@@ -1,5 +1,12 @@
 "use strict";
 
+import { auth, db } from "./firebase.js";
+import { FERIADOS_DEFAULT } from "./modules/logic/holidayLogic.js";
+
+// Verify imports
+// console.log("NOC Module Loaded. Feriados Default Count:", FERIADOS_DEFAULT.length);
+
+
 // import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const supabaseUrl = "https://jmrzvajipfdqvzilqjvq.supabase.co";
@@ -13,37 +20,33 @@ try {
 }
 */
 
-// Auth and DB - will be populated after Firebase loads
-let auth = window.auth;
-let db = window.db;
-
 // Delayed Firebase check - wait up to 5 seconds before showing error
 let firebaseCheckAttempts = 0;
 const maxFirebaseAttempts = 50; // 50 * 100ms = 5 seconds
 
 function checkFirebaseAvailability() {
   firebaseCheckAttempts++;
-  auth = window.auth;
-  db = window.db;
+  // auth and db are imported from module, so they should be ready if firebase.js ran.
+  // But firebase.js initializes them synchronously.
 
   if (auth && db) {
-    console.log("[NOC] Firebase disponible después de", firebaseCheckAttempts, "intentos");
-    return; // Firebase ready, no error needed
+    console.log("[NOC] Firebase disponible (Module Import).");
+    return;
   }
 
   if (firebaseCheckAttempts < maxFirebaseAttempts) {
     setTimeout(checkFirebaseAvailability, 100);
   } else {
-    // Only show error after all attempts exhausted
     console.error("Firebase auth/db not initialized after timeout.");
     Swal.fire({
       icon: "error",
       title: "Error de Carga",
-      text: "No se pudo conectar con el sistema de autenticación. Por favor, deshabilita extensiones de privacidad/bloqueo de anuncios y recarga la página.",
+      text: "No se pudo conectar con el sistema de autenticación.",
       footer: "Detalle técnico: Firebase no inicializado."
     });
   }
 }
+
 
 // Start checking after DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
@@ -62,60 +65,8 @@ let feriadosChile = [];
 let feriadosInfo = {};
 
 // Feriados por defecto para inicialización (Backup)
-const FERIADOS_DEFAULT = [
-  { fecha: "2025-01-01", nombre: "Año Nuevo" },
-  { fecha: "2025-04-18", nombre: "Viernes Santo" },
-  { fecha: "2025-04-19", nombre: "Sábado Santo" },
-  { fecha: "2025-05-01", nombre: "Día del Trabajador" },
-  { fecha: "2025-05-21", nombre: "Glorias Navales" },
-  { fecha: "2025-06-20", nombre: "Dia Nacional de los Pueblos Indigenas" },
-  { fecha: "2025-06-29", nombre: "San Pedro y San Pablo" },
-  { fecha: "2025-07-16", nombre: "Virgen del Carmen" },
-  { fecha: "2025-08-15", nombre: "Asunción de la Virgen" },
-  { fecha: "2025-09-18", nombre: "Fiestas Patrias" },
-  { fecha: "2025-09-19", nombre: "Glorias del Ejército" },
-  { fecha: "2025-10-12", nombre: "Encuentro de Dos Mundos" },
-  { fecha: "2025-10-31", nombre: "Día Iglesias Evangélicas" },
-  { fecha: "2025-11-01", nombre: "Día de Todos los Santos" },
-  { fecha: "2025-11-16", nombre: "Elecciones Presidenciales y Parlamentarias Irrenunciable" },
-  { fecha: "2025-12-08", nombre: "Inmaculada Concepción" },
-  { fecha: "2025-12-14", nombre: "Elecciones Presidenciales (Segunda Vuelta) Irrenunciable" },
-  { fecha: "2025-12-25", nombre: "Navidad" },
-  // 2026
-  { fecha: "2026-01-01", nombre: "Año Nuevo" },
-  { fecha: "2026-04-03", nombre: "Viernes Santo" },
-  { fecha: "2026-04-04", nombre: "Sábado Santo" },
-  { fecha: "2026-05-01", nombre: "Día del Trabajador" },
-  { fecha: "2026-05-21", nombre: "Glorias Navales" },
-  { fecha: "2026-06-20", nombre: "Día Nacional de los Pueblos Indígenas" },
-  { fecha: "2026-06-29", nombre: "San Pedro y San Pablo" },
-  { fecha: "2026-07-16", nombre: "Virgen del Carmen" },
-  { fecha: "2026-08-15", nombre: "Asunción de la Virgen" },
-  { fecha: "2026-09-18", nombre: "Fiestas Patrias" },
-  { fecha: "2026-09-19", nombre: "Glorias del Ejército" },
-  { fecha: "2026-10-12", nombre: "Encuentro de Dos Mundos" },
-  { fecha: "2026-10-31", nombre: "Día Iglesias Evangélicas" },
-  { fecha: "2026-11-01", nombre: "Día de Todos los Santos" },
-  { fecha: "2026-12-08", nombre: "Inmaculada Concepción" },
-  { fecha: "2026-12-25", nombre: "Navidad" },
-  // 2027
-  { fecha: "2027-01-01", nombre: "Año Nuevo" },
-  { fecha: "2027-03-26", nombre: "Viernes Santo" },
-  { fecha: "2027-03-27", nombre: "Sábado Santo" },
-  { fecha: "2027-05-01", nombre: "Día del Trabajador" },
-  { fecha: "2027-05-21", nombre: "Glorias Navales" },
-  { fecha: "2027-06-20", nombre: "Día Nacional de los Pueblos Indígenas" },
-  { fecha: "2027-06-29", nombre: "San Pedro y San Pablo" },
-  { fecha: "2027-07-16", nombre: "Virgen del Carmen" },
-  { fecha: "2027-08-15", nombre: "Asunción de la Virgen" },
-  { fecha: "2027-09-18", nombre: "Fiestas Patrias" },
-  { fecha: "2027-09-19", nombre: "Glorias del Ejército" },
-  { fecha: "2027-10-12", nombre: "Encuentro de Dos Mundos" },
-  { fecha: "2027-10-31", nombre: "Día Iglesias Evangélicas" },
-  { fecha: "2027-11-01", nombre: "Día de Todos los Santos" },
-  { fecha: "2027-12-08", nombre: "Inmaculada Concepción" },
-  { fecha: "2027-12-25", nombre: "Navidad" }
-];
+// FERIADOS_DEFAULT is imported from holidayLogic.js
+
 
 async function cargarFeriados() {
   try {
@@ -191,13 +142,9 @@ const DEFAULT_EMPLOYEES_NAMES = [
 ];
 
 async function cargarEmpleadosDeFirestore() {
-  // Critical Fix: Wait for DB if not ready
   if (!db) {
-    if (window.db) db = window.db; // Try to grab from global
-    else {
-      console.warn("[NOC] DB no lista al cargar empleados. Se reintentará en el ciclo de sincronización.");
-      return []; // Return empty, will be retired by main sync loop
-    }
+    console.warn("[NOC] DB no lista al cargar empleados. Se reintentará.");
+    return [];
   }
 
   let loadedList = [];

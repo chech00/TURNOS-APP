@@ -29,6 +29,13 @@
   /* Default opacity */
 }
 
+/* Role-based visibility utilities */
+.admin-only,
+.superadmin-only {
+  display: none;
+  /* Hidden by default, toggled by JS */
+}
+
 
 
 .error-message {

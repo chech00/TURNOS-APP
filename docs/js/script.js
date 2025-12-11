@@ -1,6 +1,10 @@
-// Auth and DB - will be populated when Firebase loads
-let auth = window.auth;
-let db = window.db;
+import { auth, db } from "./firebase.js";
+import { formatDate, calcularPascua, obtenerFeriadosMoviles, obtenerSemanaActual } from "./modules/utils/dateUtils.js";
+import { generarListaFeriados } from "./modules/logic/holidayLogic.js";
+
+// Global vars are still needed if other scripts rely on them, but we use imported auth/db primarily
+// window.auth/db are set by firebase.js
+
 
 window.onerror = function (msg, url, line, col, error) {
   console.error("Global Error:", msg, "Line:", line, "Error:", error);
@@ -17,23 +21,9 @@ window.onerror = function (msg, url, line, col, error) {
 };
 
 // Wait for Firebase to be ready
-function waitForFirebaseScript(callback, maxAttempts = 50, interval = 100) {
-  let attempts = 0;
-  const check = () => {
-    attempts++;
-    auth = window.auth;
-    db = window.db;
-    if (db && auth) {
-      console.log("[SCRIPT] Firebase ready after", attempts, "attempts");
-      callback();
-    } else if (attempts < maxAttempts) {
-      setTimeout(check, interval);
-    } else {
-      console.error("[SCRIPT] Firebase not available after timeout");
-    }
-  };
-  check();
-}
+// WaitForFirebase function removed as we import them directly and they should be ready or promises
+// If we strictly need to wait for auth state, we use onAuthStateChanged.
+
 
 
 // ----------------------
@@ -60,42 +50,8 @@ let asignacionesManual = {};
 // ----------------------
 // 3) FUNCIONES DE FERIADOS
 // ----------------------
-function calcularPascua(year) {
-  let a = year % 19;
-  let b = Math.floor(year / 100);
-  let c = year % 100;
-  let d = Math.floor(b / 4);
-  let e = b % 4;
-  let f = Math.floor((b + 8) / 25);
-  let g = Math.floor((b - f + 1) / 3);
-  let h = (19 * a + b - d - g + 15) % 30;
-  let i = Math.floor(c / 4);
-  let k = c % 4;
-  let l = (32 + 2 * e + 2 * i - h - k) % 7;
-  let m = Math.floor((a + 11 * h + 22 * l) / 451);
-  let month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
-  let day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(year, month, day);
-}
+// Date functions imported from dateUtils.js
 
-function obtenerFeriadosMoviles(year) {
-  const pascua = calcularPascua(year);
-  const viernesSanto = new Date(pascua);
-  viernesSanto.setDate(pascua.getDate() - 2);
-  const sabadoSanto = new Date(pascua);
-  sabadoSanto.setDate(pascua.getDate() - 1);
-  return [
-    { fecha: formatDate(viernesSanto), nombre: "Viernes Santo" },
-    { fecha: formatDate(sabadoSanto), nombre: "Sábado Santo" }
-  ];
-}
-
-function formatDate(date) {
-  const year = date.getFullYear();
-  const month = (`0${date.getMonth() + 1}`).slice(-2);
-  const day = (`0${date.getDate()}`).slice(-2);
-  return `${year}-${month}-${day}`;
-}
 
 let feriadosCache = null;
 
@@ -128,63 +84,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Optimistic Loading: Sidebar
   const cachedRole = localStorage.getItem("userRole");
+
+  // PROTECCIÓN DE RUTA: Si estamos en index.html y NO es admin/super, redirigir
+  if (window.location.pathname.endsWith("index.html") || window.location.pathname === "/") {
+    if (cachedRole && cachedRole !== "admin" && cachedRole !== "superadmin") {
+      window.location.href = "directorio.html";
+    }
+  }
+
   if (cachedRole === "superadmin") {
     const liRegistros = document.getElementById("li-registros");
     const liUsuarios = document.getElementById("li-usuarios");
+    const liAnimaciones = document.getElementById("li-animaciones");
+    const liTurnos = document.getElementById("li-turnos");
+
     if (liRegistros) liRegistros.style.display = "block";
     if (liUsuarios) liUsuarios.style.display = "block";
+    if (liAnimaciones) liAnimaciones.style.display = "block";
+    if (liTurnos) liTurnos.style.display = "block";
+
     document.body.classList.add("is-admin");
   } else if (cachedRole === "admin") {
+    const liTurnos = document.getElementById("li-turnos");
+    if (liTurnos) liTurnos.style.display = "block";
     document.body.classList.add("is-admin");
   }
 });
 
+// Use modular function
 function generarFeriados(year) {
-  let feriadosFijos = [];
-
-  if (feriadosCache) {
-    feriadosFijos = feriadosCache;
-  } else {
-    // Fallback hardcoded si no ha cargado aún
-    feriadosFijos = [
-      { "fecha": "2025-01-01", "nombre": "Año Nuevo (irrenunciable)" },
-      { "fecha": "2025-04-18", "nombre": "Viernes Santo" },
-      { "fecha": "2025-04-19", "nombre": "Sábado Santo" },
-      { "fecha": "2025-05-01", "nombre": "Día Nacional del Trabajo (irrenunciable)" },
-      { "fecha": "2025-05-21", "nombre": "Día de las Glorias Navales" },
-      { "fecha": "2025-06-20", "nombre": "Día Nacional de los Pueblos Indígenas" },
-      { "fecha": "2025-06-29", "nombre": "San Pedro y San Pablo" },
-      { "fecha": "2025-07-16", "nombre": "Día de la Virgen del Carmen" },
-      { "fecha": "2025-08-15", "nombre": "Asunción de la Virgen" },
-      { "fecha": "2025-09-18", "nombre": "Independencia Nacional (irrenunciable)" },
-      { "fecha": "2025-09-19", "nombre": "Día de las Glorias del Ejército (irrenunciable)" },
-      { "fecha": "2025-10-12", "nombre": "Encuentro de Dos Mundos" },
-      { "fecha": "2025-10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes" },
-      { "fecha": "2025-11-01", "nombre": "Día de Todos los Santos" },
-      { "fecha": "2025-12-08", "nombre": "Inmaculada Concepción" },
-      { "fecha": "2025-12-25", "nombre": "Navidad (irrenunciable)" },
-      // 2026
-      { "fecha": "2026-01-01", "nombre": "Año Nuevo (irrenunciable)" },
-      { "fecha": "2026-04-03", "nombre": "Viernes Santo" },
-      { "fecha": "2026-04-04", "nombre": "Sábado Santo" },
-      { "fecha": "2026-05-01", "nombre": "Día Nacional del Trabajo (irrenunciable)" },
-      { "fecha": "2026-05-21", "nombre": "Día de las Glorias Navales" },
-      { "fecha": "2026-06-20", "nombre": "Día Nacional de los Pueblos Indígenas" },
-      { "fecha": "2026-06-29", "nombre": "San Pedro y San Pablo" },
-      { "fecha": "2026-07-16", "nombre": "Día de la Virgen del Carmen" },
-      { "fecha": "2026-08-15", "nombre": "Asunción de la Virgen" },
-      { "fecha": "2026-09-18", "nombre": "Independencia Nacional (irrenunciable)" },
-      { "fecha": "2026-09-19", "nombre": "Día de las Glorias del Ejército (irrenunciable)" },
-      { "fecha": "2026-10-12", "nombre": "Encuentro de Dos Mundos" },
-      { "fecha": "2026-10-31", "nombre": "Día de las Iglesias Evangélicas y Protestantes" },
-      { "fecha": "2026-11-01", "nombre": "Día de Todos los Santos" },
-      { "fecha": "2026-12-08", "nombre": "Inmaculada Concepción" },
-      { "fecha": "2026-12-25", "nombre": "Navidad (irrenunciable)" }
-    ];
-  }
-
-  const feriadosMoviles = obtenerFeriadosMoviles(year);
-  return [...feriadosFijos, ...feriadosMoviles];
+  return generarListaFeriados(year, feriadosCache);
 }
 
 // ----------------------
@@ -651,15 +580,8 @@ function generarVistaLineal() {
 // ----------------------
 // 10) SEMANA ACTUAL / RESALTAR
 // ----------------------
-function obtenerSemanaActual() {
-  const hoy = new Date();
-  const mes = hoy.getMonth();
-  const año = hoy.getFullYear();
-  const primerDiaDelMes = new Date(año, mes, 1);
-  const diaSemanaPrimerDia = primerDiaDelMes.getDay() === 0 ? 7 : primerDiaDelMes.getDay();
-  const diaDelMes = hoy.getDate();
-  return Math.floor((diaDelMes + diaSemanaPrimerDia - 2) / 7);
-}
+// obtenerSemanaActual imported from dateUtils
+
 
 function resaltarSemanaActual() {
   const externalArrow = document.getElementById("external-arrow");

@@ -34,31 +34,38 @@ function verificarRolUsuario() {
         const userData = userDoc.data();
         const userRole = userData.rol;
 
-        // Si es admin, redirigir a index.html
-        if (userRole === "admin" || userRole === "superadmin") {
-          window.location.href = "index.html";
-        } else {
-          // Usuario normal - actualizar header de perfil
-          const nameElement = document.getElementById('user-display-name');
-          const emailElement = document.getElementById('user-display-email');
-          const roleBadge = document.getElementById('user-role-badge');
-          const roleText = document.getElementById('user-role-text');
+        // Si NO es admin/superadmin, redirigir a directorio
+        // El usuario quiere que "Turnos" sea solo para admins
+        if (userRole !== "admin" && userRole !== "superadmin") {
+          console.warn("Acceso denegado a Turnos: Redirigiendo a directorio.");
+          window.location.href = "directorio.html";
+          return;
+        }
 
-          if (nameElement && emailElement && roleBadge && roleText) {
-            const displayName = user.displayName || user.email.split('@')[0];
-            nameElement.textContent = displayName;
-            emailElement.textContent = user.email;
+        // Si es admin, mostrar la vista
+        // (Antes redirigía a index, pero ahora user.html es la vista restringida también)
+        // O tal vez index.html es la vista de turnos principal?
+        // Si el usuario dijo "vista de turnos", y el link lleva a user.html o index.html...
+        // Protegemos esta vista por si acaso.
 
-            roleText.textContent = 'Usuario';
-            roleBadge.className = 'user-role-badge';
+        // Actualizar header de perfil aunque sea admin
+        const nameElement = document.getElementById('user-display-name');
+        const emailElement = document.getElementById('user-display-email');
+        const roleBadge = document.getElementById('user-role-badge');
+        const roleText = document.getElementById('user-role-text');
 
-            const roleIcon = roleBadge.querySelector('i');
-            if (roleIcon) {
-              roleIcon.setAttribute('data-lucide', 'user');
-              if (window.lucide) window.lucide.createIcons();
-            }
+        if (nameElement && emailElement && roleBadge && roleText) {
+          const displayName = user.displayName || user.email.split('@')[0];
+          nameElement.textContent = displayName;
+          emailElement.textContent = user.email;
 
-            console.log('✅ User profile updated (user view):', displayName);
+          roleText.textContent = userRole.toUpperCase();
+          roleBadge.className = 'user-role-badge ' + userRole; // Adds color
+
+          const roleIcon = roleBadge.querySelector('i');
+          if (roleIcon) {
+            roleIcon.setAttribute('data-lucide', 'shield');
+            if (window.lucide) window.lucide.createIcons();
           }
         }
       }

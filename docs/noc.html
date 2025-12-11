@@ -34,12 +34,15 @@
     </div>
     <nav class="sidebar-menu">
       <ul>
+
         <li><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i> <span>Directorio</span></a></li>
-        <li><a href="user.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li id="li-turnos" class="admin-only"><a href="user.html" id="menu-turnos"><i data-lucide="calendar"></i>
+            <span>Turnos</span></a></li>
         <li><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i> <span>Señal de Fibra</span></a></li>
         <li><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i> <span>Documentos Noc</span></a></li>
         <li><a href="noc.html" id="calendar-check" class="active"><i data-lucide="calendar-check"></i> <span>Turnos
               Noc</span></a></li>
+        <li><a href="suralis.html"><i data-lucide="send"></i><span>Notificaciones</span></a></li>
         <li id="li-empleados" class="admin-only">
           <a href="gestion_empleados.html">
             <i data-lucide="user-cog"></i>
@@ -429,7 +432,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
   <script type="module" src="./js/firebase.js"></script>
-  <script defer src="./js/noc.js"></script>
+  <script type="module" src="./js/noc.js"></script>
   <!-- Employee cards moved to directorio.html -->
   <script>
     // Esperar a que lucide esté cargado antes de inicializar iconos

@@ -79,6 +79,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
         db.collection("loginLogs").add({
           email: user.email,
           rol: userRole,
+          authProvider: "email",
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }),
         db.collection("userRoles").doc(user.uid).update({
@@ -125,6 +126,181 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     }
   }
 });
+
+// --------------------------------------------------
+// Google Sign-In
+// --------------------------------------------------
+const googleLoginBtn = document.getElementById("google-login-btn");
+if (googleLoginBtn) {
+  googleLoginBtn.addEventListener("click", async () => {
+    console.log("Iniciando Google Sign-In...");
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    // Request Gmail send permission to allow sending emails from user's account
+    provider.addScope('https://www.googleapis.com/auth/gmail.send');
+
+    try {
+      const result = await auth.signInWithPopup(provider);
+
+      // Get OAuth access token for Gmail API
+      const credential = result.credential;
+      const googleAccessToken = credential?.accessToken || null;
+      console.log("📧 Gmail access token obtenido:", googleAccessToken ? "✅" : "❌");
+      const user = result.user;
+      console.log("Usuario Google autenticado:", user.email);
+
+      // Domain restriction - only @patagoniaip.cl allowed (with exceptions)
+      const allowedDomain = "@patagoniaip.cl";
+      const allowedEmails = [
+        "sergio.cb87@gmail.com" // Superadmin de pruebas
+      ];
+
+      const emailLower = user.email.toLowerCase();
+      const isDomainAllowed = emailLower.endsWith(allowedDomain);
+      const isWhitelisted = allowedEmails.includes(emailLower);
+
+      if (!isDomainAllowed && !isWhitelisted) {
+        console.warn("Dominio no permitido:", user.email);
+        await auth.signOut();
+        Swal.fire({
+          icon: 'error',
+          title: 'Dominio no permitido',
+          html: `Solo se permite el acceso con cuentas <strong>@patagoniaip.cl</strong>.<br><br>Tu cuenta: ${user.email}`,
+          confirmButtonColor: '#7796CB'
+        });
+        return;
+      }
+
+      // First, check if user exists by UID (already linked to Google)
+      let userDoc = await db.collection("userRoles").doc(user.uid).get();
+      let existingDocId = null;
+      let needsMigration = false;
+
+      if (!userDoc.exists) {
+        // User doesn't exist by UID, search by EMAIL (manual account)
+        console.log("🔍 Buscando cuenta existente por email...");
+        const querySnapshot = await db.collection("userRoles")
+          .where("email", "==", user.email)
+          .limit(1)
+          .get();
+
+        if (querySnapshot.empty) {
+          // User not registered in the system - REJECT
+          console.warn("Usuario no registrado en el sistema:", user.email);
+          await auth.signOut();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Usuario no registrado',
+            html: `El correo <strong>${user.email}</strong> no está registrado en el sistema.<br><br>Contacta al administrador para obtener acceso.`,
+            confirmButtonColor: '#7796CB'
+          });
+          return;
+        }
+
+        // User found by email - need to migrate to Google UID
+        existingDocId = querySnapshot.docs[0].id;
+        userDoc = querySnapshot.docs[0];
+        needsMigration = true;
+        console.log("✅ Cuenta encontrada por email, documento antiguo:", existingDocId);
+      }
+
+      const userData = userDoc.data();
+      const userRole = userData.rol;
+
+      // === ACCOUNT LINKING: Migrate manual account to Google UID ===
+      if (needsMigration && existingDocId && existingDocId !== user.uid) {
+        console.log("🔗 Iniciando migración de cuenta a Google UID...");
+
+        try {
+          // Prepare migrated data
+          const migratedData = {
+            ...userData,
+            googleLinked: true,
+            googleLinkedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            previousUid: existingDocId // Keep reference for audit
+          };
+
+          // Use batch write for atomicity
+          const batch = db.batch();
+
+          // 1. Create new document with Google UID
+          batch.set(db.collection("userRoles").doc(user.uid), migratedData);
+
+          // 2. Delete old document
+          batch.delete(db.collection("userRoles").doc(existingDocId));
+
+          // 3. Migrate userStatus if exists
+          const oldStatusDoc = await db.collection("userStatus").doc(existingDocId).get();
+          if (oldStatusDoc.exists) {
+            batch.set(db.collection("userStatus").doc(user.uid), oldStatusDoc.data());
+            batch.delete(db.collection("userStatus").doc(existingDocId));
+          }
+
+          await batch.commit();
+          console.log("✅ Cuenta migrada exitosamente al UID de Google:", user.uid);
+
+        } catch (migrationError) {
+          console.error("⚠️ Error en migración (login continúa):", migrationError);
+          // Don't block login if migration fails - user can still use the system
+        }
+      }
+
+      // Check suspension
+      const userStatusDoc = await db.collection("userStatus").doc(user.uid).get().catch(() => null);
+      if (userStatusDoc && userStatusDoc.exists && userStatusDoc.data().suspended === true) {
+        await auth.signOut();
+        Swal.fire({
+          icon: 'error',
+          title: 'Cuenta Suspendida',
+          text: userStatusDoc.data().suspendedReason || "Contacta al administrador.",
+          confirmButtonColor: '#3b82f6'
+        });
+        return;
+      }
+
+      // Log login and save Gmail access token
+      const now = Date.now();
+      const updateData = {
+        lastActivity: now,
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      // Save Gmail access token if available (for sending emails)
+      if (googleAccessToken) {
+        updateData.gmailAccessToken = googleAccessToken;
+        updateData.gmailTokenUpdatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        console.log("💾 Gmail access token guardado en Firestore");
+      }
+
+      await Promise.all([
+        db.collection("loginLogs").add({
+          email: user.email,
+          rol: userRole,
+          authProvider: "google",
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }),
+        db.collection("userRoles").doc(user.uid).update(updateData)
+      ]);
+
+      localStorage.setItem("userRole", userRole);
+      window.location.href = "directorio.html";
+    } catch (error) {
+      console.error("Error en Google Sign-In:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log("Usuario cerró el popup");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        console.log("Popup cancelado");
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de autenticación',
+          text: 'No se pudo iniciar sesión con Google. Intenta de nuevo.',
+          confirmButtonColor: '#3b82f6'
+        });
+      }
+    }
+  });
+}
 
 // --------------------------------------------------
 // Toggle para mostrar/ocultar contraseña
