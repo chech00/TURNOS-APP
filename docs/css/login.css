@@ -42,7 +42,7 @@ body::after {
 /* Contenedor Principal Glassmorphism */
 .login-container {
   width: 900px;
-  min-height: 550px;
+  min-height: 480px;
   height: auto;
   display: flex;
   border-radius: 24px;
@@ -88,7 +88,7 @@ body::after {
 /* Lado Derecho: Formulario */
 .login-content {
   flex: 1;
-  padding: 3rem;
+  padding: 2rem 3rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -98,8 +98,8 @@ body::after {
 }
 
 .logo img {
-  width: 160px;
-  margin-bottom: 2rem;
+  width: 140px;
+  margin-bottom: 1.2rem;
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) brightness(1.3) contrast(1.1);
   transition: transform 0.3s ease;
 }
@@ -113,7 +113,7 @@ body::after {
   max-width: 320px;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 0.9rem;
 }
 
 .form-group {
@@ -219,7 +219,7 @@ body::after {
   align-items: center;
   width: 100%;
   max-width: 320px;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
 }
 
 .login-divider::before,
@@ -278,7 +278,7 @@ body::after {
 .social-links {
   display: flex;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1.2rem;
   justify-content: center;
 }
 
