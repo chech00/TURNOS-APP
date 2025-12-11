@@ -386,7 +386,7 @@ ${currentSignature}`;
         const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
         const API_BASE = isLocal
             ? 'http://localhost:3000'
-            : 'https://turnos-backend.onrender.com';
+            : 'https://turnos-app-8viu.onrender.com';
 
         const sendEmail = async (type) => {
             if (selectedServices.size === 0) {
