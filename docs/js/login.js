@@ -109,6 +109,51 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
       errorCode = 'auth/invalid-login-credentials';
     }
 
+    // === SMART ERROR HANDLING FOR GOOGLE LINKED ACCOUNTS ===
+    if (errorCode === "auth/wrong-password" || errorCode === "auth/invalid-login-credentials" || errorCode === "auth/user-not-found") {
+      try {
+        // Check what providers are linked to this email
+        const methods = await auth.fetchSignInMethodsForEmail(email);
+        console.log("Métodos de inicio de sesión para", email, ":", methods);
+
+        const hasGoogle = methods.includes("google.com");
+        const hasPassword = methods.includes("password");
+
+        // Case 1: Account exists with Google but NO password (replaced by Google)
+        // This is the common confusion point for the user
+        if (hasGoogle && !hasPassword) {
+          Swal.fire({
+            icon: 'info',
+            title: 'Cuenta verificada con Google',
+            html: `
+              <p>Tu cuenta está vinculada a Google.</p>
+              <ul style="text-align: left; margin-top: 10px; font-size: 0.9em; color: #555;">
+                <li>Para entrar ahora, usa el botón <strong>"Continuar con Google"</strong>.</li>
+                <br>
+                <li>Si prefieres usar una clave manual, haz clic en <strong>"¿Olvidaste tu contraseña?"</strong> para crear una nueva.</li>
+              </ul>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#7796CB'
+          });
+          return; // Stop here, don't show generic error
+        }
+
+        // Case 2: Account has Google AND Password, but password failed
+        if (hasGoogle && hasPassword) {
+          // Let it fall through to generic error, OR give a hint
+          // Currently falling through to "Usuario o contraseña incorrectos" is standard security practice,
+          // but we can be helpful if we want. Let's stick to standard for mismatched password.
+        }
+
+        // Case 3: Only Google (should be covered by Case 1 logically if !hasPassword)
+
+      } catch (methodError) {
+        console.error("Error verificando métodos de inicio:", methodError);
+        // Fallback to standard error if this check fails
+      }
+    }
+
     switch (errorCode) {
       case "auth/user-not-found":
       case "auth/wrong-password":
