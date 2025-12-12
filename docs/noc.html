@@ -5,14 +5,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Turnos Noc - Calendario de Turnos</title>
+
+  <!-- Preconnect para recursos externos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+
+  <!-- Critical CSS: Inline para renderizado instantáneo -->
+  <link rel="stylesheet" href="./css/critical.css">
+
+  <!-- Fonts con display=swap para evitar FOIT -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
-  <script defer src="https://unpkg.com/lucide@latest"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="./css/styles.css">
+
+  <!-- CSS principal (puede cargarse después del critical) -->
+  <link rel="stylesheet" href="./css/styles.css" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="./css/styles.css">
+  </noscript>
   <link rel="stylesheet" href="./css/noc.css" />
   <link rel="stylesheet" href="./css/user-profile-header.css" />
   <script defer src="./js/user-profile-header.js"></script>
@@ -24,6 +33,36 @@
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
   <script src="./js/security-helpers.js"></script>
   <script defer src="./js/christmas.js"></script>
+  <!-- Performance Helpers (debounced icons, DOM utils) -->
+  <script src="./js/performance-helpers.js"></script>
+
+  <!-- External Libraries (defer for non-blocking) -->
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SweetAlert2: Lazy load on first use -->
+  <script>
+    // Lazy load SweetAlert2 only when needed
+    window.Swal = window.Swal || new Proxy({}, {
+      get: function (target, prop) {
+        if (prop === 'fire' || prop === 'mixin') {
+          return function (...args) {
+            return new Promise(resolve => {
+              const script = document.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+              script.onload = () => {
+                if (window.Swal && window.Swal[prop]) {
+                  resolve(window.Swal[prop](...args));
+                }
+              };
+              document.head.appendChild(script);
+            });
+          };
+        }
+        return undefined;
+      }
+    });
+  </script>
 </head>
 
 <body>
@@ -435,9 +474,11 @@
   <script type="module" src="./js/noc.js"></script>
   <!-- Employee cards moved to directorio.html -->
   <script>
-    // Esperar a que lucide esté cargado antes de inicializar iconos
+    // Usar refreshIcons() debounced para mejor rendimiento
     document.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide) {
+      if (window.refreshIcons) {
+        refreshIcons();
+      } else if (window.lucide) {
         lucide.createIcons();
       }
     });

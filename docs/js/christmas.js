@@ -16,7 +16,9 @@
         bubbles: 'bubbles-container',
         aurora: 'aurora-container',
         matrix: 'matrix-container',
-        particles: 'particles-container'
+        particles: 'particles-container',
+        christmas_lights: 'christmas-lights-container',
+        golden_border: 'golden-border-container'
     };
 
     const STORAGE_KEY = 'seasonalAnimations';
@@ -138,6 +140,10 @@
         data.matrix ? enableMatrix() : disableAnimation('matrix');
         // Particles
         data.particles ? enableParticles() : disableAnimation('particles');
+        // Christmas Lights
+        data.christmas_lights ? enableChristmasLights() : disableAnimation('christmas_lights');
+        // Golden Border
+        data.golden_border ? enableGoldenBorder() : disableAnimation('golden_border');
     }
 
     function disableAnimation(type) {
@@ -165,24 +171,32 @@
     // 1. SNOW ❄️ (Enhanced Realistic Version)
     // ==========================================
     function enableSnow() {
+        // Performance: Respect user preference for reduced motion
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
         const container = createContainer('snow');
         if (!container) return;
 
         const symbols = ['❄', '❅', '❆', '•', '.'];
-        // Increased count for better density
-        const count = 150;
+        // Performance: Reduced count for better performance (was 150)
+        // Mobile: 25, Desktop: 50
+        const isMobile = window.innerWidth < 768;
+        const count = isMobile ? 25 : 50;
+
+        // Use DocumentFragment for batch DOM insertion
+        const fragment = document.createDocumentFragment();
 
         for (let i = 0; i < count; i++) {
             const flake = document.createElement('div');
             flake.className = 'snowflake';
-            flake.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+            flake.textContent = symbols[Math.floor(Math.random() * symbols.length)];
 
             // Random horizontal position
             const leftPos = Math.random() * 100;
             flake.style.left = `${leftPos}vw`;
 
-            // Varied duration for depth perception (smaller = slower/farther, bigger = faster/closer)
-            const duration = Math.random() * 5 + 5; // 5s to 10s
+            // Varied duration for depth perception
+            const duration = Math.random() * 5 + 5;
             flake.style.animationDuration = `${duration}s`;
 
             // Random delay so they don't all start at once
@@ -192,11 +206,13 @@
             flake.style.opacity = Math.random() * 0.7 + 0.3;
 
             // Varied size
-            const size = Math.random() * 1.5 + 0.5; // 0.5rem to 2rem
+            const size = Math.random() * 1.5 + 0.5;
             flake.style.fontSize = `${size}rem`;
 
-            container.appendChild(flake);
+            fragment.appendChild(flake);
         }
+
+        container.appendChild(fragment);
     }
 
     // ==========================================
@@ -574,11 +590,21 @@
     // 7. RAIN 🌧️ (Realistic Version)
     // ==========================================
     function enableRain() {
+        // Performance: Respect user preference for reduced motion
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
         const container = createContainer('rain');
         if (!container) return;
 
+        // Performance: Reduced count (was 120)
+        const isMobile = window.innerWidth < 768;
+        const dropCount = isMobile ? 30 : 50;
+        const splashCount = isMobile ? 5 : 10;
+
+        const fragment = document.createDocumentFragment();
+
         // Rain drops with varying sizes
-        for (let i = 0; i < 120; i++) {
+        for (let i = 0; i < dropCount; i++) {
             const drop = document.createElement('div');
             drop.className = 'rain-drop';
             const height = 15 + Math.random() * 25;
@@ -590,18 +616,20 @@
             drop.style.setProperty('--opacity', `${0.3 + Math.random() * 0.4}`);
             drop.style.left = `${Math.random() * 100}%`;
             drop.style.animationDelay = `${Math.random() * 2}s`;
-            container.appendChild(drop);
+            fragment.appendChild(drop);
         }
 
         // Splash effects at bottom
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < splashCount; i++) {
             const splash = document.createElement('div');
             splash.className = 'rain-splash';
             splash.style.left = `${Math.random() * 100}%`;
             splash.style.animationDelay = `${Math.random() * 2}s`;
             splash.style.animationDuration = `${0.3 + Math.random() * 0.3}s`;
-            container.appendChild(splash);
+            fragment.appendChild(splash);
         }
+
+        container.appendChild(fragment);
     }
 
     // ==========================================
@@ -713,8 +741,10 @@
 
         const ctx = canvas.getContext('2d');
         let particles = [];
-        const particleCount = 80;
-        const connectionDistance = 150;
+        // Performance: Reduced count (was 80)
+        const isMobile = window.innerWidth < 768;
+        const particleCount = isMobile ? 25 : 40;
+        const connectionDistance = 120;
 
         // Color palette
         const colors = [
@@ -843,6 +873,71 @@
             container.dataset.animFrame = requestAnimationFrame(animate);
         }
         animate();
+    }
+
+    // ==========================================
+    // 13. CHRISTMAS LIGHTS 🎄 (Background Version)
+    // ==========================================
+    function enableChristmasLights() {
+        const container = createContainer('christmas_lights');
+        if (!container) return;
+
+        container.className = 'christmas-lights-background';
+
+        const colors = ['#ff3333', '#33ff33', '#3333ff', '#ffff33', '#ff33ff', '#33ffff', '#ff9933', '#ffffff'];
+        const lightCount = 60; // Scattered lights across the screen
+
+        for (let i = 0; i < lightCount; i++) {
+            const light = document.createElement('div');
+            light.className = 'bg-light';
+
+            const color = colors[i % colors.length];
+            light.style.setProperty('--light-color', color);
+
+            // Random position across the entire screen
+            light.style.left = `${Math.random() * 100}%`;
+            light.style.top = `${Math.random() * 100}%`;
+
+            // Random size (small to medium)
+            const size = 4 + Math.random() * 8;
+            light.style.width = `${size}px`;
+            light.style.height = `${size}px`;
+
+            // Random animation delay for staggered twinkling
+            light.style.animationDelay = `${Math.random() * 3}s`;
+
+            // Random animation duration for variety
+            light.style.animationDuration = `${1.5 + Math.random() * 2}s`;
+
+            container.appendChild(light);
+        }
+    }
+
+    // ==========================================
+    // 14. GOLDEN BORDER SHIMMER ✨
+    // ==========================================
+    function enableGoldenBorder() {
+        const container = createContainer('golden_border');
+        if (!container) return;
+
+        container.className = 'golden-border-effect';
+
+        // Create 4 border sides
+        const sides = ['top', 'right', 'bottom', 'left'];
+        sides.forEach((side, index) => {
+            const border = document.createElement('div');
+            border.className = `golden-border golden-border-${side}`;
+            border.style.animationDelay = `${index * 0.5}s`;
+            container.appendChild(border);
+        });
+
+        // Add corner sparkles
+        const corners = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+        corners.forEach(corner => {
+            const sparkle = document.createElement('div');
+            sparkle.className = `golden-sparkle golden-sparkle-${corner}`;
+            container.appendChild(sparkle);
+        });
     }
 
 })();

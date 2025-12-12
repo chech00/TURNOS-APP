@@ -7,7 +7,7 @@ const db = window.db;
 // Manejo del inicio de sesión
 document.getElementById("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  console.log("Iniciando proceso de login v2.1..."); // DEBUG
+  // DEBUG logs removed for production security
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -17,7 +17,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     // 1) Autenticar con Firebase
     const userCredential = await auth.signInWithEmailAndPassword(email, password);
     const user = userCredential.user;
-    console.log("Usuario autenticado:", user);
+    // User authenticated successfully
 
     // Ocultar mensajes de error
     errorMessageElement.style.display = "none";
@@ -40,13 +40,13 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
     const userData = userDoc.data();
     const userRole = userData.rol;
-    console.log("Rol del usuario:", userRole);
+    // Role verified
 
     // --- Verificación de Suspensión ---
     if (userStatusDoc && userStatusDoc.exists) {
       const statusData = userStatusDoc.data();
       if (statusData.suspended === true) {
-        console.warn("Usuario suspendido:", user.email);
+        // User suspended - blocking access
         await auth.signOut();
         let reason = statusData.suspendedReason || "Razón no especificada";
 
@@ -72,7 +72,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
     // 3) Guardar log de inicio de sesión y ACTUALIZAR lastActivity (Critical for Backend Session)
     try {
-      console.log("📝 Guardando log de sesión y actualizando lastActivity...");
+      // Saving login log
 
       const now = Date.now();
       await Promise.all([
@@ -88,7 +88,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
         })
       ]);
 
-      console.log("✅ Log guardado y Session Timer reseteado.");
+      // Login log saved
     } catch (logError) {
       // No bloqueamos el login si falla, pero es crítico saberlo
       console.error("⚠️ Error guardando log o actualizando lastActivity:", logError);
@@ -114,7 +114,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
       try {
         // Check what providers are linked to this email
         const methods = await auth.fetchSignInMethodsForEmail(email);
-        console.log("Métodos de inicio de sesión para", email, ":", methods);
+        // Check sign-in methods for this email
 
         const hasGoogle = methods.includes("google.com");
         const hasPassword = methods.includes("password");
@@ -178,7 +178,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 const googleLoginBtn = document.getElementById("google-login-btn");
 if (googleLoginBtn) {
   googleLoginBtn.addEventListener("click", async () => {
-    console.log("Iniciando Google Sign-In...");
+    // Starting Google Sign-In
     const provider = new firebase.auth.GoogleAuthProvider();
 
     // Request Gmail send permission to allow sending emails from user's account
@@ -190,9 +190,9 @@ if (googleLoginBtn) {
       // Get OAuth access token for Gmail API
       const credential = result.credential;
       const googleAccessToken = credential?.accessToken || null;
-      console.log("📧 Gmail access token obtenido:", googleAccessToken ? "✅" : "❌");
+      // Gmail access token obtained
       const user = result.user;
-      console.log("Usuario Google autenticado:", user.email);
+      // Google user authenticated
 
       // Domain restriction - only @patagoniaip.cl allowed (with exceptions)
       const allowedDomain = "@patagoniaip.cl";

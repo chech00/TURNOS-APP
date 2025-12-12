@@ -143,6 +143,34 @@ body::after {
   color: rgba(227, 230, 235, 0.4);
 }
 
+/* Password Toggle Button */
+.password-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-container input {
+  padding-right: 3rem;
+  /* Espacio para el ícono del ojo */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.2s ease;
+  user-select: none;
+  z-index: 5;
+}
+
+.toggle-password:hover {
+  color: var(--color-acento-primario);
+}
+
 /* Checkbox y Olvidé Contraseña */
 .remember-forgot-container {
   display: flex;

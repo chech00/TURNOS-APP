@@ -1,5 +1,6 @@
 
 import { db } from "./firebase.js";
+import { showToast } from "./modules/ui/toast.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     // === DOM Elements ===
@@ -8,12 +9,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const emailContentDiv = document.querySelector('#emailContentDiv');
     const onlineContentDiv = document.querySelector('#onlineContentDiv');
 
+    // Search Elements
+    const searchInput = document.getElementById('serviceSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const searchContainer = document.querySelector('.search-container');
+
     // === State ===
     const selectedServices = new Set();
     let servicesByCategory = {}; // Will be populated from Firestore
     let currentSignature = '';
     let recipients = []; // Email recipients from Firestore
     let currentUserRole = null; // Will be populated on auth change
+
+    // === Search Functionality ===
+    const setupSearch = () => {
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            filterServices(query);
+
+            // Toggle clear button
+            if (query.length > 0) {
+                searchContainer?.classList.add('has-text');
+            } else {
+                searchContainer?.classList.remove('has-text');
+            }
+        });
+
+        clearSearchBtn?.addEventListener('click', () => {
+            searchInput.value = '';
+            filterServices(''); // Show all
+            searchInput.focus();
+            searchContainer?.classList.remove('has-text');
+        });
+    };
+
+    const filterServices = (query) => {
+        const panels = document.querySelectorAll('.category-panel');
+        let totalMatches = 0;
+
+        panels.forEach(panel => {
+            const items = panel.querySelectorAll('.service-item');
+            let matchInPanel = false;
+            let hiddenItems = 0;
+
+            items.forEach(item => {
+                const nameEl = item.querySelector('.service-name');
+                const name = nameEl.textContent.toLowerCase();
+                const originalText = nameEl.textContent;
+
+                if (query === '' || name.includes(query)) {
+                    item.style.display = 'flex';
+                    matchInPanel = true;
+                    totalMatches++;
+
+                    // Highlight match if query exists
+                    if (query !== '') {
+                        const regex = new RegExp(`(${query})`, 'gi');
+                        nameEl.innerHTML = originalText.replace(regex, '<span class="highlight-match">$1</span>');
+                    } else {
+                        nameEl.innerHTML = originalText; // Reset
+                    }
+                } else {
+                    item.style.display = 'none';
+                    hiddenItems++;
+                }
+            });
+
+            // Handle panel visibility
+            if (query === '') {
+                // Reset to default state (collapsed)
+                panel.style.display = 'block';
+                panel.classList.remove('expanded');
+            } else if (matchInPanel) {
+                panel.style.display = 'block';
+                // Auto expand if there are matches
+                panel.classList.add('expanded');
+            } else {
+                panel.style.display = 'none';
+            }
+        });
+    };
 
     // === Firestore: Load Services ===
     const loadServicesFromFirestore = async () => {
@@ -158,7 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 await db.collection('suralis_services').add(category);
             }
 
-            Swal.fire({ icon: 'success', title: 'Datos guardados', text: 'Los servicios se han guardado en Firestore.', timer: 2000, showConfirmButton: false });
+
+
+            // Use Toast for success instead of intrusive alert
+            showToast('Servicios cargados correctamente', 'success');
 
             // Reload from Firestore
             await loadServicesFromFirestore();
@@ -433,6 +513,21 @@ ${currentSignature}`;
                 const result = await response.json();
 
                 if (response.ok && result.success) {
+                    // === GUARDAR INCIDENTE EN FIRESTORE PARA ESTADÍSTICAS ===
+                    try {
+                        await db.collection('suralisIncidents').add({
+                            type: type, // 'caida' o 'normalizacion'
+                            services: Array.from(selectedServices),
+                            servicesCount: selectedServices.size,
+                            sentBy: user?.email || 'Sistema',
+                            sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            recipientsCount: recipients.length
+                        });
+                    } catch (incidentError) {
+                        console.warn('No se pudo guardar el incidente:', incidentError);
+                        // No bloquear el flujo si falla el log
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: '¡Correo enviado!',
@@ -502,7 +597,7 @@ ${currentSignature}`;
     const saveNewService = async () => {
         const serviceName = newServiceInput.value.trim();
         if (!serviceName) {
-            Swal.fire({ icon: 'warning', title: 'Nombre vacío', text: 'Ingresa un nombre para el servicio.', confirmButtonColor: '#7796CB' });
+            showToast('Ingresa un nombre para el servicio', 'warning');
             return;
         }
 
@@ -520,7 +615,7 @@ ${currentSignature}`;
             const currentServices = doc.data().services || [];
 
             if (currentServices.includes(serviceName)) {
-                Swal.fire({ icon: 'warning', title: 'Duplicado', text: 'Este servicio ya existe en la categoría.' });
+                showToast('Este servicio ya existe', 'warning');
                 return;
             }
 
@@ -529,7 +624,7 @@ ${currentSignature}`;
             });
 
             closeModal();
-            Swal.fire({ icon: 'success', title: 'Servicio agregado', timer: 1500, showConfirmButton: false });
+            showToast(`Servicio "${serviceName}" agregado`, 'success');
 
             // Reload
             await loadServicesFromFirestore();
@@ -576,6 +671,7 @@ ${currentSignature}`;
     }
 
     // === Initialize ===
+    setupSearch(); // <--- Initialize Search
     loadServicesFromFirestore();
     loadRecipients();
     updateSummary();
@@ -698,7 +794,7 @@ ${currentSignature}`;
             await db.collection('suralis_config').doc('recipients').set({ emails: recipients });
             displayRecipientsInPreview();
             renderRecipientsModal();
-            Swal.fire({ icon: 'success', title: '¡Agregado!', text: `${trimmedEmail} fue agregado.`, timer: 1500, showConfirmButton: false });
+            showToast(`${trimmedEmail} agregado`, 'success');
             return true;
         } catch (error) {
             console.error('Error adding recipient:', error);
@@ -768,6 +864,190 @@ ${currentSignature}`;
                 } catch (error) {
                     console.error('Error checking user role:', error);
                     openBtn.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // =========================================
+    // DASHBOARD DE ESTADÍSTICAS
+    // =========================================
+
+    const dashboardToggle = document.getElementById('dashboardToggle');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const dashboardSection = document.getElementById('step-dashboard');
+    let dashboardChart = null;
+    let dashboardLoaded = false;
+
+    // Toggle dashboard
+    if (dashboardToggle && dashboardContent) {
+        dashboardToggle.addEventListener('click', () => {
+            const isExpanded = dashboardContent.style.display !== 'none';
+            dashboardContent.style.display = isExpanded ? 'none' : 'block';
+            dashboardToggle.classList.toggle('expanded', !isExpanded);
+
+            // Cargar datos solo la primera vez que se expande
+            if (!isExpanded && !dashboardLoaded) {
+                loadDashboardStats();
+                dashboardLoaded = true;
+            }
+        });
+    }
+
+    // Cargar estadísticas del dashboard
+    async function loadDashboardStats() {
+        try {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            // Consultar incidentes
+            const snapshot = await db.collection('suralisIncidents')
+                .orderBy('sentAt', 'desc')
+                .limit(200)
+                .get();
+
+            const incidents = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                incidents.push({
+                    id: doc.id,
+                    ...data,
+                    sentAt: data.sentAt?.toDate() || new Date()
+                });
+            });
+
+            // Calcular métricas
+            const thisMonth = incidents.filter(i => i.sentAt >= startOfMonth);
+            const caidasMes = thisMonth.filter(i => i.type === 'caida').length;
+            const normalizacionesMes = thisMonth.filter(i => i.type === 'normalizacion').length;
+
+            // Servicio más afectado
+            const serviceCounts = {};
+            incidents.filter(i => i.type === 'caida').forEach(i => {
+                (i.services || []).forEach(s => {
+                    const shortName = s.length > 20 ? s.substring(0, 20) + '...' : s;
+                    serviceCounts[shortName] = (serviceCounts[shortName] || 0) + 1;
+                });
+            });
+            const topService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
+
+            // Actualizar UI
+            document.getElementById('statCaidasMes').textContent = caidasMes;
+            document.getElementById('statNormalizaciones').textContent = normalizacionesMes;
+            document.getElementById('statTopServicio').textContent = topService ? topService[0] : 'N/A';
+            document.getElementById('statTotalIncidentes').textContent = incidents.length;
+
+            // Renderizar tabla de últimos incidentes
+            renderIncidentsTable(incidents.slice(0, 10));
+
+            // Renderizar gráfico
+            renderIncidentsChart(incidents.filter(i => i.sentAt >= thirtyDaysAgo));
+
+        } catch (error) {
+            console.error('Error loading dashboard stats:', error);
+        }
+    }
+
+    function renderIncidentsTable(incidents) {
+        const tbody = document.getElementById('incidentsTableBody');
+        if (!tbody) return;
+
+        if (incidents.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#A1A9B5;">No hay incidentes registrados</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = incidents.map(i => {
+            const date = i.sentAt.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            const typeClass = i.type === 'caida' ? 'type-caida' : 'type-normalizacion';
+            const typeLabel = i.type === 'caida' ? '⚠️ Caída' : '✅ Normal';
+            const servicesText = (i.services || []).slice(0, 2).join(', ') + (i.servicesCount > 2 ? ` (+${i.servicesCount - 2})` : '');
+            const sentBy = i.sentBy?.split('@')[0] || 'Sistema';
+
+            return `
+                <tr>
+                    <td>${date}</td>
+                    <td><span class="incident-type ${typeClass}">${typeLabel}</span></td>
+                    <td title="${(i.services || []).join(', ')}">${servicesText || 'N/A'}</td>
+                    <td>${sentBy}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderIncidentsChart(incidents) {
+        const ctx = document.getElementById('incidentsChart');
+        if (!ctx) return;
+
+        // Agrupar por día
+        const dailyCounts = {};
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const key = date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+            dailyCounts[key] = { caidas: 0, normalizaciones: 0 };
+        }
+
+        incidents.forEach(i => {
+            const key = i.sentAt.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+            if (dailyCounts[key]) {
+                if (i.type === 'caida') {
+                    dailyCounts[key].caidas++;
+                } else {
+                    dailyCounts[key].normalizaciones++;
+                }
+            }
+        });
+
+        const labels = Object.keys(dailyCounts);
+        const caidasData = labels.map(l => dailyCounts[l].caidas);
+        const normData = labels.map(l => dailyCounts[l].normalizaciones);
+
+        // Destruir gráfico anterior si existe
+        if (dashboardChart) {
+            dashboardChart.destroy();
+        }
+
+        dashboardChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Caídas',
+                        data: caidasData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Normalizaciones',
+                        data: normData,
+                        backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#A1A9B5', stepSize: 1 },
+                        grid: { color: 'rgba(255,255,255,0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#A1A9B5', maxRotation: 45 },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#E0E4EA' }
+                    }
                 }
             }
         });

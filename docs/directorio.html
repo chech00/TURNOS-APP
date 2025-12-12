@@ -20,6 +20,8 @@
     <!-- Optimistic Profile Header Loading -->
     <script src="./js/user-profile-header.js"></script>
     <script defer src="./js/christmas.js"></script>
+    <!-- Performance Helpers (debounced icons, DOM utils) -->
+    <script src="./js/performance-helpers.js"></script>
 </head>
 
 <body>
@@ -325,7 +327,8 @@
             });
         });
 
-        lucide.createIcons();
+        // Use debounced refreshIcons for performance
+        if (window.refreshIcons) refreshIcons(); else lucide.createIcons();
     </script>
 </body>
 

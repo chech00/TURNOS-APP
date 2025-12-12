@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ANIMATION_KEYS = [
         'christmas_snow', 'newyear_fireworks', 'halloween', 'valentine',
         'easter', 'independence', 'rain', 'autumn', 'bubbles', 'aurora',
-        'matrix', 'particles'
+        'matrix', 'particles', 'christmas_lights', 'golden_border'
     ];
 
     const ANIMATION_NAMES = {
@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
         bubbles: 'Burbujas',
         aurora: 'Aurora boreal',
         matrix: 'Matrix',
-        particles: 'Partículas conectadas'
+        particles: 'Partículas conectadas',
+        christmas_lights: 'Lucecitas navideñas',
+        golden_border: 'Borde dorado'
     };
 
     function initAnimsManager() {

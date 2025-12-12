@@ -892,6 +892,7 @@ input:checked+.toggle-slider:before {
         opacity: 0;
     }
 }
+
 /* ===========================================
    PREMIUM SLIDER COMPONENT
    =========================================== */
@@ -950,4 +951,415 @@ input:checked+.toggle-slider:before {
 .premium-slider::-moz-range-thumb:hover {
     transform: scale(1.2);
     box-shadow: 0 0 15px rgba(119, 150, 203, 0.8);
+}
+
+/* ===========================================
+   CHRISTMAS LIGHTS BACKGROUND 🎄
+   =========================================== */
+.christmas-lights-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9997;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.bg-light {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--light-color);
+    box-shadow:
+        0 0 10px var(--light-color),
+        0 0 20px var(--light-color),
+        0 0 40px var(--light-color);
+    animation: bg-twinkle 2s ease-in-out infinite;
+}
+
+@keyframes bg-twinkle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+/* ===========================================
+   GOLDEN BORDER SHIMMER ✨
+   =========================================== */
+.golden-border-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9997;
+    pointer-events: none;
+}
+
+.golden-border {
+    position: absolute;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 215, 0, 0.3) 20%,
+            rgba(255, 223, 100, 0.6) 50%,
+            rgba(255, 215, 0, 0.3) 80%,
+            transparent 100%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.golden-border-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+}
+
+.golden-border-bottom {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+}
+
+.golden-border-left {
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(255, 215, 0, 0.3) 20%,
+            rgba(255, 223, 100, 0.6) 50%,
+            rgba(255, 215, 0, 0.3) 80%,
+            transparent 100%);
+}
+
+.golden-border-right {
+    top: 0;
+    right: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(255, 215, 0, 0.3) 20%,
+            rgba(255, 223, 100, 0.6) 50%,
+            rgba(255, 215, 0, 0.3) 80%,
+            transparent 100%);
+}
+
+@keyframes shimmer {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.golden-sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle, #fff 0%, #ffd700 50%, transparent 70%);
+    border-radius: 50%;
+    animation: sparkle-pulse 2s ease-in-out infinite;
+}
+
+.golden-sparkle-top-left {
+    top: 5px;
+    left: 5px;
+}
+
+.golden-sparkle-top-right {
+    top: 5px;
+    right: 5px;
+    animation-delay: 0.5s;
+}
+
+.golden-sparkle-bottom-right {
+    bottom: 5px;
+    right: 5px;
+    animation-delay: 1s;
+}
+
+.golden-sparkle-bottom-left {
+    bottom: 5px;
+    left: 5px;
+    animation-delay: 1.5s;
+}
+
+@keyframes sparkle-pulse {
+
+    0%,
+    100% {
+        transform: scale(0.5);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Christmas Lights Preview */
+.lights-preview {
+    background: linear-gradient(180deg, #1a2030 0%, #0d1520 100%);
+}
+
+.preview-bulb {
+    width: 8px;
+    height: 12px;
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    position: absolute;
+    top: 30%;
+    animation: preview-twinkle 1s ease-in-out infinite;
+}
+
+.preview-bulb:nth-child(1) {
+    left: 15%;
+    background: #ff3333;
+    box-shadow: 0 0 8px #ff3333;
+}
+
+.preview-bulb:nth-child(2) {
+    left: 35%;
+    background: #33ff33;
+    box-shadow: 0 0 8px #33ff33;
+    animation-delay: 0.2s;
+}
+
+.preview-bulb:nth-child(3) {
+    left: 55%;
+    background: #3333ff;
+    box-shadow: 0 0 8px #3333ff;
+    animation-delay: 0.4s;
+}
+
+.preview-bulb:nth-child(4) {
+    left: 75%;
+    background: #ffff33;
+    box-shadow: 0 0 8px #ffff33;
+    animation-delay: 0.6s;
+}
+
+@keyframes preview-twinkle {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* Golden Border Preview */
+.golden-preview {
+    background: linear-gradient(180deg, #1a1520 0%, #0d0a10 100%);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.preview-golden-shimmer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent 40%, rgba(255, 215, 0, 0.3) 50%, transparent 60%);
+    animation: preview-shimmer 2s linear infinite;
+}
+
+@keyframes preview-shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Toggle slider colors for new animations */
+input:checked+.toggle-slider.christmas_lights {
+    background: linear-gradient(135deg, #ff3333, #33ff33);
+}
+
+input:checked+.toggle-slider.golden_border {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+}
+
+/* ===========================================
+   CHRISTMAS LIGHTS ANIMATION (Real Effect)
+   =========================================== */
+.christmas-lights-background,
+#christmas-lights-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9998;
+    overflow: hidden;
+}
+
+.bg-light {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--light-color, #ff3333);
+    box-shadow:
+        0 0 10px var(--light-color, #ff3333),
+        0 0 20px var(--light-color, #ff3333),
+        0 0 40px var(--light-color, #ff3333);
+    animation: twinkle-light var(--duration, 2s) ease-in-out infinite;
+    opacity: 0.8;
+}
+
+@keyframes twinkle-light {
+
+    0%,
+    100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+}
+
+/* ===========================================
+   GOLDEN BORDER SHIMMER (Real Effect)
+   =========================================== */
+.golden-border-effect,
+#golden-border-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9997;
+    overflow: hidden;
+}
+
+.golden-border {
+    position: absolute;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 215, 0, 0.6) 25%,
+            rgba(255, 180, 0, 0.9) 50%,
+            rgba(255, 215, 0, 0.6) 75%,
+            transparent 100%);
+    animation: golden-shimmer 3s linear infinite;
+}
+
+.golden-border-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+}
+
+.golden-border-bottom {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+}
+
+.golden-border-left {
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(255, 215, 0, 0.6) 25%,
+            rgba(255, 180, 0, 0.9) 50%,
+            rgba(255, 215, 0, 0.6) 75%,
+            transparent 100%);
+}
+
+.golden-border-right {
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(255, 215, 0, 0.6) 25%,
+            rgba(255, 180, 0, 0.9) 50%,
+            rgba(255, 215, 0, 0.6) 75%,
+            transparent 100%);
+}
+
+@keyframes golden-shimmer {
+    0% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.5);
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.golden-sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle, #fff 0%, #ffd700 50%, transparent 70%);
+    border-radius: 50%;
+    animation: sparkle-pulse 2s ease-in-out infinite;
+}
+
+.golden-sparkle-top-left {
+    top: 0;
+    left: 0;
+}
+
+.golden-sparkle-top-right {
+    top: 0;
+    right: 0;
+}
+
+.golden-sparkle-bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+.golden-sparkle-bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+@keyframes sparkle-pulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.5);
+    }
 }

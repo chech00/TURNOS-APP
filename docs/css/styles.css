@@ -1074,6 +1074,33 @@ td.pendiente {
   overflow-x: hidden;
   /* Prevent reflow during transition */
   contain: layout style;
+  /* Enable vertical scroll */
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(119, 150, 203, 0.3);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(119, 150, 203, 0.5);
+}
+
+/* Firefox scrollbar */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(119, 150, 203, 0.3) transparent;
 }
 
 .sidebar.expanded {
@@ -3394,5 +3421,168 @@ div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
 
   50% {
     transform: translateY(-20px) rotate(10deg);
+  }
+}
+
+/* ===========================================
+   CHRISTMAS LIGHTS BACKGROUND 🎄
+   =========================================== */
+#christmas-lights-container,
+.christmas-lights-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-light {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--light-color);
+  box-shadow:
+    0 0 10px var(--light-color),
+    0 0 20px var(--light-color),
+    0 0 40px var(--light-color);
+  animation: bg-twinkle 2s ease-in-out infinite;
+}
+
+@keyframes bg-twinkle {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ===========================================
+   GOLDEN BORDER SHIMMER ✨
+   =========================================== */
+#golden-border-container,
+.golden-border-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9997;
+  pointer-events: none;
+}
+
+.golden-border {
+  position: absolute;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 215, 0, 0.3) 20%,
+      rgba(255, 223, 100, 0.6) 50%,
+      rgba(255, 215, 0, 0.3) 80%,
+      transparent 100%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.golden-border-top {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+
+.golden-border-bottom {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
+
+.golden-border-left {
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(255, 215, 0, 0.3) 20%,
+      rgba(255, 223, 100, 0.6) 50%,
+      rgba(255, 215, 0, 0.3) 80%,
+      transparent 100%);
+}
+
+.golden-border-right {
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(255, 215, 0, 0.3) 20%,
+      rgba(255, 223, 100, 0.6) 50%,
+      rgba(255, 215, 0, 0.3) 80%,
+      transparent 100%);
+}
+
+@keyframes shimmer {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.golden-sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #fff 0%, #ffd700 50%, transparent 70%);
+  border-radius: 50%;
+  animation: sparkle-pulse 2s ease-in-out infinite;
+}
+
+.golden-sparkle-top-left {
+  top: 5px;
+  left: 5px;
+}
+
+.golden-sparkle-top-right {
+  top: 5px;
+  right: 5px;
+  animation-delay: 0.5s;
+}
+
+.golden-sparkle-bottom-right {
+  bottom: 5px;
+  right: 5px;
+  animation-delay: 1s;
+}
+
+.golden-sparkle-bottom-left {
+  bottom: 5px;
+  left: 5px;
+  animation-delay: 1.5s;
+}
+
+@keyframes sparkle-pulse {
+
+  0%,
+  100% {
+    transform: scale(0.5);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
   }
 }

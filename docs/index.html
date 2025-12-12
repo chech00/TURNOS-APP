@@ -5,20 +5,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asignación de Turnos</title>
+
+  <!-- Preconnect para recursos externos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="./css/styles.css?v=8" />
+
+  <!-- Critical CSS first -->
+  <link rel="stylesheet" href="./css/critical.css">
+
+  <!-- CSS principal (carga asíncrona con media-swap) -->
+  <link rel="stylesheet" href="./css/styles.css?v=8" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="./css/styles.css?v=8">
+  </noscript>
   <link rel="stylesheet" href="./css/user-profile-header.css" />
+
+  <!-- Scripts con defer para non-blocking -->
   <script defer src="https://unpkg.com/lucide@latest"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script defer src="./js/auto-logout.js"></script>
   <script defer src="./js/christmas.js"></script>
+
   <!-- Security: XSS Protection -->
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
   <script src="./js/security-helpers.js"></script>
   <!-- Optimistic Profile Header Loading -->
   <script src="./js/user-profile-header.js"></script>
+  <!-- Performance Helpers (debounced icons, DOM utils) -->
+  <script src="./js/performance-helpers.js"></script>
+
+  <!-- SweetAlert2: Lazy load on first use -->
+  <script>
+    window.Swal = window.Swal || new Proxy({}, {
+      get: function (target, prop) {
+        if (prop === 'fire' || prop === 'mixin') {
+          return function (...args) {
+            return new Promise(resolve => {
+              const script = document.createElement('script');
+              script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+              script.onload = () => resolve(window.Swal[prop]?.(...args));
+              document.head.appendChild(script);
+            });
+          };
+        }
+        return undefined;
+      }
+    });
+  </script>
 </head>
 
 <body>

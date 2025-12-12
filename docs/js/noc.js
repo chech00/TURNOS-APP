@@ -236,6 +236,15 @@ function iniciarCalendario() {
   }
 }
 
+// PERFORMANCE: Debounced version of renderCalendar for rapid navigation
+let renderCalendarTimeout = null;
+function renderCalendarDebounced(date = currentDate, delay = 150) {
+  clearTimeout(renderCalendarTimeout);
+  renderCalendarTimeout = setTimeout(() => {
+    renderCalendar(date);
+  }, delay);
+}
+
 // -----------------------------------------------------------------------------
 // GLOBAL UI HELPER FUNCTIONS
 // -----------------------------------------------------------------------------
@@ -285,7 +294,8 @@ function updateLockUI() {
     if (lockIndicator) lockIndicator.style.display = "none";
   }
 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  // Use debounced refreshIcons for performance
+  if (typeof refreshIcons === 'function') refreshIcons(); else if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // Escuchar cambios de empleados desde otras pestañas
@@ -531,7 +541,8 @@ function configurarSidebar() {
       mainContent.classList.toggle("expanded");
     });
   });
-  lucide.createIcons();
+  // Use debounced refreshIcons for performance
+  if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
 }
 
 function configurarLogout() {
@@ -798,7 +809,8 @@ function renderCalendar(date = currentDate) {
   // ELIMINADO: restaurarEmpleadosEliminados(data.assignments); ya no queremos recuperar empleados borrados.
 
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
-  lucide.createIcons();
+  // Use debounced refreshIcons for performance
+  if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
   fixShiftTextColors();
   calcularHorasExtras(date);
 
@@ -1391,7 +1403,8 @@ function renderCalendarDesdeCero(date) {
   });
 
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
-  lucide.createIcons();
+  // Use debounced refreshIcons for performance
+  if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
 
   // REMOVED: No auto-guardar al renderizar, solo cuando el usuario hace cambios
   // Esto previene sobrescribir estados de otros meses durante la navegación
@@ -1840,9 +1853,7 @@ async function renderOvertimeTable(data, date) {
   container.innerHTML = html;
 
   // Refrescar iconos
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  if (typeof refreshIcons === 'function') refreshIcons(); else if (window.lucide) lucide.createIcons();
 }
 
 // Función auxiliar para editar sueldo (Global)
@@ -2785,7 +2796,8 @@ function subscribeCalendar() {
           console.log("[SYNC] Mes cerrado - manteniendo estado histórico (no se agregan empleados nuevos)");
         }
 
-        lucide.createIcons();
+        // Use debounced refreshIcons for performance
+        if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
         // fixShiftTextColors(); // Removed: function not defined
         if (usuarioEsAdmin) {
           attachAdminCellListeners();
@@ -2869,7 +2881,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".admin-only").forEach((el) => {
       el.classList.remove("admin-only");
     });
-    lucide.createIcons();
+    // Use debounced refreshIcons for performance
+    if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
     if (cachedRole === "superadmin") {
       const liRegistros = document.getElementById("li-registros");
       if (liRegistros) liRegistros.style.display = "block";
@@ -2888,8 +2901,8 @@ document.addEventListener("DOMContentLoaded", function () {
       document.querySelectorAll(".admin-only").forEach((el) => {
         el.classList.remove("admin-only");
       });
-      // Re-create icons for newly exposed elements
-      lucide.createIcons();
+      // Use debounced refreshIcons for performance
+      if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
       // Attach listeners for cell selection (fix for late auth)
       // attachAdminCellListeners(); // Removed
     }
@@ -3162,7 +3175,8 @@ document.addEventListener("DOMContentLoaded", function () {
             dayBtn.classList.remove("selected");
           });
 
-          lucide.createIcons();
+          // Use debounced refreshIcons for performance
+          if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
           selectedDays = []; // Limpiamos la selección
           scheduleFirestoreUpdate();
         } else {
@@ -3657,7 +3671,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (lockIndicator) lockIndicator.style.display = "none";
       }
 
-      lucide.createIcons();
+      // Use debounced refreshIcons for performance
+      if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
     }
 
 
@@ -3759,7 +3774,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
           btnToggle.innerHTML = '<i data-lucide="maximize-2"></i>';
         }
-        if (window.lucide) lucide.createIcons();
+        // Use debounced refreshIcons for performance
+        if (typeof refreshIcons === 'function') refreshIcons(); else if (window.lucide) lucide.createIcons();
       });
 
       // Drag Start

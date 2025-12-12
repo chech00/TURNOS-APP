@@ -3,120 +3,205 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // =======================================================================
-    // REGLAS BALANCEADAS DE SEGURIDAD
-    // Lectura: Usuarios autenticados
-    // Escritura: Solo admins/superadmins (validado en colección userRoles)
+    // HELPER FUNCTIONS
     // =======================================================================
     
-    // UserRoles - CRITICAL: Proteger roles de usuarios
+    // Verificar si está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Obtener el rol del usuario actual (solo usar en reglas que NO son userRoles)
+    function getUserRole() {
+      return get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol;
+    }
+    
+    // Verificar si es admin o superadmin
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() in ['admin', 'superadmin'];
+    }
+    
+    // Verificar si es superadmin
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'superadmin';
+    }
+    
+    // =======================================================================
+    // DATA VALIDATION
+    // =======================================================================
+    
+    function isValidRole(role) {
+      return role in ['user', 'admin', 'superadmin'];
+    }
+    
+    function isValidUserRoleData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['email', 'rol']) &&
+             data.email is string &&
+             data.rol is string &&
+             isValidRole(data.rol);
+    }
+    
+    // =======================================================================
+    // USER ROLES - CRÍTICO: Solo superadmins pueden modificar roles
+    // =======================================================================
     match /userRoles/{userId} {
-      // Cualquier usuario autenticado puede leer su propio rol
-      allow read: if request.auth != null;
-      // Solo Cloud Functions o admins verificados pueden escribir roles
-      // Permitir escritura para guardar roles y nombres (incluyendo el campo 'nombre')
-      allow write: if request.auth != null;
+      // Cualquier usuario autenticado puede LEER (para verificar su propio rol)
+      allow read: if isAuthenticated();
+      
+      // CREAR: Solo superadmins Y los datos deben ser válidos
+      allow create: if isAuthenticated() && 
+        get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol == 'superadmin' &&
+        isValidUserRoleData();
+      
+      // ACTUALIZAR: Superadmins pueden todo, usuarios solo pueden actualizar SU documento SIN cambiar el rol
+      allow update: if isAuthenticated() && (
+        get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol == 'superadmin' ||
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['rol']))
+      );
+      
+      // ELIMINAR: Solo superadmins
+      allow delete: if isAuthenticated() && 
+        get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol == 'superadmin';
     }
     
-    // Calendarios - Lectura abierta, escritura restringida
-    match /calendarios/{calendarId} {
-      allow read: if request.auth != null;
-      // Escritura: permitir si autenticado (validación adicional en cliente)
-      // Nota: La validación real de rol debe hacerse en el cliente antes de intentar escribir
-      allow write: if request.auth != null;
-    }
-    
-    // Turnos/Asignaciones - Mismo patrón que calendarios
-    match /turnos/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Empleados - Lectura abierta, escritura para autenticados
-    match /empleados/{employeeId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Config collection - lowercase 'config' for animations
-    // Animations config - allow PUBLIC read so login/recuperar pages can show animations
-    match /config/animations {
-      allow read: if true;  // Public read for animations
-      allow write: if request.auth != null;
-    }
-    
-    // Config (feriados, etc.) - Lectura abierta, escritura para autenticados
-    match /Config/{configId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Señales de Fibra - Lectura abierta, escritura para autenticados
-    match /fiberSignals/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Nodos/Cabinets - Para vista de señales
-    match /nodos/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Cabinets - Para vista de señales
-    match /cabinets/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // OLTs - Para vista de señales
-    match /olts/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Documentos NOC
-    match /documents/{documentId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // Login Logs - Solo lectura (escritura por sistema)
-    match /loginLogs/{logId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null; // Permitir crear logs de login
-      allow update, delete: if false;
-    }
-    
-    // Audit Logs - Lectura y escritura para autenticados
-    match /auditLogs/{logId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if false;
-    }
-    
-    // Registros - Solo lectura para autenticados
-    match /registros/{registroId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    
-    // User Status - Para suspensión de cuentas
+    // =======================================================================
+    // USER STATUS - Solo admins pueden suspender
+    // =======================================================================
     match /userStatus/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
     
-    // Backup Data
-    match /backups/{backupId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+    // =======================================================================
+    // CALENDARIOS Y TURNOS - Admins pueden escribir
+    // =======================================================================
+    match /calendarios/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
     
-    // Catch-all: Permitir acceso autenticado por defecto
-    // Esto asegura que nuevas colecciones no queden bloqueadas
+    match /turnos/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // =======================================================================
+    // EMPLEADOS - Admins pueden escribir
+    // =======================================================================
+    match /empleados/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // =======================================================================
+    // CONFIG - Configuración del sistema
+    // =======================================================================
+    match /config/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // =======================================================================
+    // FIBER SIGNALS - Señales de fibra
+    // =======================================================================
+    match /fiberSignals/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /nodos/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /cabinets/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /olts/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // =======================================================================
+    // DOCUMENTS - Documentos NOC
+    // =======================================================================
+    match /documents/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // =======================================================================
+    // LOGS - Inmutables después de crear
+    // =======================================================================
+    match /loginLogs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    match /auditLogs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    // =======================================================================
+    // REGISTROS Y BACKUPS
+    // =======================================================================
+    match /registros/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /backups/{document=**} {
+      allow read: if isSuperAdmin();
+      allow write: if isSuperAdmin();
+    }
+    
+    // =======================================================================
+    // DIRECTORIO
+    // =======================================================================
+    match /directorio/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // =======================================================================
+    // SURALIS - Notificaciones e incidentes
+    // =======================================================================
+    match /suralisIncidents/{document=**} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+    
+    match /suralis_config/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /suralis_services/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // =======================================================================
+    // ANIMACIONES - Solo superadmin puede modificar
+    // =======================================================================
+    match /animaciones/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // =======================================================================
+    // DEFAULT: Lectura autenticada, escritura denegada
+    // =======================================================================
     match /{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if isAuthenticated();
+      allow write: if false;
     }
   }
 }

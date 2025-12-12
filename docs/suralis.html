@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/suralis.css">
     <link rel="stylesheet" href="./css/user-profile-header.css">
+    <link rel="stylesheet" href="./css/toast.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Libraries -->
@@ -17,6 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.7/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.7/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -26,6 +28,7 @@
     <script type="module" src="./js/script.js"></script>
     <script type="module" src="./js/suralis.js"></script>
     <script defer src="./js/user-profile-header.js"></script>
+    <script defer src="./js/christmas.js"></script>
 </head>
 
 <body>
@@ -95,7 +98,16 @@
                 </div>
 
                 <!-- Collapsible Categories -->
-                <div class="categories-container" id="categoriesContainer">
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="serviceSearchInput" placeholder="Buscar servicio (ej. '167', 'Osorno')..."
+                        autocomplete="off">
+                    <button id="clearSearchBtn" class="clear-search-btn" title="Limpiar búsqueda"><i
+                            class="fas fa-times"></i></button>
+                </div>
+
+                <div id="categoriesContainer" class="categories-container">
                     <!-- JS Populated -->
                 </div>
 
@@ -209,6 +221,77 @@
                     <button class="send-btn send-btn-danger" id="enviarReporteButton">
                         <i class="fas fa-paper-plane"></i> <span id="sendButtonText">Enviar Reporte de Caída</span>
                     </button>
+                </div>
+            </section>
+
+            <!-- ========== DASHBOARD DE ESTADÍSTICAS ========== -->
+            <section class="step-section dashboard-section admin-only" id="step-dashboard">
+                <div class="step-header dashboard-toggle" id="dashboardToggle">
+                    <span class="step-badge"><i class="fas fa-chart-bar"></i></span>
+                    <h2>Dashboard de Incidentes</h2>
+                    <i class="fas fa-chevron-down dashboard-chevron"></i>
+                </div>
+
+                <div class="dashboard-content" id="dashboardContent" style="display: none;">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card stat-caidas">
+                            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statCaidasMes">--</span>
+                                <span class="stat-label">Caídas este mes</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-normalizaciones">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statNormalizaciones">--</span>
+                                <span class="stat-label">Normalizaciones</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-servicios">
+                            <div class="stat-icon"><i class="fas fa-server"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statTopServicio">--</span>
+                                <span class="stat-label">Servicio más afectado</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-promedio">
+                            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statTotalIncidentes">--</span>
+                                <span class="stat-label">Total histórico</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <h3><i class="fas fa-chart-line"></i> Incidentes por día (últimos 30 días)</h3>
+                        <canvas id="incidentsChart" height="200"></canvas>
+                    </div>
+
+                    <!-- Recent Incidents Table -->
+                    <div class="recent-incidents">
+                        <h3><i class="fas fa-history"></i> Últimos incidentes</h3>
+                        <div class="incidents-table-container">
+                            <table class="incidents-table" id="incidentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Servicios</th>
+                                        <th>Enviado por</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="incidentsTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align:center;">Cargando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
 
