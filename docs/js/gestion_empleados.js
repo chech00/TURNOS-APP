@@ -409,6 +409,9 @@ function verificarAcceso() {
                         if (liRegistros) liRegistros.style.display = "block";
                         if (liUsuarios) liUsuarios.style.display = "block";
                         if (liAnimaciones) liAnimaciones.style.display = "block";
+                        // Refrescar iconos después de mostrar elementos
+                        if (typeof refreshIcons === 'function') refreshIcons();
+                        else if (typeof lucide !== 'undefined') lucide.createIcons();
                     }
 
                     // Renderizar tabla

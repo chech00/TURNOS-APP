@@ -139,6 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (liUsuarios) liUsuarios.style.display = "block";
             const liAnimaciones = document.getElementById("li-animaciones");
             if (liAnimaciones) liAnimaciones.style.display = "block";
+            // Refrescar iconos después de mostrar elementos
+            if (typeof refreshIcons === 'function') refreshIcons();
+            else if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         // Remover la clase oculta y cargar archivos

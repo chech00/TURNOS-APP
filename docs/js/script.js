@@ -104,10 +104,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (liTurnos) liTurnos.style.display = "block";
 
     document.body.classList.add("is-admin");
+    // Refrescar iconos después de mostrar elementos
+    if (typeof refreshIcons === 'function') refreshIcons();
+    else if (typeof lucide !== 'undefined') lucide.createIcons();
   } else if (cachedRole === "admin") {
     const liTurnos = document.getElementById("li-turnos");
     if (liTurnos) liTurnos.style.display = "block";
     document.body.classList.add("is-admin");
+    // Refrescar iconos
+    if (typeof refreshIcons === 'function') refreshIcons();
+    else if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
   // === NOTIFICACIÓN DE PRESERVACIÓN DE CONTRASEÑA ===

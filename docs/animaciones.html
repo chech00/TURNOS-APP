@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./css/user-profile-header.css" />
     <script defer src="./js/user-profile-header.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/lucide-instant.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="./js/security-helpers.js"></script>
@@ -22,25 +23,34 @@
 
 <body>
     <div id="sidebar" class="sidebar">
+        <button id="menu-toggle" class="menu-btn"><i data-lucide="menu"></i></button>
         <div class="sidebar-header">
-            <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo" class="logo-sidebar" />
+            <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo de la Empresa"
+                class="logo-sidebar">
         </div>
         <nav class="sidebar-menu">
             <ul>
-                <li><a href="directorio.html"><i data-lucide="users"></i><span>Directorio</span></a></li>
-                <li id="li-turnos" class="admin-only" style="display:none;"><a href="user.html"><i
+                <li data-tooltip="Directorio"><a href="directorio.html"><i
+                            data-lucide="users"></i><span>Directorio</span></a></li>
+                <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a href="user.html"><i
                             data-lucide="calendar"></i><span>Turnos</span></a></li>
-                <li><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de Fibra</span></a></li>
-                <li><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos Noc</span></a></li>
-                <li><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos Noc</span></a></li>
-                <li><a href="suralis.html"><i data-lucide="send"></i><span>Notificaciones</span></a></li>
-                <li id="li-empleados" class="admin-only"><a href="gestion_empleados.html"><i
-                            data-lucide="user-cog"></i><span>Gestionar Empleados</span></a></li>
-                <li id="li-usuarios" class="superadmin-only"><a href="gestion_usuarios.html"><i
-                            data-lucide="shield-check"></i><span>Cuentas de Sistema</span></a></li>
-                <li id="li-animaciones" class="superadmin-only"><a href="animaciones.html" class="active"><i
-                            data-lucide="sparkles"></i><span>Animaciones</span></a></li>
-                <li id="li-registros" class="superadmin-only"><a href="registros.html"><i
+                <li data-tooltip="Señal de Fibra"><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de
+                            Fibra</span></a></li>
+                <li data-tooltip="Documentos Noc"><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos
+                            Noc</span></a></li>
+                <li data-tooltip="Turnos Noc"><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos
+                            Noc</span></a></li>
+                <li data-tooltip="Notificaciones"><a href="suralis.html"><i
+                            data-lucide="send"></i><span>Notificaciones</span></a></li>
+                <li id="li-empleados" class="admin-only" data-tooltip="Gestionar Empleados"><a
+                        href="gestion_empleados.html"><i data-lucide="user-cog"></i><span>Gestionar
+                            Empleados</span></a></li>
+                <li id="li-usuarios" class="superadmin-only" data-tooltip="Cuentas de Sistema"><a
+                        href="gestion_usuarios.html"><i data-lucide="shield-check"></i><span>Cuentas de
+                            Sistema</span></a></li>
+                <li id="li-animaciones" class="superadmin-only" data-tooltip="Animaciones"><a href="animaciones.html"
+                        class="active"><i data-lucide="sparkles"></i><span>Animaciones</span></a></li>
+                <li id="li-registros" class="superadmin-only" data-tooltip="Registros"><a href="registros.html"><i
                             data-lucide="file-text"></i><span>Registros</span></a></li>
             </ul>
         </nav>
@@ -50,7 +60,6 @@
 
     <div class="main-content">
         <header>
-            <button id="menu-toggle" class="menu-btn"><i data-lucide="panel-left"></i></button>
             <h1>Gestión de Animaciones</h1>
             <!-- Premium User Profile Header -->
             <div class="user-profile-header">

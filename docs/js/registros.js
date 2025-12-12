@@ -86,6 +86,9 @@ function showAdminElements() {
     const el = document.getElementById(id);
     if (el) el.style.display = "block";
   });
+  // Refrescar iconos después de mostrar elementos
+  if (typeof refreshIcons === 'function') refreshIcons();
+  else if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // -------------------------------------------------------------
