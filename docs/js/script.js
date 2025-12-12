@@ -109,6 +109,34 @@ document.addEventListener("DOMContentLoaded", () => {
     if (liTurnos) liTurnos.style.display = "block";
     document.body.classList.add("is-admin");
   }
+
+  // === NOTIFICACIÓN DE PRESERVACIÓN DE CONTRASEÑA ===
+  // Mostrar mensaje cuando el usuario vinculó con Google y se le envió email
+  const showPasswordNotice = localStorage.getItem('showPasswordPreservationNotice');
+  if (showPasswordNotice === 'true') {
+    localStorage.removeItem('showPasswordPreservationNotice');
+    const email = localStorage.getItem('passwordPreservationEmail') || 'tu correo';
+    localStorage.removeItem('passwordPreservationEmail');
+
+    // Usar setTimeout para asegurar que Swal está disponible
+    setTimeout(() => {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'info',
+          title: '¡Cuenta vinculada con Google!',
+          html: `
+            <p>Ahora puedes iniciar sesión con Google.</p>
+            <p style="margin-top: 10px;">Te enviamos un email a <strong>${email}</strong> para que también puedas usar contraseña si lo prefieres.</p>
+            <p style="margin-top: 10px; font-size: 0.85em; color: #888;">
+              Revisa tu bandeja de entrada (o spam) y haz clic en el link para establecer tu contraseña.
+            </p>
+          `,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#7796CB'
+        });
+      }
+    }, 500);
+  }
 });
 
 // Use modular function

@@ -284,6 +284,21 @@ if (googleLoginBtn) {
           await batch.commit();
           console.log("✅ Cuenta migrada exitosamente al UID de Google:", user.uid);
 
+          // === AUTOMÁTICAMENTE ENVIAR EMAIL PARA PRESERVAR AMBOS MÉTODOS ===
+          // Cuando se vincula con Google, Firebase elimina el proveedor de contraseña.
+          // Enviamos automáticamente un email de reset para que el usuario pueda
+          // re-establecer su contraseña y usar AMBOS métodos.
+          try {
+            await auth.sendPasswordResetEmail(user.email);
+            console.log("📧 Email de reset enviado para preservar método de contraseña");
+
+            // Guardar flag para mostrar notificación después del redirect
+            localStorage.setItem('showPasswordPreservationNotice', 'true');
+            localStorage.setItem('passwordPreservationEmail', user.email);
+          } catch (resetError) {
+            console.warn("No se pudo enviar email de reset:", resetError);
+          }
+
         } catch (migrationError) {
           console.error("⚠️ Error en migración (login continúa):", migrationError);
           // Don't block login if migration fails - user can still use the system
