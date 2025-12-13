@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Animaciones - NOC</title>
@@ -32,9 +34,9 @@
             <ul>
                 <li data-tooltip="Directorio"><a href="directorio.html"><i
                             data-lucide="users"></i><span>Directorio</span></a></li>
-                <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a href="user.html"><i
+                <li id="li-turnos" class="superadmin-only" style="display:none;" style="display:none;" data-tooltip="Turnos"><a href="user.html"><i
                             data-lucide="calendar"></i><span>Turnos</span></a></li>
-                <li data-tooltip="Señal de Fibra"><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de
+                <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de
                             Fibra</span></a></li>
                 <li data-tooltip="Documentos Noc"><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos
                             Noc</span></a></li>
@@ -60,6 +62,8 @@
 
     <div class="main-content">
         <header>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
             <h1>Gestión de Animaciones</h1>
             <!-- Premium User Profile Header -->
             <div class="user-profile-header">
@@ -356,3 +360,4 @@
 </body>
 
 </html>
+

@@ -102,6 +102,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Legacy: Soporte para Config con mayúscula (datos antiguos)
+    match /Config/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
     // =======================================================================
     // FIBER SIGNALS - Señales de fibra
     // =======================================================================
@@ -110,9 +116,25 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
     
-    match /nodos/{document=**} {
+    match /Nodos/{nodoId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
+      
+      match /PONLetters/{letter} {
+        allow read, write: if isAuthenticated();
+        
+        match /PONs/{ponId} {
+          allow read, write: if isAuthenticated();
+          
+          match /Cajas/{cajaId} {
+             allow read, write: if isAuthenticated();
+             
+             match /Filamentos/{filamentoId} {
+                allow read, write: if isAuthenticated();
+             }
+          }
+        }
+      }
     }
     
     match /cabinets/{document=**} {
@@ -186,6 +208,11 @@ service cloud.firestore {
     match /suralis_services/{document=**} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+    
+    // ESTADO REAL-TIME (Semáforo)
+    match /suralis_states/{document=**} {
+      allow read, write: if isAuthenticated();
     }
     
     // =======================================================================

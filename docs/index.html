@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asignación de Turnos</title>
@@ -15,8 +17,10 @@
   <link rel="stylesheet" href="./css/critical.css">
 
   <!-- CSS principal (carga asíncrona con media-swap) -->
+  <link rel="stylesheet" href="./css/enhancements.css" />
   <link rel="stylesheet" href="./css/styles.css?v=8" media="print" onload="this.media='all'">
   <noscript>
+    <link rel="stylesheet" href="./css/enhancements.css" />
     <link rel="stylesheet" href="./css/styles.css?v=8">
   </noscript>
   <link rel="stylesheet" href="./css/user-profile-header.css" />
@@ -84,9 +88,10 @@
 
         <li data-tooltip="Directorio"><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
             <span>Directorio</span></a></li>
-        <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a href="#" id="menu-turnos"
-            class="active"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
-        <li data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i>
+        <li id="li-turnos" class="superadmin-only" style="display:none;" style="display:none;" data-tooltip="Turnos"><a
+            href="#" id="menu-turnos" class="active"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i
+              data-lucide="waypoints"></i>
             <span>Señal de Fibra</span></a></li>
         <li data-tooltip="Documentos Noc"><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i>
             <span>Documentos Noc</span></a></li>
@@ -128,6 +133,8 @@
   <!-- Contenido Principal -->
   <div id="main-content" class="main-content" style="display: none;">
     <header>
+      <!-- Logger: Suprime console.log en producción -->
+      <script src="./js/logger.js"></script>
       <h1>Calendario de Turnos</h1>
       <!-- Premium User Profile Header -->
       <div class="user-profile-header">
@@ -465,6 +472,7 @@
 
     lucide.createIcons();
   </script>
+  <script src="./js/sw-register.js"></script>
 </body>
 
 </html>

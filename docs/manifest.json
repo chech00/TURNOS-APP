@@ -1,0 +1,25 @@
+{
+    "name": "Turnos NOC - PatagoniaIP",
+    "short_name": "Turnos NOC",
+    "description": "Sistema de gestión de turnos del Centro de Operaciones de Red",
+    "start_url": "./directorio.html",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#1a1d2d",
+    "theme_color": "#1a1d2d",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "./img/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ],
+    "categories": [
+        "business",
+        "productivity"
+    ],
+    "lang": "es",
+    "dir": "ltr"
+}

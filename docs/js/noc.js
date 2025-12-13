@@ -188,6 +188,7 @@ async function cargarEmpleadosDeFirestore() {
 // -----------------------------------------------------------------------------
 // 1. Inicializar con valores por defecto INMEDIATAMENTE
 empleados = DEFAULT_EMPLOYEES_NAMES.map(name => ({ nombre: name, turnos: [] }));
+window.empleados = empleados; // Exponer globalmente para mini calendario
 
 if (!feriadosChile || feriadosChile.length === 0) {
   feriadosChile = FERIADOS_DEFAULT.map(f => f.fecha);
@@ -212,6 +213,8 @@ Promise.all([cargarEmpleadosDeFirestore(), cargarFeriados()]).then(([lista]) => 
 
   if (lista && lista.length > 0) {
     empleados = lista;
+    // Exponer globalmente para uso en mini calendario
+    window.empleados = empleados;
   }
 
   // Re-renderizar para aplicar feriados actualizados o nuevos empleados
@@ -498,17 +501,15 @@ function verificarRolUsuario(callback) {
           // Mostrar link de Registros y Usuarios para superadmins
           if (isSuperAdmin) {
             const liRegistros = document.getElementById("li-registros");
-            if (liRegistros) {
-              liRegistros.style.display = "block";
-            }
+            const liTurnos = document.getElementById("li-turnos");
             const liUsuarios = document.getElementById("li-usuarios");
-            if (liUsuarios) {
-              liUsuarios.style.display = "block";
-            }
             const liAnimaciones = document.getElementById("li-animaciones");
-            if (liAnimaciones) {
-              liAnimaciones.style.display = "block";
-            }
+
+            if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
+            if (liUsuarios) liUsuarios.style.display = "block";
+            if (liAnimaciones) liAnimaciones.style.display = "block";
+
             // Refrescar iconos después de mostrar elementos
             if (typeof refreshIcons === 'function') refreshIcons();
             else if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -746,6 +747,127 @@ function sincronizarCalendarioNocturno() {
   tbody.innerHTML = newBodyHTML;
 }
 
+// ============================================================================
+// SINCRONIZACIÓN INTELIGENTE: Solo agrega empleados faltantes (NO borra asignaciones)
+// ============================================================================
+
+function agregarEmpleadosFaltantes() {
+  const tablaGeneral = document.getElementById("general-calendar");
+  if (!tablaGeneral) return;
+
+  const tbody = tablaGeneral.querySelector("tbody");
+  if (!tbody) return;
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // 1. Obtener nombres de empleados que YA están en el DOM
+  const empleadosEnDOM = new Set();
+  tbody.querySelectorAll("tr").forEach(row => {
+    const firstCell = row.querySelector("td");
+    if (firstCell) {
+      const nombre = firstCell.textContent.replace(/⚠️/g, "").trim();
+      if (nombre && nombre !== "Encargado de Bitácora") {
+        empleadosEnDOM.add(nombre);
+      }
+    }
+  });
+
+  // 2. Detectar empleados DIURNOS que faltan
+  const empleadosFaltantes = empleados.filter(emp => {
+    const tipoTurno = emp.tipoTurno || "diurno";
+    return tipoTurno === "diurno" && !empleadosEnDOM.has(emp.nombre);
+  });
+
+  if (empleadosFaltantes.length === 0) return;
+
+  console.log(`[SYNC+] Agregando ${empleadosFaltantes.length} diurno(s):`, empleadosFaltantes.map(e => e.nombre));
+
+  // 3. Encontrar la fila de bitácora
+  const filaBitacora = tbody.querySelector('tr:has(td.bitacora-row)');
+
+  // 4. Crear filas solo para faltantes
+  empleadosFaltantes.forEach((empleado) => {
+    const posicion = empleados.indexOf(empleado) + 1;
+    const tienePrivilegios = posicion <= 2;
+
+    let rowHTML = `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const fecha = new Date(year, month, day);
+      const esDomingo = fecha.getDay() === 0;
+      const esFeriado = feriadosChile.includes(dateStr);
+
+      let turno = "";
+      if (tienePrivilegios && esDomingo) turno = "DL";
+
+      let extraClass = turno === "DL" ? "domingo-libre" : "";
+      if (esFeriado && tienePrivilegios) extraClass += " feriado";
+
+      rowHTML += `<td><button data-date="${dateStr}" data-empleado="${empleado.nombre}" data-day="${day}" class="calendar-day w-full h-full ${extraClass}">${turno}</button></td>`;
+    }
+    rowHTML += "</tr>";
+
+    if (filaBitacora) {
+      filaBitacora.insertAdjacentHTML('beforebegin', rowHTML);
+    } else {
+      tbody.insertAdjacentHTML('beforeend', rowHTML);
+    }
+  });
+
+  if (usuarioEsAdmin) attachAdminCellListeners();
+}
+
+function agregarEmpleadosNocturnosFaltantes() {
+  const tablaNocturno = document.getElementById("nocturno-calendar");
+  if (!tablaNocturno) return;
+
+  const tbody = tablaNocturno.querySelector("tbody");
+  if (!tbody) return;
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const empleadosEnDOM = new Set();
+  tbody.querySelectorAll("tr").forEach(row => {
+    const firstCell = row.querySelector("td");
+    if (firstCell) empleadosEnDOM.add(firstCell.textContent.trim());
+  });
+
+  const empleadosFaltantes = empleados.filter(emp => {
+    const tipoTurno = emp.tipoTurno || "diurno";
+    return tipoTurno === "nocturno" && !empleadosEnDOM.has(emp.nombre);
+  });
+
+  if (empleadosFaltantes.length === 0) return;
+
+  console.log(`[SYNC+] Agregando ${empleadosFaltantes.length} nocturno(s):`, empleadosFaltantes.map(e => e.nombre));
+
+  empleadosFaltantes.forEach(empleado => {
+    let rowHTML = `<tr><td class="text-left p-2">${empleado.nombre}</td>`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const fecha = new Date(year, month, day);
+      const esFeriado = feriadosChile.includes(dateStr);
+      const dayOfWeek = fecha.getDay();
+
+      let turno = "", turnoClass = "";
+      if (esFeriado) { turno = "F"; turnoClass = "feriado"; }
+      else if (dayOfWeek === 0) { turno = "DL"; turnoClass = "domingo-libre"; }
+      else if (dayOfWeek === 6) { turno = "L"; turnoClass = "dia-libre"; }
+      else { turno = "N"; turnoClass = "nocturno"; }
+
+      rowHTML += `<td><button data-date="${dateStr}" data-empleado="${empleado.nombre}" data-day="${day}" class="calendar-day w-full h-full ${turnoClass}">${turno}</button></td>`;
+    }
+    rowHTML += "</tr>";
+    tbody.insertAdjacentHTML('beforeend', rowHTML);
+  });
+
+  if (usuarioEsAdmin) attachAdminCellListeners();
+}
+
 
 // Renderiza el calendario. Primero intenta cargar datos guardados en localStorage;
 // si no existen o están incompletos, se construye desde cero.
@@ -812,17 +934,22 @@ function renderCalendar(date = currentDate) {
   // ELIMINADO: restaurarEmpleadosEliminados(data.assignments); ya no queremos recuperar empleados borrados.
 
   if (usuarioEsAdmin) { attachAdminCellListeners(); }
+
   // Use debounced refreshIcons for performance
   if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
   fixShiftTextColors();
-  calcularHorasExtras(date);
-
-  // 44-Hour Global Check on Load
-  const generalRows = document.querySelectorAll("#general-calendar tbody tr");
-  generalRows.forEach(row => checkWeeklyHours(row));
 
   // Actualizar UI de bloqueo al final (después de cargar estado desde localStorage)
   updateLockUI();
+
+  // OPTIMIZACIÓN: Diferir cálculos pesados para no bloquear el renderizado
+  requestAnimationFrame(() => {
+    calcularHorasExtras(date);
+
+    // 44-Hour Global Check on Load (diferido)
+    const generalRows = document.querySelectorAll("#general-calendar tbody tr");
+    generalRows.forEach(row => checkWeeklyHours(row));
+  });
 }
 
 // Helper para migrar datos HTML a JSON
@@ -1012,91 +1139,102 @@ function checkWeeklyHours(row) {
   const employeeName = nameCell.textContent.trim();
   const isExcludedSunday = (employeeName === "Sergio Castillo" || employeeName === "Ignacio Aburto");
 
-  // ROBUST: Read headers to determine day of week (LUN, MAR, etc)
-  // This avoids desync between global currentDate and visible table
-  const table = row.closest("table");
-  const headers = table.querySelectorAll("thead th div:first-child"); // The name div (Lun, Mar...)
-  // Headers index 0 is "Empleado". So day 1 is at index 1.
+  // ROBUST: Use global currentDate for Year/Month math
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
   let weeklySum = 0;
   let hasViolation = false;
   let violationWeeks = [];
-  let currentWeekNumber = 1; // logical week counter
+  let currentWeekNumber = 1;
+
+  // Debug Header
+  console.log(`[44h Check] Checking ${employeeName} for ${month + 1}/${year}`);
 
   buttons.forEach((btn, index) => {
-    // Determine Day from Header text
-    let dayName = "";
-    // Header index starts at 0 for Day 1 because querySelectorAll skipped "Empleado" th
-    if (headers[index]) {
-      dayName = headers[index].textContent.trim().toLowerCase();
-    }
+    try {
+      const day = index + 1;
+      const dateObj = new Date(year, month, day);
+      const dayOfWeek = dateObj.getDay(); // 0 (Sun) to 6 (Sat)
+      const shift = btn.textContent.trim();
 
-    // Map Spanish short days to 0-6 (Sun-Sat)
-    // headers are usually: 'lun.', 'mar.', 'mié.', 'jue.' ... or just 'lun', 'mar'
-    let dayOfWeek = -1;
-    if (dayName.includes("lun")) dayOfWeek = 1;
-    else if (dayName.includes("mar")) dayOfWeek = 2;
-    else if (dayName.includes("mié") || dayName.includes("mie")) dayOfWeek = 3;
-    else if (dayName.includes("jue")) dayOfWeek = 4;
-    else if (dayName.includes("vie")) dayOfWeek = 5;
-    else if (dayName.includes("sáb") || dayName.includes("sab")) dayOfWeek = 6;
-    else if (dayName.includes("dom")) dayOfWeek = 0;
-
-    const shift = btn.textContent.trim();
-
-    // Reset on Monday (Start of new week)
-    if (dayOfWeek === 1) {
-      if (weeklySum > 44) {
-        hasViolation = true;
-        violationWeeks.push(currentWeekNumber);
-        console.log(`[44h Violation] ${employeeName} Week ${currentWeekNumber} Sum: ${weeklySum}`);
-      }
-      weeklySum = 0;
-      currentWeekNumber++;
-    }
-
-    let hours = SHIFT_HOURS[shift] || 0;
-
-    // RULE: Friday = -1 hour
-    if (dayOfWeek === 5 && hours > 0) {
-      hours -= 1;
-    }
-
-    // RULE: Saturday Specifics
-    if (dayOfWeek === 6) {
-      if (shift === "M1" || shift === "M2") {
-        hours = 5; // Reduced Saturday hours
-      }
-    }
-
-    // RULE: Employee Specific Sunday Exclusion
-    if (dayOfWeek === 0 && isExcludedSunday) {
-      hours = 0; // Sundays do not count
-    }
-
-    // Manual adjustments for specific known logic could go here
-    weeklySum += hours;
-
-    // Check Sunday (End of week) or Last Day of Month
-    if (dayOfWeek === 0 || index === buttons.length - 1) {
-      if (weeklySum > 44) {
-        hasViolation = true;
-        violationWeeks.push(currentWeekNumber); // Use currentWeekNumber
-        console.log(`[44h Violation] ${employeeName} Week End Sum: ${weeklySum}`);
+      // 1. Reset on Monday (Start of NEW week logic)
+      // If current day is Monday, we check the PREVIOUS week sum/status logic if needed, 
+      // but here we just reset the counter for the new week starting today.
+      if (dayOfWeek === 1) {
+        // Check previous week accumulated sum (only if it wasn't the very first iteration)
+        if (index > 0 && weeklySum > 44) {
+          hasViolation = true;
+          violationWeeks.push(currentWeekNumber);
+          console.log(`  -> Violation Found! Week ${currentWeekNumber} Sum: ${weeklySum}`);
+        }
         weeklySum = 0;
+        currentWeekNumber++;
       }
+
+      // 2. Add Hours
+      // Access global SHIFT_HOURS safely
+      const lookupHours = (typeof SHIFT_HOURS !== 'undefined' ? SHIFT_HOURS : window.SHIFT_HOURS) || {};
+      let hours = lookupHours[shift] || 0;
+
+      // RULE: Friday = -1 hour IF working
+      if (dayOfWeek === 5 && hours > 0) {
+        hours -= 1;
+      }
+
+      // RULE: Saturday Specifics (M1/M2 reduced)
+      if (dayOfWeek === 6) {
+        if (shift === "M1" || shift === "M2") {
+          hours = 5;
+        }
+      }
+
+      // RULE: Employee Specific Sunday Exclusion
+      if (dayOfWeek === 0 && isExcludedSunday) {
+        hours = 0;
+      }
+
+      weeklySum += hours;
+
+      // 3. End of Week Check (Sunday OR End of Month)
+      if (dayOfWeek === 0 || index === buttons.length - 1) {
+        if (weeklySum > 44) {
+          hasViolation = true;
+          violationWeeks.push(currentWeekNumber);
+          console.log(`  -> Violation Found! Week End/Month End. Sum: ${weeklySum}`);
+          // Reset immediately to avoid double counting if month ends on Sunday
+          weeklySum = 0;
+        }
+      }
+    } catch (e) {
+      console.error("Error in daily loop 44h:", e);
     }
   });
 
   if (hasViolation) {
-    console.log(`[44h DEBUG] Adding warning icon for ${employeeName}. Weeks: ${violationWeeks.join(",")}`);
+    console.log(`[44h ALERT] ${employeeName} exceeded limits.`);
+
+    // VISUAL FEEDBACK EXTREMO
     const icon = document.createElement("span");
-    icon.textContent = " ⚠️"; // Warning Icon
+    icon.textContent = " ⚠️";
     icon.className = "warning-icon";
     icon.title = `Excede 44 hrs en semana(s): ${violationWeeks.join(", ")}`;
-    icon.style.cssText = "cursor:help; margin-left:5px; color: #e74c3c; font-size: 1.2em;"; // Inline style backup
+    icon.style.cssText = "cursor:help; margin-left:5px; color: #e74c3c; font-weight:bold; font-size: 1.25em;";
+
     nameCell.appendChild(icon);
-    console.log(`[44h DEBUG] Icon appended. nameCell.innerHTML now:`, nameCell.innerHTML);
+    nameCell.classList.add("text-warning");
+
+    // Añadir estilo directo a la celda para asegurar visibilidad
+    nameCell.style.backgroundColor = "rgba(232, 194, 126, 0.35)"; // Ámbar sutil que combina con el tema oscuro
+    nameCell.style.borderLeft = "4px solid #e8c27e"; // Borde ámbar suave
+    nameCell.style.color = "#f0f0f0"; // Texto claro para contraste
+    nameCell.title = `Alerta: 44h excedidas en semanas ${violationWeeks.join(",")}`;
+  } else {
+    // Limpieza profunda de estilos si se arregló
+    nameCell.style.backgroundColor = "";
+    nameCell.style.borderLeft = "";
+    nameCell.style.color = ""; // Restaurar color original
+    nameCell.title = "";
   }
 }
 
@@ -2122,11 +2260,11 @@ async function exportarReporteHorasExtras() {
     doc.setTextColor(150, 150, 150);
     doc.text("PatagoniaIP - Conexión que transforma realidades", pageWidth / 2, finalY + 10, { align: 'center' });
 
-    swalLoading.close();
+    Swal.close();
     doc.save(`Reporte_NOC_${yearReport}_${monthReport + 1}.pdf`);
 
   } catch (error) {
-    swalLoading.close();
+    Swal.close();
     console.error("Error al generar PDF:", error);
     Swal.fire("Error", "No se pudo generar el reporte PDF: " + error.message, "error");
   }
@@ -2174,6 +2312,10 @@ function adminMousedown(e, targetElement) {
     el.className = "calendar-day w-full h-full";
     el.removeAttribute("title");
 
+    // Recalcular 44 horas para la fila afectada
+    const row = el.closest("tr");
+    if (row) checkWeeklyHours(row);
+
     scheduleFirestoreUpdate();
   }
 }
@@ -2200,6 +2342,10 @@ function adminMouseover(e, targetElement) {
       el.removeAttribute("style");
       el.className = "calendar-day w-full h-full";
       el.removeAttribute("title");
+
+      // Recalcular 44 horas para la fila afectada
+      const row = el.closest("tr");
+      if (row) checkWeeklyHours(row);
 
       scheduleFirestoreUpdate();
     }
@@ -2763,6 +2909,12 @@ function subscribeCalendar() {
     .doc(monthId)
     .onSnapshot((doc) => {
       if (doc.exists) {
+        // BLOQUEO: Si estamos seleccionando O en periodo de cooldown post-guardado
+        if (isSelecting || isDeselecting || saveCooldown) {
+          console.log("[SYNC] Bloqueado (selección activa o cooldown post-guardado).");
+          return;
+        }
+
         const data = doc.data();
         const generalContainer = document.getElementById("general-calendar");
         const nocturnoContainer = document.getElementById("nocturno-calendar");
@@ -2789,14 +2941,11 @@ function subscribeCalendar() {
         isMonthLocked = !!data.locked;
         updateLockUI();
 
-        // IMPORTANTE: Solo sincronizar empleados en meses ABIERTOS
-        // Los meses cerrados mantienen su estado histórico intacto
+        // Sincronización INTELIGENTE: Solo agrega empleados nuevos y faltantes
+        // NO reconstruye la tabla, solo inserta filas faltantes
         if (!isMonthLocked) {
-          console.log("[SYNC] Mes abierto - sincronizando empleados nuevos");
-          sincronizarTablasConEmpleados(); // Calendario general (diurnos)
-          sincronizarCalendarioNocturno(); // Calendario nocturno (nocturnos)
-        } else {
-          console.log("[SYNC] Mes cerrado - manteniendo estado histórico (no se agregan empleados nuevos)");
+          agregarEmpleadosFaltantes(); //  Diurnos
+          agregarEmpleadosNocturnosFaltantes(); // Nocturnos
         }
 
         // Use debounced refreshIcons for performance
@@ -2838,34 +2987,43 @@ function subscribeCalendar() {
 }
 
 // -----------------------------------------------------------------------------
-// 10) ACTUALIZACIÓN EN TIEMPO REAL (debounce)
+// 10) ACTUALIZACIÓN EN TIEMPO REAL (SIMPLIFICADO)
 // -----------------------------------------------------------------------------
-let updateTimeout;
+let updateTimeout = null;
+let saveCooldown = false; // Bloquea snapshots entrantes durante 3s después de guardar
 
 function scheduleFirestoreUpdate() {
-  // Si el mes está bloqueado, NO guardar nada.
   if (isMonthLocked) {
     console.warn("El mes está cerrado. No se guardan cambios.");
     return;
   }
 
+  // Activar cooldown INMEDIATAMENTE al programar un guardado
+  saveCooldown = true;
+
   clearTimeout(updateTimeout);
   updateTimeout = setTimeout(() => {
+    updateTimeout = null;
+
     const datos = obtenerDatosCalendario();
+    console.log(`[SAVE] Guardando ${datos.mes}...`);
+
     db.collection("calendarios")
       .doc(datos.mes)
       .set(datos)
       .then(() => {
-        console.log("Actualización en tiempo real guardada.");
+        console.log(`[SAVE] OK: ${datos.mes}`);
+        // Mantener cooldown por 3 segundos después del guardado exitoso
+        setTimeout(() => { saveCooldown = false; }, 3000);
       })
-      .catch((error) => {
-        console.error("Error al actualizar:", error);
+      .catch((e) => {
+        console.error("[SAVE] Error:", e);
+        saveCooldown = false; // Desbloquear en caso de error
       });
 
-    // También se guarda en localStorage y se recalculan horas extras
     guardarCalendarioEnLocalStorage();
     calcularHorasExtras(currentDate);
-  }, 1000);
+  }, 1500);
 }
 
 // -----------------------------------------------------------------------------
@@ -2888,7 +3046,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
     if (cachedRole === "superadmin") {
       const liRegistros = document.getElementById("li-registros");
+      const liTurnos = document.getElementById("li-turnos");
+      const liUsuarios = document.getElementById("li-usuarios");
+      const liAnimaciones = document.getElementById("li-animaciones");
       if (liRegistros) liRegistros.style.display = "block";
+      if (liTurnos) liTurnos.style.display = "block";
+      if (liUsuarios) liUsuarios.style.display = "block";
+      if (liAnimaciones) liAnimaciones.style.display = "block";
     }
   }
 
@@ -3117,28 +3281,79 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (prevMonthButton) {
       prevMonthButton.addEventListener("click", function () {
+        // Guardar datos del mes actual de forma asíncrona (no bloquea)
+        clearTimeout(updateTimeout);
+        const datos = obtenerDatosCalendario();
+        const mesActual = datos.mes;
+
+        // Guardar en localStorage primero (rápido)
         guardarCalendarioEnLocalStorage();
+
+        // Cambiar de mes INMEDIATAMENTE
         currentDate.setMonth(currentDate.getMonth() - 1);
         renderCalendar(currentDate);
         subscribeCalendar();
+
+        // Actualizar panel flotante si está abierto
+        refreshPrevMonthPanelIfOpen();
+
+        // Guardar en Firestore en background (no bloquea)
+        db.collection("calendarios").doc(mesActual).set(datos)
+          .then(() => console.log(`[NAV] Background save: ${mesActual}`))
+          .catch(e => console.error("[NAV] Background save error:", e));
+
+        saveCooldown = false;
       });
     }
 
     if (nextMonthButton) {
       nextMonthButton.addEventListener("click", function () {
+        clearTimeout(updateTimeout);
+        const datos = obtenerDatosCalendario();
+        const mesActual = datos.mes;
+
+        // Guardar en localStorage primero (rápido)
         guardarCalendarioEnLocalStorage();
+
+        // Cambiar de mes INMEDIATAMENTE
         currentDate.setMonth(currentDate.getMonth() + 1);
         renderCalendar(currentDate);
         subscribeCalendar();
+
+        // Actualizar panel flotante si está abierto
+        refreshPrevMonthPanelIfOpen();
+
+        // Guardar en Firestore en background (no bloquea)
+        db.collection("calendarios").doc(mesActual).set(datos)
+          .then(() => console.log(`[NAV] Background save: ${mesActual}`))
+          .catch(e => console.error("[NAV] Background save error:", e));
+
+        saveCooldown = false;
       });
     }
 
     if (todayButton) {
-      todayButton.addEventListener("click", function () {
+      todayButton.addEventListener("click", async function () {
+        clearTimeout(updateTimeout);
+        const datos = obtenerDatosCalendario();
+
+        try {
+          await db.collection("calendarios").doc(datos.mes).set(datos);
+          console.log(`[NAV] Guardado ${datos.mes}`);
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch (e) {
+          console.error("[NAV] Error:", e);
+        }
+
         guardarCalendarioEnLocalStorage();
+        saveCooldown = false;
+
         currentDate = new Date();
         renderCalendar(currentDate);
         subscribeCalendar();
+
+        // Actualizar panel flotante si está abierto
+        refreshPrevMonthPanelIfOpen();
       });
     }
 
@@ -3177,6 +3392,15 @@ document.addEventListener("DOMContentLoaded", function () {
             // Quitamos la selección tras asignar
             dayBtn.classList.remove("selected");
           });
+
+          // 🟢 VERIFICAR 44 HORAS EN TIEMPO REAL
+          // Recalcular para cada fila afectada
+          const affectedRows = new Set();
+          selectedDays.forEach(btn => {
+            const row = btn.closest("tr");
+            if (row) affectedRows.add(row);
+          });
+          affectedRows.forEach(row => checkWeeklyHours(row));
 
           // Use debounced refreshIcons for performance
           if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
@@ -4007,3 +4231,318 @@ function aplicarAsignacionesV2(assignments) {
     }
   });
 }
+
+// =============================================================================
+// MINI CALENDARIO FLOTANTE - VISTA PREVIA MES ANTERIOR
+// =============================================================================
+
+function initPrevMonthPanel() {
+  const fabButton = document.getElementById("btn-preview-prev-month");
+  const panel = document.getElementById("prev-month-panel");
+  const closeBtn = document.getElementById("close-prev-month-panel");
+  const header = document.querySelector(".prev-month-panel-header");
+
+  if (!fabButton || !panel) return;
+
+  // Abrir panel
+  fabButton.addEventListener("click", () => {
+    openPrevMonthPanel();
+  });
+
+  // Cerrar panel con botón X
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closePrevMonthPanel);
+  }
+
+  // Cerrar con Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.classList.contains("active")) {
+      closePrevMonthPanel();
+    }
+  });
+
+  // === DRAG FUNCTIONALITY ===
+  if (header) {
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+
+    header.addEventListener("mousedown", startDrag);
+    header.addEventListener("touchstart", startDrag, { passive: false });
+
+    function startDrag(e) {
+      // Ignorar si se hace clic en el botón cerrar
+      if (e.target.closest(".btn-close-panel")) return;
+
+      isDragging = true;
+
+      const touch = e.touches ? e.touches[0] : e;
+      startX = touch.clientX;
+      startY = touch.clientY;
+
+      const rect = panel.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+
+      // Remover transiciones durante el arrastre
+      panel.style.transition = "none";
+
+      document.addEventListener("mousemove", doDrag);
+      document.addEventListener("mouseup", stopDrag);
+      document.addEventListener("touchmove", doDrag, { passive: false });
+      document.addEventListener("touchend", stopDrag);
+
+      e.preventDefault();
+    }
+
+    function doDrag(e) {
+      if (!isDragging) return;
+
+      const touch = e.touches ? e.touches[0] : e;
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+
+      let newLeft = startLeft + deltaX;
+      let newTop = startTop + deltaY;
+
+      // Limitar a los bordes de la pantalla
+      const maxLeft = window.innerWidth - panel.offsetWidth;
+      const maxTop = window.innerHeight - panel.offsetHeight;
+
+      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+      newTop = Math.max(0, Math.min(newTop, maxTop));
+
+      panel.style.left = newLeft + "px";
+      panel.style.top = newTop + "px";
+      panel.style.right = "auto";
+
+      e.preventDefault();
+    }
+
+    function stopDrag() {
+      isDragging = false;
+      panel.style.transition = "";
+
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+      document.removeEventListener("touchmove", doDrag);
+      document.removeEventListener("touchend", stopDrag);
+    }
+  }
+}
+
+function openPrevMonthPanel() {
+  const panel = document.getElementById("prev-month-panel");
+  const loadingEl = document.getElementById("prev-month-loading");
+  const contentEl = document.getElementById("prev-month-content");
+
+  // Mostrar panel flotante
+  panel.classList.add("active");
+
+  // Mostrar loading
+  if (loadingEl) loadingEl.style.display = "flex";
+  if (contentEl) contentEl.classList.remove("loaded");
+
+  // Cargar datos del mes anterior
+  loadPrevMonthData();
+
+  // Refrescar iconos
+  if (typeof refreshIcons === 'function') refreshIcons();
+  else if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closePrevMonthPanel() {
+  const panel = document.getElementById("prev-month-panel");
+  panel.classList.remove("active");
+}
+
+// Refrescar el panel flotante si está abierto (llamado al cambiar de mes)
+function refreshPrevMonthPanelIfOpen() {
+  const panel = document.getElementById("prev-month-panel");
+  if (panel && panel.classList.contains("active")) {
+    console.log("[Prev Month Panel] Refrescando datos por cambio de mes");
+    loadPrevMonthData();
+  }
+}
+
+async function loadPrevMonthData() {
+  const loadingEl = document.getElementById("prev-month-loading");
+  const contentEl = document.getElementById("prev-month-content");
+  const titleEl = document.getElementById("prev-month-title");
+
+  // Calcular mes anterior basándose en currentDate (mes actual mostrado)
+  const prevDate = new Date(currentDate);
+  prevDate.setMonth(prevDate.getMonth() - 1);
+
+  const year = prevDate.getFullYear();
+  const month = prevDate.getMonth(); // 0-indexed
+  const monthName = prevDate.toLocaleString("es", { month: "long" });
+  const monthNameCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  // Actualizar título
+  titleEl.textContent = `${monthNameCapitalized} ${year}`;
+
+  // Usar el mismo formato de clave que guardarCalendarioEnLocalStorage
+  // Formato: calendar_v3_${year}-${month+1}
+  const key = `calendar_v3_${year}-${month + 1}`;
+  let data = null;
+
+  console.log("[Prev Month Panel] Buscando datos con clave:", key);
+
+  // 1. Intentar cargar desde localStorage primero (caché local)
+  try {
+    const storedData = localStorage.getItem(key);
+    if (storedData) {
+      data = JSON.parse(storedData);
+      console.log("[Prev Month Panel] Datos encontrados en localStorage");
+    }
+  } catch (e) {
+    console.warn("[Prev Month Panel] Error leyendo localStorage:", e);
+  }
+
+  // 2. Si no hay datos en localStorage, intentar Firestore
+  if (!data || !data.assignments || Object.keys(data.assignments).length === 0) {
+    try {
+      // Formato del docId en Firestore: "Enero 2026" (mes capitalizado)
+      const docId = `${monthNameCapitalized} ${year}`;
+      console.log("[Prev Month Panel] Buscando en Firestore con docId:", docId);
+
+      const doc = await db.collection("calendarios").doc(docId).get();
+      if (doc.exists) {
+        data = doc.data();
+        console.log("[Prev Month Panel] Datos encontrados en Firestore");
+      } else {
+        console.log("[Prev Month Panel] No hay documento en Firestore para:", docId);
+      }
+    } catch (e) {
+      console.warn("[Prev Month Panel] Error leyendo Firestore:", e);
+    }
+  }
+
+  // Ocultar loading y mostrar contenido
+  if (loadingEl) loadingEl.style.display = "none";
+  if (contentEl) contentEl.classList.add("loaded");
+
+  // Renderizar mini calendario
+  renderMiniCalendar(contentEl, data, year, month);
+}
+
+function renderMiniCalendar(container, data, year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Si no hay datos
+  if (!data || !data.assignments || Object.keys(data.assignments).length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:2rem; color:var(--color-texto-secundario);">
+        <i data-lucide="calendar-x" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.5;"></i>
+        <p>No hay datos guardados para este mes</p>
+      </div>
+    `;
+    if (typeof refreshIcons === 'function') refreshIcons();
+    else if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+
+  // Construir cabecera
+  let headerHTML = '<tr><th>Empleado</th>';
+  for (let day = 1; day <= daysInMonth; day++) {
+    const fecha = new Date(year, month, day);
+    const dayName = fecha.toLocaleString("es", { weekday: "narrow" });
+    headerHTML += `<th title="${fecha.toLocaleDateString('es')}">${day}</th>`;
+  }
+  headerHTML += '</tr>';
+
+  // Construir filas de empleados
+  let bodyHTML = '';
+
+  // Mapa de colores hardcoded (mismo que actualizarBotonTurno)
+  const SHIFT_COLORS = window.SHIFT_COLORS || {
+    "M0": "#648c9b", "M0A": "#7b69a5", "M1": "#557a5f", "M1A": "#c49f87",
+    "M1B": "#ffaaa5", "M2": "#ffcc99", "M2A": "#d4a5a5", "M2B": "#b5e7a0",
+    "M3": "#996a7f", "V": "#88C0A6", "L": "#8FBCBB", "DL": "#D77A7A",
+    "N": "#cccccc", "S": "#4A90E2", "I": "#2C3E50"
+  };
+
+  // Ordenar empleados según el orden de la lista 'empleados' (no alfabéticamente)
+  const empleadosOrder = (window.empleados || []).map(e => e.nombre);
+  const employeesInData = Object.keys(data.assignments).filter(n => n !== "Encargado de Bitácora");
+
+  // Ordenar: primero los que están en la lista empleados (en su orden), luego los demás
+  const sortedEmployees = employeesInData.sort((a, b) => {
+    const indexA = empleadosOrder.indexOf(a);
+    const indexB = empleadosOrder.indexOf(b);
+    // Si ambos están en la lista, ordenar por su posición
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    // Si solo uno está, ese va primero
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    // Si ninguno está, ordenar alfabéticamente como fallback
+    return a.localeCompare(b);
+  });
+
+  sortedEmployees.forEach(name => {
+    const shifts = data.assignments[name];
+    bodyHTML += `<tr><td title="${name}">${name.split(' ')[0]}</td>`; // Solo primer nombre
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const shift = shifts[day] || "";
+      let shiftClass = "";
+      let displayShift = shift;
+      let inlineStyle = "";
+
+      // Manejar objeto vs string
+      if (typeof shift === 'object') {
+        displayShift = shift.code || "";
+        // Si el objeto tiene color guardado, usarlo
+        if (shift.color) {
+          inlineStyle = `background-color:${shift.color}; color:#000;`;
+        }
+      }
+
+      // Determinar clase CSS y color
+      if (displayShift === "DL") {
+        shiftClass = "domingo-libre";
+      } else if (displayShift === "F") {
+        shiftClass = "feriado";
+      } else if (displayShift === "V") {
+        shiftClass = "vacaciones";
+        displayShift = "🌴";
+        inlineStyle = `background-color:${SHIFT_COLORS["V"] || "#88C0A6"}; color:#000;`;
+      } else if (displayShift === "L") {
+        shiftClass = "dia-libre";
+        inlineStyle = `background-color:${SHIFT_COLORS["L"] || "#8FBCBB"}; color:#000;`;
+      } else if (displayShift === "N") {
+        shiftClass = "nocturno";
+      } else if (displayShift && SHIFT_COLORS[displayShift]) {
+        // Aplicar color del turno (M0, M1, M2, etc.)
+        inlineStyle = `background-color:${SHIFT_COLORS[displayShift]}; color:#000;`;
+      }
+
+      // Si no hay inline style pero hay color guardado en el objeto, usarlo
+      if (!inlineStyle && typeof shift === 'object' && shift.color) {
+        inlineStyle = `background-color:${shift.color}; color:#000;`;
+      }
+
+      bodyHTML += `<td><span class="mini-shift ${shiftClass}" style="${inlineStyle}">${displayShift}</span></td>`;
+    }
+    bodyHTML += '</tr>';
+  });
+
+  // Construir tabla
+  container.innerHTML = `
+    <table class="mini-calendar">
+      <thead>${headerHTML}</thead>
+      <tbody>${bodyHTML}</tbody>
+    </table>
+    <div style="text-align:center; padding-top:0.5rem;">
+      <small style="color:var(--color-texto-secundario);">
+        ${sortedEmployees.length} empleados · ${daysInMonth} días
+      </small>
+    </div>
+  `;
+}
+
+// Inicializar panel cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", () => {
+  // Delay para asegurar que otros elementos ya estén cargados
+  setTimeout(initPrevMonthPanel, 500);
+});

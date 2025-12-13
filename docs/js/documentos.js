@@ -124,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function configureView() {
         const container = document.querySelector(".documentos-container");
         const liRegistros = document.getElementById("li-registros");
+        const liTurnos = document.getElementById("li-turnos");
         const openUploadModalBtn = document.getElementById("open-upload-modal-btn");
 
         // Mostrar botón de subida solo a admins
@@ -135,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (currentUserRole === "superadmin") {
             if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
             const liUsuarios = document.getElementById("li-usuarios");
             if (liUsuarios) liUsuarios.style.display = "block";
             const liAnimaciones = document.getElementById("li-animaciones");
@@ -268,8 +270,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     const errorData = await response.json();
                     if (errorData.error === "Session expired by inactivity") {
                         console.warn("Sesión expirada. Redirigiendo al login...");
-                        alert("Tu sesión ha expirado por inactividad. Por favor ingresa nuevamente.");
-                        window.location.href = "login.html";
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Sesión Expirada',
+                            text: 'Tu sesión ha expirado por inactividad. Por favor ingresa nuevamente.',
+                            confirmButtonColor: '#7796CB'
+                        }).then(() => {
+                            window.location.href = "login.html";
+                        });
                         return;
                     }
                 }

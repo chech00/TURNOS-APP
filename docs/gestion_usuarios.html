@@ -2,9 +2,17 @@
 <html lang="es">
 
 <head>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestión de Cuentas de Usuario - Sistema</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Sistema de gestión de turnos del NOC de PatagoniaIP." />
+  <meta name="author" content="PatagoniaIP" />
+  <meta name="theme-color" content="#1a1d2d" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="./img/favicon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="./js/lucide-instant.js"></script>
@@ -16,7 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/enhancements.css" /><link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/gestion_usuarios.css" />
     <link rel="stylesheet" href="./css/user-profile-header.css" />
     <script defer src="./js/user-profile-header.js"></script>
@@ -36,9 +44,9 @@
 
                 <li data-tooltip="Directorio"><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
                         <span>Directorio</span></a></li>
-                <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a href="index.html"
+                <li id="li-turnos" class="superadmin-only" style="display:none;" style="display:none;" data-tooltip="Turnos"><a href="index.html"
                         id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
-                <li data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i>
+                <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i>
                         <span>Señal de
                             Fibra</span></a></li>
                 <li data-tooltip="Documentos Noc"><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i>
@@ -80,6 +88,8 @@
     <!-- Contenedor Principal -->
     <div id="main-content" class="main-content">
         <header>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
             <h1>Gestión de Usuarios y Roles</h1>
             <!-- Premium User Profile Header -->
             <div class="user-profile-header">
@@ -247,6 +257,7 @@
     <script>
         lucide.createIcons();
     </script>
-</body>
+  <script src="./js/sw-register.js"></script></body>
 
 </html>
+

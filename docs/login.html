@@ -2,11 +2,21 @@
 <html lang="es">
 
 <head>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Sistema de gestión de turnos del NOC de PatagoniaIP." />
+  <meta name="author" content="PatagoniaIP" />
+  <meta name="theme-color" content="#1a1d2d" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./img/favicon.svg" />
   <!-- Google Fonts para una tipografía moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/enhancements.css" />
   <link rel="stylesheet" href="./css/styles.css">
   <link rel="stylesheet" href="./css/login.css?v=2.0">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -75,6 +85,7 @@
   <script type="module" src="./js/firebase.js"></script>
   <script type="module" src="./js/login.js?v=3.0"></script>
   <script type="module" src="./js/christmas.js"></script>
+  <script src="./js/sw-register.js"></script>
 </body>
 
 </html>

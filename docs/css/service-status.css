@@ -1,0 +1,29 @@
+/* Real-time Service Status Styles */
+.service-item.is-down {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.service-item.is-down .service-name {
+    color: #fca5a5 !important; /* Red-300 */
+}
+
+.service-item.is-down .custom-checkbox {
+    border-color: #ef4444 !important;
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.service-item.is-down::after {
+    content: 'CAÍDO';
+    position: absolute;
+    right: 10px;
+    font-size: 0.65rem;
+    background: #ef4444;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Add a tooltip for "reported by" if possible, or just visual cue for now */

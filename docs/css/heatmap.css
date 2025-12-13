@@ -1,0 +1,104 @@
+/* ===========================================
+   HEATMAP STYLES
+   =========================================== */
+.heatmap-container {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: 40px repeat(24, 1fr);
+    /* Label + 24 hours */
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.heatmap-header-cell {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-align: center;
+    padding-bottom: 4px;
+}
+
+.heatmap-row-label {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-right: 8px;
+}
+
+.heatmap-cell {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+    position: relative;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.2);
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Intensity Colors */
+.intensity-0 {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.intensity-1 {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+/* Low */
+.intensity-2 {
+    background: rgba(59, 130, 246, 0.4);
+}
+
+.intensity-3 {
+    background: rgba(59, 130, 246, 0.6);
+}
+
+.intensity-4 {
+    background: rgba(59, 130, 246, 0.8);
+}
+
+.intensity-5 {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6;
+}
+
+/* High */
+
+/* Tooltip */
+.heatmap-cell::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 20;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.heatmap-cell:hover::after {
+    opacity: 1;
+}

@@ -114,24 +114,139 @@
 }
 
 .btn-action {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--color-texto-principal);
-  padding: 0.5rem;
-  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .btn-action:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Export/Backup Button */
+.btn-backup {
+  background: rgba(119, 150, 203, 0.15);
+  border-color: rgba(119, 150, 203, 0.3);
+  color: var(--color-acento-primario);
+}
+
+.btn-backup:hover {
+  background: rgba(119, 150, 203, 0.25);
+  border-color: rgba(119, 150, 203, 0.5);
+  box-shadow: 0 4px 12px rgba(119, 150, 203, 0.2);
+}
+
+/* Cleanup/Trash Button */
+.btn-cleanup {
+  background: rgba(215, 122, 122, 0.1);
+  border-color: rgba(215, 122, 122, 0.25);
+  color: #d77a7a;
 }
 
 .btn-cleanup:hover {
-  background: rgba(231, 76, 60, 0.2);
+  background: rgba(215, 122, 122, 0.2);
+  border-color: rgba(215, 122, 122, 0.4);
   color: #e74c3c;
+  box-shadow: 0 4px 12px rgba(215, 122, 122, 0.2);
+}
+
+/* Secondary Button (Reset/X button) */
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-texto-secundario);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--color-texto-principal);
+}
+
+/* Role Badges */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role-badge.superadmin {
+  background: linear-gradient(135deg, rgba(232, 194, 126, 0.25), rgba(215, 122, 122, 0.25));
+  color: #f7c866;
+  border: 1px solid rgba(232, 194, 126, 0.4);
+}
+
+.role-badge.admin {
+  background: rgba(119, 150, 203, 0.2);
+  color: #7796cb;
+  border: 1px solid rgba(119, 150, 203, 0.3);
+}
+
+.role-badge.user {
+  background: rgba(161, 169, 181, 0.2);
+  color: var(--color-texto-secundario);
+  border: 1px solid rgba(161, 169, 181, 0.3);
+}
+
+/* Method Badges */
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(119, 150, 203, 0.15);
+  color: var(--color-acento-primario);
+  border: 1px solid rgba(119, 150, 255, 0.2);
+}
+
+.method-badge i {
+  width: 14px;
+  height: 14px;
+}
+
+.method-badge.email {
+  background: rgba(119, 150, 203, 0.15);
+  color: #7796cb;
+  border: 1px solid rgba(119, 150, 203, 0.25);
+}
+
+.method-badge.google {
+  background: rgba(234, 67, 53, 0.15);
+  color: #ea4335;
+  border: 1px solid rgba(234, 67, 53, 0.25);
+}
+
+.method-badge.password {
+  background: rgba(136, 192, 166, 0.15);
+  color: #88c0a6;
+  border: 1px solid rgba(136, 192, 166, 0.25);
 }

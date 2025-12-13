@@ -20,6 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSignature = '';
     let recipients = []; // Email recipients from Firestore
     let currentUserRole = null; // Will be populated on auth change
+    let serviceStates = {}; // { "ServiceName": { status: 'down', by: 'User', at: timestamp } }
+
+    // === Real-time State Listener ===
+    const listenToServiceStates = () => {
+        db.collection('suralis_states').doc('current_status')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    serviceStates = doc.data() || {};
+                    renderCategories(); // Re-render to show red/green status
+                }
+            }, (error) => {
+                console.error("Error listening to service states:", error);
+            });
+    };
+
+    // Initialize Listener
+    listenToServiceStates();
 
     // === Search Functionality ===
     const setupSearch = () => {
@@ -314,11 +331,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const servicesList = panel.querySelector('.services-list');
             categoryData.services.forEach(serviceName => {
                 const isSelected = selectedServices.has(serviceName);
+
+                // Check Real-time State (Updated variable)
+                const state = serviceStates[serviceName];
+                const isDown = state && state.status === 'down';
+
                 const item = document.createElement('div');
-                item.className = `service-item ${isSelected ? 'selected' : ''}`;
+                item.className = `service-item ${isSelected ? 'selected' : ''} ${isDown ? 'is-down' : ''}`;
+
+                if (isDown) {
+                    const reporter = state.by ? state.by.split('@')[0] : 'Alguien';
+                    let timeStr = '';
+                    if (state.at && state.at.toDate) {
+                        const date = state.at.toDate();
+                        timeStr = ` a las ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    }
+                    item.title = `🔴 Reportado caído por ${reporter}${timeStr}`;
+                }
+
                 item.innerHTML = `
                     <div class="custom-checkbox"><i class="fas fa-check"></i></div>
                     <span class="service-name">${serviceName}</span>
+                    ${isDown ? '<i class="fas fa-exclamation-triangle" style="color:#ef4444;margin-left:auto;font-size:0.8rem;"></i>' : ''}
                 `;
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -400,22 +434,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const greeting = getGreeting();
 
         if (emailContentDiv) {
-            emailContentDiv.innerHTML = `${greeting},<br><br>
-Junto con saludar, informo que actualmente se registra una <strong>caída</strong> en los siguientes enlaces asociados a Suralis:<br><br>
+            emailContentDiv.innerHTML = `Estimados,<br><br>
+Informamos que nuestro sistema de monitoreo ha detectado una <strong>interrupción de servicio</strong> afectando a los siguientes enlaces de Suralis:<br><br>
 <strong>Enlaces afectados:</strong><br>
 ${servicesList || '<em>(Ninguno seleccionado)</em>'}<br><br>
-La situación ha sido debidamente registrada y se encuentra en análisis.<br>
-Se emite esta comunicación con fines informativos.<br><br>
+Personal técnico ya ha tomado conocimiento y se encuentra gestionando la incidencia para su pronta solución.<br>
+Se mantendrá informado ante novedades relevantes.<br><br>
 Saludos cordiales,<br>
 ${currentSignature}`;
         }
 
         if (onlineContentDiv) {
-            onlineContentDiv.innerHTML = `${greeting},<br><br>
-Junto con saludar, informo que los siguientes enlaces pertenecientes a Suralis han sido <strong>restablecidos</strong> y operan con normalidad:<br><br>
+            onlineContentDiv.innerHTML = `Estimados,<br><br>
+Confirmamos el <strong>restablecimiento total</strong> de los servicios afectados. Los siguientes enlaces operan nuevamente dentro de sus parámetros normales:<br><br>
 <strong>Enlaces restaurados:</strong><br>
 ${servicesList || '<em>(Ninguno seleccionado)</em>'}<br><br>
-Esta notificación se emite únicamente con fines informativos.<br><br>
+Hemos verificado la estabilidad de la conexión. Damos por cerrado este incidente.<br><br>
 Saludos cordiales,<br>
 ${currentSignature}`;
         }
@@ -482,6 +516,39 @@ ${currentSignature}`;
             // Get current user info
             const user = firebase.auth().currentUser;
 
+            // === VERIFICACIÓN: ¿El usuario está logueado con Google? ===
+            // Esto es necesario porque el envío de correos requiere el token de Gmail
+            if (user) {
+                const providerData = user.providerData || [];
+                const isGoogleLogin = providerData.some(p => p.providerId === 'google.com');
+
+                if (!isGoogleLogin) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Inicio de sesión con Google requerido',
+                        html: `
+                            <p style="margin-bottom: 1rem;">Para enviar correos de notificación, necesitas estar conectado con tu <strong>cuenta de Google</strong>.</p>
+                            <p style="font-size: 0.9rem; color: #9CA3AF;">Esto permite que el correo se envíe desde tu Gmail personal.</p>
+                            <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+                            <p style="font-size: 0.85rem; color: #A1A9B5;">
+                                <strong>¿Cómo hacerlo?</strong><br>
+                                1. Cierra tu sesión actual<br>
+                                2. Inicia sesión con el botón "Google"
+                            </p>
+                        `,
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#7796CB',
+                        background: '#1f2937',
+                        customClass: {
+                            popup: 'swal-dark-popup',
+                            title: 'swal-dark-title',
+                            htmlContainer: 'swal-dark-content'
+                        }
+                    });
+                    return;
+                }
+            }
+
             // Get content from the preview
             const contentDiv = type === 'caida' ? emailContentDiv : onlineContentDiv;
             const htmlContent = contentDiv?.innerHTML || '';
@@ -492,7 +559,74 @@ ${currentSignature}`;
                 : '✅ Enlaces Normalizados - Suralis';
 
             try {
-                Swal.fire({ title: 'Enviando correo...', text: 'Por favor espera', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                // === GUARDIAN LOGIC (Duplicate Check) ===
+                if (type === 'caida') {
+                    const alreadyDown = [];
+                    selectedServices.forEach(s => {
+                        const st = serviceStates[s];
+                        if (st && st.status === 'down') {
+                            alreadyDown.push(s);
+                        }
+                    });
+
+                    if (alreadyDown.length > 0) {
+                        const confirm = await Swal.fire({
+                            icon: 'warning',
+                            title: '⚠️ ¿Reportar nuevamente?',
+                            html: `
+                                <p>Los siguientes servicios ya están marcados como <strong>CAÍDOS</strong>:</p>
+                                <ul style="text-align:left; font-size:0.9rem; color:#ef4444; margin:1rem 0;">
+                                    ${alreadyDown.map(s => `<li>${s}</li>`).join('')}
+                                </ul>
+                                <p>¿Estás seguro de que quieres enviar otro reporte?</p>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: 'Sí, reportar igual',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#ef4444',
+                            cancelButtonColor: '#7796CB'
+                        });
+
+                        if (!confirm.isConfirmed) return;
+                    }
+                }
+
+                Swal.fire({
+                    title: 'Enviando correo...',
+                    text: 'Contactando con el servidor de correo',
+                    html: `
+                        <div class="mail-animation-container">
+                            <!-- Background Elements -->
+                            <div class="wind-line wind-1"></div>
+                            <div class="wind-line wind-2"></div>
+                            <div class="wind-line wind-3"></div>
+                            <div class="wind-line wind-4"></div>
+                            <div class="wind-line wind-5"></div>
+                            
+                            <!-- Main Combine -->
+                            <div class="plane-wrapper">
+                                <i class="fas fa-paper-plane paper-plane"></i>
+                                <div class="exhaust-trail"></div>
+                                <div class="particle p1"></div>
+                                <div class="particle p2"></div>
+                                <div class="particle p3"></div>
+                            </div>
+                        </div>
+                        <h3 style="color:#e5e7eb; font-weight:600; margin-top:15px; margin-bottom:5px;">Enviando Correo...</h3>
+                        <p style="color:#9ca3af; font-size:0.9rem;">Conectando con SMTP seguro</p>
+                    `,
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    background: '#1f2937',
+                    customClass: {
+                        popup: 'swal-dark-popup',
+                        title: 'swal-dark-title',
+                        content: 'swal-dark-content'
+                    },
+                    didOpen: () => {
+                        // Swal.showLoading() - Removed to show our custom animation
+                    }
+                });
 
                 // Get auth token
                 const token = await user.getIdToken();
@@ -515,7 +649,11 @@ ${currentSignature}`;
                 if (response.ok && result.success) {
                     // === GUARDAR INCIDENTE EN FIRESTORE PARA ESTADÍSTICAS ===
                     try {
-                        await db.collection('suralisIncidents').add({
+                        const batch = db.batch();
+
+                        // 1. Log Incident
+                        const incidentRef = db.collection('suralisIncidents').doc();
+                        batch.set(incidentRef, {
                             type: type, // 'caida' o 'normalizacion'
                             services: Array.from(selectedServices),
                             servicesCount: selectedServices.size,
@@ -523,8 +661,32 @@ ${currentSignature}`;
                             sentAt: firebase.firestore.FieldValue.serverTimestamp(),
                             recipientsCount: recipients.length
                         });
+
+                        // 2. Update Real-time State
+                        const stateRef = db.collection('suralis_states').doc('current_status');
+                        const updates = {};
+                        selectedServices.forEach(service => {
+                            // If 'caida' -> status: 'down'
+                            // If 'normalizacion' -> status: 'up' (or delete key to save space, but explicit 'up' is safer)
+                            if (type === 'caida') {
+                                updates[service] = {
+                                    status: 'down',
+                                    by: user?.email || 'Sistema',
+                                    at: firebase.firestore.Timestamp.now()
+                                };
+                            } else {
+                                // For normalizacion, we can either remove the entry or set to 'up'
+                                updates[service] = firebase.firestore.FieldValue.delete();
+                            }
+                        });
+
+                        // Use set with merge to update map
+                        batch.set(stateRef, updates, { merge: true });
+
+                        await batch.commit();
+
                     } catch (incidentError) {
-                        console.warn('No se pudo guardar el incidente:', incidentError);
+                        console.warn('No se pudo guardar el incidente o estado:', incidentError);
                         // No bloquear el flujo si falla el log
                     }
 
@@ -920,7 +1082,7 @@ ${currentSignature}`;
             // Calcular métricas
             const thisMonth = incidents.filter(i => i.sentAt >= startOfMonth);
             const caidasMes = thisMonth.filter(i => i.type === 'caida').length;
-            const normalizacionesMes = thisMonth.filter(i => i.type === 'normalizacion').length;
+            const normalizacionesMes = thisMonth.filter(i => i.type !== 'caida').length;
 
             // Servicio más afectado
             const serviceCounts = {};
@@ -931,6 +1093,37 @@ ${currentSignature}`;
                 });
             });
             const topService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
+
+            // Calcular duración de fallas (MTTR Logic)
+            incidents.forEach((incident, index) => {
+                if (incident.type !== 'caida') { // Es una normalización
+                    // Buscar hacia atrás (en el arreglo ordenado DESC, índices mayores son más antiguos)
+                    // la caída más reciente que coincida con alguno de los servicios.
+                    for (let j = index + 1; j < incidents.length; j++) {
+                        const pastIncident = incidents[j];
+
+                        // Solo nos interesa si es una caída
+                        if (pastIncident.type === 'caida') {
+                            // Verificar intersección de servicios
+                            const hasCommonService = incident.services.some(s => pastIncident.services.includes(s));
+
+                            if (hasCommonService) {
+                                // ¡Encontrado!
+                                const diffMs = incident.sentAt - pastIncident.sentAt;
+                                const diffMins = Math.floor(diffMs / 60000);
+                                const hours = Math.floor(diffMins / 60);
+                                const mins = diffMins % 60;
+
+                                incident.durationFormatted = `${hours}h ${mins}m`;
+
+                                // Opcional: Marcar incidente pasado como "resuelto" para no contearlo doble si hay múltiples normalizaciones (complejo).
+                                // Por ahora, primer match gana (la caída más reciente).
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
 
             // Actualizar UI
             document.getElementById('statCaidasMes').textContent = caidasMes;
@@ -944,6 +1137,9 @@ ${currentSignature}`;
             // Renderizar gráfico
             renderIncidentsChart(incidents.filter(i => i.sentAt >= thirtyDaysAgo));
 
+            // Renderizar Heatmap
+            renderHeatmap(incidents);
+
         } catch (error) {
             console.error('Error loading dashboard stats:', error);
         }
@@ -954,9 +1150,19 @@ ${currentSignature}`;
         if (!tbody) return;
 
         if (incidents.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#A1A9B5;">No hay incidentes registrados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#A1A9B5;">No hay incidentes registrados</td></tr>';
             return;
         }
+
+        // Logic to calculate durations for the displayed rows
+        // Note: incidents are passed sorted descending (newest first)
+        // We need access to the full history to find the start of an outage, but here we might only have a slice.
+        // For the best accuracy, this calculation should ideally happen before slicing, but for now we'll try to find it in the provided list or suggest better logic later.
+        // However, loadDashboardStats passes incidents.slice(0, 10). This means we might miss the 'start' if it's older than the 10th item.
+        // Quick fix: The caller should ideally calculate duration on the full list BEFORE slicing. 
+        // Let's implement a visual check here assuming 'incidents' might be the subset, so we can't guarantee finding the pair.
+        // BUT, to do it right, I will grab the full list from 'loadDashboardStats' context if possible, or just look in this slice.
+        // Actually, let's just modify the render mapping.
 
         tbody.innerHTML = incidents.map(i => {
             const date = i.sentAt.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -965,11 +1171,23 @@ ${currentSignature}`;
             const servicesText = (i.services || []).slice(0, 2).join(', ') + (i.servicesCount > 2 ? ` (+${i.servicesCount - 2})` : '');
             const sentBy = i.sentBy?.split('@')[0] || 'Sistema';
 
+            // Calculate duration if it's a normalization
+            let durationText = '-';
+            if (i.type !== 'caida' && i.duration) {
+                // Used if pre-calculated
+                durationText = i.duration;
+            } else if (i.type !== 'caida') {
+                // Try to calculate on the fly if passed in incidents has the data? 
+                // It's better to pre-calc. For now, placeholder or needs pre-calc.
+                durationText = '--';
+            }
+
             return `
                 <tr>
                     <td>${date}</td>
                     <td><span class="incident-type ${typeClass}">${typeLabel}</span></td>
                     <td title="${(i.services || []).join(', ')}">${servicesText || 'N/A'}</td>
+                    <td style="font-family:'Consolas',monospace;font-size:0.9em;color:#A1A9B5;">${i.durationFormatted || '-'}</td>
                     <td>${sentBy}</td>
                 </tr>
             `;
@@ -1051,5 +1269,54 @@ ${currentSignature}`;
                 }
             }
         });
+    }
+
+    function renderHeatmap(incidents) {
+        const heatmapContainer = document.getElementById('incidentsHeatmap');
+        if (!heatmapContainer) return;
+
+        // Initialize 7x24 grid (Sun-Sat, 0-23h)
+        const gridData = Array(7).fill().map(() => Array(24).fill(0));
+
+        incidents.forEach(incident => {
+            if (incident.type === 'caida') {
+                const date = incident.sentAt;
+                const day = date.getDay(); // 0-6 (Sun-Sat)
+                const hour = date.getHours(); // 0-23
+                gridData[day][hour]++;
+            }
+        });
+
+        const dayLabels = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        let html = '';
+
+        // Header Row (Hours)
+        html += '<div class="heatmap-header-cell"></div>'; // Corner
+        for (let h = 0; h < 24; h++) {
+            html += `<div class="heatmap-header-cell">${h}h</div>`;
+        }
+
+        // Data Rows
+        for (let d = 0; d < 7; d++) {
+            // Row Label
+            html += `<div class="heatmap-row-label">${dayLabels[d]}</div>`;
+
+            // Cells
+            for (let h = 0; h < 24; h++) {
+                const count = gridData[d][h];
+                let intensity = 0;
+                if (count > 0) intensity = 1;
+                if (count > 2) intensity = 2;
+                if (count > 5) intensity = 3;
+                if (count > 10) intensity = 4;
+                if (count > 20) intensity = 5;
+
+                html += `<div class="heatmap-cell intensity-${intensity}" 
+                              data-tooltip="${dayLabels[d]} ${h}:00 - ${count} caídas">
+                         </div>`;
+            }
+        }
+
+        heatmapContainer.innerHTML = html;
     }
 });

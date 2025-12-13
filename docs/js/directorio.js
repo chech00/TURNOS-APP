@@ -229,11 +229,85 @@ function getEmployeeStatus(employeeName, calendarData) {
             'I': { start: '09:00', end: '18:00' }  // Estimated
         };
 
-        // ... inside getEmployeeStatus ...
+        // ================================================================
+        // PRIORIDAD 1: TURNO NOCTURNO REGULAR (Cristian Oyarzo)
+        // Se verifica ANTES de feriados para evitar conflictos
+        // ================================================================
+        if (employeeName === CONFIG.names.nightShiftSpecial) {
+            const now = new Date();
+            const hour = now.getHours();
+            const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
-        // ... inside getEmployeeStatus ...
+            // Holiday Check
+            let isHolidayToday = false;
+            let isHolidayYesterday = false;
 
-        // CHECK FERIADOS (Special Night Shifts: 21:00 - 02:00)
+            if (calendarData && calendarData.feriados) {
+                const dString = now.getDate().toString();
+                const dPad = dString.padStart(2, '0');
+                if (calendarData.feriados[dString] || calendarData.feriados[dPad]) isHolidayToday = true;
+
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                const yString = yesterday.getDate().toString();
+                const yPad = yString.padStart(2, '0');
+                if (calendarData.feriados[yString] || calendarData.feriados[yPad]) isHolidayYesterday = true;
+            }
+
+            let status = 'free';
+            let label = 'Libre';
+            let icon = 'coffee';
+
+            // PRIORIDAD 1: Terminando turno (madrugada)
+            if (dayOfWeek >= 2 && dayOfWeek <= 6 && hour < 7 && !isHolidayYesterday) {
+                // Mar-Sáb 00:00-06:59: terminando turno del día anterior
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            } else if (dayOfWeek === 0 && hour < 2 && !isHolidayYesterday) {
+                // Domingo 00:00-01:59: terminando turno del sábado
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            } else if (dayOfWeek === 1 && hour < 2 && !isHolidayYesterday) {
+                // Lunes 00:00-01:59: terminando turno del domingo
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            }
+            // PRIORIDAD 2: Iniciando turno (noche)
+            else if (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 21 && !isHolidayToday) {
+                // Lun-Vie 21:00+: iniciando turno
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            } else if (dayOfWeek === 6 && hour >= 21 && !isHolidayToday) {
+                // Sábado 21:00+: iniciando turno
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            } else if (dayOfWeek === 0 && hour >= 21 && !isHolidayToday) {
+                // Domingo 21:00+: iniciando turno
+                status = 'night';
+                label = 'De Turno (Noche)';
+                icon = 'moon';
+            }
+            // PRIORIDAD 3: Próximo a entrar
+            else if (hour >= 19 && hour < 21 && !isHolidayToday) {
+                // Cualquier día 19:00-20:59: próximo a entrar
+                status = 'upcoming';
+                label = 'Entra 21:00';
+                icon = 'clock';
+            }
+
+            return { status, shift: 'Nocturno', customLabel: label, customIcon: icon };
+        }
+
+        // ================================================================
+        // CHECK: TURNOS DE FIN DE SEMANA Y FERIADOS (Solo horario nocturno)
+        // Ignacio/Sergio pueden tener turno diurno Y turno nocturno el mismo día
+        // Esta lógica solo se aplica en horario 19:00-02:00
+        // ================================================================
         if (calendarData.feriados) {
             const feriadoShift = calendarData.feriados[dayString] || calendarData.feriados[dayPadded];
             if (feriadoShift) {
@@ -244,28 +318,80 @@ function getEmployeeStatus(employeeName, calendarData) {
                 if (feriadoShift === 'I' && employeeName === CONFIG.names.holidaySpecial2) isAssignedHoliday = true;
 
                 if (isAssignedHoliday) {
-                    // Holiday night shift logic
                     const now = new Date();
                     const hour = now.getHours();
+                    const dayOfWeek = now.getDay();
 
-                    let label = 'Entra 21:00';
-                    let icon = 'clock';
-                    let statusClass = 'night'; // Use night style (or working)
+                    // SOLO aplicar lógica nocturna si estamos en horario de turno noche
+                    let isNightShiftTime = false;
 
-                    // If now is late night (21+) or early morning (< 2)
-                    // Note: < 2 covers the "next day" part if checking same-day (which is imperfect but works for visual "De Turno")
-                    if (hour >= 21 || hour < 2) {
-                        label = 'De Turno (Feriado)';
-                        icon = 'moon'; // Moon for night
-                        statusClass = 'working';
+                    if (dayOfWeek === 6) {
+                        // Sábado: 19:00+ (preparando/trabajando turno nocturno)
+                        isNightShiftTime = hour >= 19;
+                    } else if (dayOfWeek === 0) {
+                        // Domingo: <02:00 (terminando sábado) o 19:00+ (iniciando domingo)
+                        isNightShiftTime = hour < 2 || hour >= 19;
+                    } else if (dayOfWeek === 1) {
+                        // Lunes: <02:00 (terminando domingo)
+                        isNightShiftTime = hour < 2;
+                    } else {
+                        // Feriado otro día: 19:00+ o <02:00
+                        isNightShiftTime = hour >= 19 || hour < 2;
                     }
 
-                    return {
-                        status: statusClass,
-                        shift: 'Feriado (21:00 - 02:00)',
-                        customLabel: label,
-                        customIcon: icon
-                    };
+                    // Solo retornar si es horario nocturno, sino continuar al turno regular
+                    if (isNightShiftTime) {
+                        let label = 'Libre';
+                        let icon = 'coffee';
+                        let statusClass = 'free';
+
+                        if (dayOfWeek === 6 && hour >= 21) {
+                            label = 'De Turno (Feriado)';
+                            icon = 'moon';
+                            statusClass = 'night';
+                        } else if (dayOfWeek === 6 && hour >= 19) {
+                            label = 'Entra 21:00';
+                            icon = 'clock';
+                            statusClass = 'upcoming';
+                        } else if (dayOfWeek === 0 && hour < 2) {
+                            label = 'De Turno (Feriado)';
+                            icon = 'moon';
+                            statusClass = 'night';
+                        } else if (dayOfWeek === 0 && hour >= 21) {
+                            label = 'De Turno (Feriado)';
+                            icon = 'moon';
+                            statusClass = 'night';
+                        } else if (dayOfWeek === 0 && hour >= 19) {
+                            label = 'Entra 21:00';
+                            icon = 'clock';
+                            statusClass = 'upcoming';
+                        } else if (dayOfWeek === 1 && hour < 2) {
+                            label = 'De Turno (Feriado)';
+                            icon = 'moon';
+                            statusClass = 'night';
+                        } else if (hour >= 21) {
+                            label = 'De Turno (Feriado)';
+                            icon = 'moon';
+                            statusClass = 'night';
+                        } else if (hour < 2) {
+                            label = 'De Turno (Feriado)';
+                            icon = 'moon';
+                            statusClass = 'night';
+                        } else if (hour >= 19) {
+                            label = 'Entra 21:00';
+                            icon = 'clock';
+                            statusClass = 'upcoming';
+                        }
+
+                        return {
+                            status: statusClass,
+                            shift: 'Feriado (21:00 - 02:00)',
+                            customLabel: label,
+                            customIcon: icon
+                        };
+                    }
+                    // Si NO es horario nocturno, continuar al siguiente bloque
+                    // para procesar turno diurno si existe
                 }
             }
         }
@@ -321,74 +447,6 @@ function getEmployeeStatus(employeeName, calendarData) {
 
                 return { status: statusClass, shift: todayShift, customLabel: label, customIcon: icon };
             }
-        }
-
-        // FIX: Night Shift Special Logic (Cristian Oyarzo)
-        // He works Mon-Fri 21:00 to 07:00.
-        // He is "Working" if:
-        // 1. It is Mon-Fri AND time is >= 21:00 (Starts shift) - UNLESS it's a holiday
-        // 2. It is Tue-Sat AND time is < 07:00 (Finishing shift from previous day) - UNLESS yesterday was holiday
-        if (employeeName === CONFIG.names.nightShiftSpecial) {
-            const now = new Date();
-            const hour = now.getHours();
-            const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-
-            // Check if currently working (approximate logic without checking specific "N" assignment per day to be safer/simpler if calendar is missing)
-            // Real logic should rely on calendarData.nocturno ideally, but user description is strict Rule-based.
-            // "Trabaja de lunes a viernes de 21 a 07".
-
-            // Check "Current Shift" (Started today at 21:00)
-            // Must be Mon(1) - Fri(5)
-            // Not a holiday today
-            const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
-            const isStartShiftTime = hour >= 21;
-
-            // Check "Ending Shift" (Started yesterday, ending today at 07:00)
-            // If today is Tue(2) - Sat(6), then yesterday was Mon-Fri.
-            const isEndShiftDay = dayOfWeek >= 2 && dayOfWeek <= 6;
-            const isEndShiftTime = hour < 7;
-
-            // Holiday Check
-            let isHolidayToday = false;
-            let isHolidayYesterday = false;
-
-            if (calendarData && calendarData.feriados) {
-                const dString = now.getDate().toString();
-                const dPad = dString.padStart(2, '0');
-                if (calendarData.feriados[dString] || calendarData.feriados[dPad]) isHolidayToday = true;
-
-                // Check yesterday for ending shift
-                const yesterday = new Date(now);
-                yesterday.setDate(now.getDate() - 1);
-                const yString = yesterday.getDate().toString();
-                const yPad = yString.padStart(2, '0');
-                if (calendarData.feriados[yString] || calendarData.feriados[yPad]) isHolidayYesterday = true;
-            }
-
-            let status = 'free';
-            let label = 'Libre';
-            let icon = 'coffee';
-
-            // CASE 1: Working NOW (Late night start)
-            if (isWeekday && isStartShiftTime && !isHolidayToday) {
-                status = 'night'; // or 'working'
-                label = 'De Turno (Noche)';
-                icon = 'moon';
-            }
-            // CASE 2: Working NOW (Early morning end)
-            else if (isEndShiftDay && isEndShiftTime && !isHolidayYesterday) {
-                status = 'night';
-                label = 'De Turno (Noche)';
-                icon = 'moon';
-            }
-            // CASE 3: Upcoming tonight
-            else if (isWeekday && hour >= 19 && hour < 21 && !isHolidayToday) {
-                status = 'upcoming';
-                label = 'Entra 21:00';
-                icon = 'clock';
-            }
-
-            return { status, shift: '21:00 - 07:00', customLabel: label, customIcon: icon };
         }
 
         // Debug: Show keys if shift is empty to see what keys exist
@@ -926,6 +984,19 @@ function initSortable() {
 document.addEventListener("DOMContentLoaded", () => {
     console.log("[DIRECTORIO] Iniciando...");
     setupSearchAndFilters();
+
+    // Mostrar elementos para superadmin
+    const cachedRole = localStorage.getItem("userRole");
+    if (cachedRole === "superadmin") {
+        const liRegistros = document.getElementById("li-registros");
+        const liTurnos = document.getElementById("li-turnos");
+        const liUsuarios = document.getElementById("li-usuarios");
+        const liAnimaciones = document.getElementById("li-animaciones");
+        if (liRegistros) liRegistros.style.display = "block";
+        if (liTurnos) liTurnos.style.display = "block";
+        if (liUsuarios) liUsuarios.style.display = "block";
+        if (liAnimaciones) liAnimaciones.style.display = "block";
+    }
 
     waitForFirebase(() => {
         console.log("[DIRECTORIO] Cargando empleados...");

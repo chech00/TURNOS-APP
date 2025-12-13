@@ -1497,3 +1497,18 @@
     background: rgba(34, 197, 94, 0.15);
     color: #22c55e;
 }
+
+/* Service Down State */
+.service-item.is-down {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.service-item.is-down:hover {
+    border-color: rgba(239, 68, 68, 0.6);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.service-item.is-down .service-name {
+    color: #ef4444;
+}

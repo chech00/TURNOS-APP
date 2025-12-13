@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Documentos NOC - Gestión Profesional</title>
@@ -45,9 +47,9 @@
 
         <li data-tooltip="Directorio"><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
             <span>Directorio</span></a></li>
-        <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a href="user.html"
+        <li id="li-turnos" class="superadmin-only" style="display:none;" style="display:none;" data-tooltip="Turnos"><a href="index.html"
             id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
-        <li data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i>
+        <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i>
             <span>Señal de Fibra</span></a></li>
         <li data-tooltip="Documentos Noc"><a href="documentos.html" id="menu-doc" class="active"><i
               data-lucide="dock"></i> <span>Documentos
@@ -90,6 +92,8 @@
   <!-- Contenido Principal -->
   <div id="main-content" class="main-content">
     <header>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
       <h1>Documentos NOC</h1>
 
       <!-- Premium User Profile Header -->
@@ -191,3 +195,4 @@
 </body>
 
 </html>
+

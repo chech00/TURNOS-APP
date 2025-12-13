@@ -40,6 +40,10 @@ function verificarRolUsuario() {
           console.warn("Acceso denegado a Turnos: Redirigiendo a directorio.");
           window.location.href = "directorio.html";
           return;
+        } else {
+          // Redirect admins to the main Turnos dashboard which has all functionality
+          window.location.href = "index.html";
+          return;
         }
 
         // Si es admin, mostrar la vista

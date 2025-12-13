@@ -17,7 +17,7 @@ window.onerror = function (msg, url, line, col, error) {
     console.warn("Firebase may not be initialized yet");
     return;
   }
-  alert("Error en script.js: " + msg + " Linea: " + line);
+  console.error("Error en script.js:", msg, "Línea:", line);
 };
 
 // Wait for Firebase to be ready
@@ -94,14 +94,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (cachedRole === "superadmin") {
     const liRegistros = document.getElementById("li-registros");
+    const liTurnos = document.getElementById("li-turnos");
     const liUsuarios = document.getElementById("li-usuarios");
     const liAnimaciones = document.getElementById("li-animaciones");
-    const liTurnos = document.getElementById("li-turnos");
+
 
     if (liRegistros) liRegistros.style.display = "block";
+    if (liTurnos) liTurnos.style.display = "block";
     if (liUsuarios) liUsuarios.style.display = "block";
     if (liAnimaciones) liAnimaciones.style.display = "block";
-    if (liTurnos) liTurnos.style.display = "block";
+
 
     document.body.classList.add("is-admin");
     // Refrescar iconos después de mostrar elementos
@@ -807,7 +809,11 @@ function showCustomAlert(message) {
   const closeAlert = document.getElementById("close-alert");
 
   if (!alertModal || !alertMessage || !closeAlert) {
-    alert(message);
+    if (typeof Swal !== 'undefined') {
+      Swal.fire('Aviso', message, 'info');
+    } else {
+      console.warn(message);
+    }
     return;
   }
 
@@ -1060,7 +1066,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const nombre = contactNameInput.value.trim();
       const chatId = contactIdInput.value.trim();
       if (!nombre || !chatId) {
-        alert("Por favor, ingrese nombre y chat ID.");
+        Swal.fire('Campos requeridos', 'Por favor, ingrese nombre y chat ID.', 'warning');
         return;
       }
 
@@ -1193,6 +1199,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             if (role === "superadmin") {
               const liRegistros = document.getElementById("li-registros");
+              const liTurnos = document.getElementById("li-turnos");
               if (liRegistros) {
                 liRegistros.style.display = "block";
               }
@@ -1350,6 +1357,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mostrar elementos de superadmin
     // Mostrar/Ocultar elementos de superadmin
     const liRegistros = document.getElementById("li-registros");
+    const liTurnos = document.getElementById("li-turnos");
     const liUsuarios = document.getElementById("li-usuarios");
     const liAnimaciones = document.getElementById("li-animaciones");
     if (liRegistros) {

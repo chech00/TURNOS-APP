@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function showAdminElements() {
-  const ids = ["li-registros", "li-usuarios", "li-animaciones"];
+  const ids = ["li-registros", "li-turnos", "li-usuarios", "li-animaciones"];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = "block";

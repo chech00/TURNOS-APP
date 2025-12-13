@@ -2,15 +2,28 @@
 <html lang="es">
 
 <head>
+    <!-- Logger: Suprime console.log en producción -->
+    <script src="./js/logger.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notificaciones Suralis</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sistema de gestión de turnos del NOC de PatagoniaIP." />
+    <meta name="author" content="PatagoniaIP" />
+    <meta name="theme-color" content="#1a1d2d" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="./img/favicon.svg" />
 
     <!-- Core Styles -->
+    <link rel="stylesheet" href="./css/enhancements.css" />
     <link rel="stylesheet" href="./css/styles.css">
     <link rel="stylesheet" href="./css/suralis.css">
     <link rel="stylesheet" href="./css/user-profile-header.css">
     <link rel="stylesheet" href="./css/toast.css">
+    <link rel="stylesheet" href="./css/mail-animation.css">
+    <link rel="stylesheet" href="./css/heatmap.css">
+    <link rel="stylesheet" href="./css/service-status.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Libraries -->
@@ -44,9 +57,11 @@
             <ul>
                 <li data-tooltip="Directorio"><a href="directorio.html"><i
                             data-lucide="users"></i><span>Directorio</span></a></li>
-                <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a
-                        href="index.html"><i data-lucide="calendar"></i><span>Turnos</span></a></li>
-                <li data-tooltip="Señal de Fibra"><a href="senales.html"><i data-lucide="waypoints"></i><span>Señal de
+                <li id="li-turnos" class="superadmin-only" style="display:none;" style="display:none;"
+                    data-tooltip="Turnos"><a href="index.html"><i data-lucide="calendar"></i><span>Turnos</span></a>
+                </li>
+                <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html"><i
+                            data-lucide="waypoints"></i><span>Señal de
                             Fibra</span></a></li>
                 <li data-tooltip="Documentos Noc"><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos
                             Noc</span></a></li>
@@ -74,6 +89,8 @@
     <!-- Main Content -->
     <div id="main-content" class="main-content">
         <header>
+            <!-- Logger: Suprime console.log en producción -->
+            <script src="./js/logger.js"></script>
             <h1>Notificaciones Suralis</h1>
             <!-- Premium User Profile Header -->
             <div class="user-profile-header">
@@ -274,9 +291,20 @@
                     </div>
 
                     <!-- Chart Container -->
+                    <!-- Chart Container -->
                     <div class="chart-container">
                         <h3><i class="fas fa-chart-line"></i> Incidentes por día (últimos 30 días)</h3>
                         <canvas id="incidentsChart" height="200"></canvas>
+                    </div>
+
+                    <!-- Heatmap Container -->
+                    <div class="heatmap-container">
+                        <h3><i class="fas fa-th"></i> Mapa de Calor (Hora vs Día)</h3>
+                        <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;">Distribución de caídas según
+                            el horario y día de la semana.</p>
+                        <div id="incidentsHeatmap" class="heatmap-grid">
+                            <!-- JS Generated -->
+                        </div>
                     </div>
 
                     <!-- Recent Incidents Table -->
@@ -289,6 +317,7 @@
                                         <th>Fecha</th>
                                         <th>Tipo</th>
                                         <th>Servicios</th>
+                                        <th>Duración</th>
                                         <th>Enviado por</th>
                                     </tr>
                                 </thead>
@@ -397,6 +426,7 @@
             });
         });
     </script>
+    <script src="./js/sw-register.js"></script>
 </body>
 
 </html>

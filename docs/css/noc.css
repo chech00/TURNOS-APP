@@ -1531,56 +1531,92 @@ body.is-admin .admin-only {
 
 /* =========================================
    FLOATING PALETTE STYLES (PREMIUM)
+   Estilo unificado con el calendario flotante
    ========================================= */
 .turnos-section.floating {
   position: fixed;
   top: 120px;
   right: 20px;
   width: 340px;
+  max-width: 90vw;
   max-height: 80vh;
 
-  /* Glassmorphism Effect */
-  background-color: rgba(24, 24, 27, 0.85);
-  /* Zinc 900 with opacity */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Mismo gradiente que prev-month-panel */
+  background: linear-gradient(180deg,
+      rgba(30, 34, 40, 0.98) 0%,
+      rgba(24, 28, 32, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 
-  /* Premium Border & Shadow */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  /* Subtle highlight */
+  /* Borde acentuado como prev-month-panel */
+  border: 1px solid rgba(119, 150, 203, 0.3);
   border-radius: 16px;
   box-shadow:
-    0 20px 40px -5px rgba(0, 0, 0, 0.6),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  /* Inner light */
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 
   z-index: 9999;
-  padding: 1.25rem;
-  overflow-y: auto;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  resize: both;
+
+  /* Animación de entrada */
+  animation: floatIn 0.3s ease-out;
 }
 
+/* Header con mismo estilo que prev-month-panel-header */
 .turnos-section.floating .turnos-header {
   cursor: move;
-  /* Indicates draggable */
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba(119, 150, 203, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex !important;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .turnos-section.floating h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: 'Outfit', sans-serif;
-  font-size: 1.1rem !important;
+  font-size: 1rem !important;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--color-texto-principal, #fff);
   margin: 0;
+}
+
+/* Botón toggle con mismo estilo que btn-close-panel */
+.turnos-section.floating #btnToggleFloating {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-texto-secundario, #a1a1aa);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.turnos-section.floating #btnToggleFloating:hover {
+  background: rgba(119, 150, 203, 0.2);
+  border-color: rgba(119, 150, 203, 0.4);
+  color: var(--color-acento-primario, #7796cb);
+}
+
+/* Container de botones */
+.turnos-section.floating .assignment-container {
+  padding: 1rem 1.25rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .turnos-section.floating .turnos-buttons {
@@ -1590,22 +1626,22 @@ body.is-admin .admin-only {
   justify-content: center;
 }
 
-/* Adjust buttons in floating mode for compactness */
+/* Botones de turno más compactos */
 .turnos-section.floating .btn-turno {
   width: 48px;
   height: 38px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 
 .turnos-section.floating .btn-turno:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Button active state for the toggle */
@@ -1640,9 +1676,7 @@ body.is-admin .admin-only {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5) !important;
-  /* Simplified shadow */
   transition: none !important;
-  /* Disable transition during drag */
   opacity: 0.9;
 }
 
@@ -1682,6 +1716,330 @@ body.is-admin .admin-only {
   }
 }
 
-animation: pulse-reminder 2s infinite;
-border-color: rgba(231, 76, 60, 0.5) !important;
+/* =============================================================================
+   MINI CALENDARIO FLOTANTE - VISTA PREVIA MES ANTERIOR
+   ============================================================================= */
+
+/* Botón Flotante (FAB) - SOLO ADMIN */
+.fab-preview-month {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-acento-primario), var(--color-acento-secundario));
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  box-shadow:
+    0 4px 15px rgba(119, 150, 203, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  display: none;
+  /* Oculto por defecto, admin-only lo controla */
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+}
+
+/* Mostrar FAB solo para admins con display:flex */
+body.is-admin .fab-preview-month.admin-only {
+  display: flex !important;
+}
+
+.fab-preview-month:hover {
+  transform: scale(1.1) translateY(-3px);
+  box-shadow:
+    0 8px 25px rgba(119, 150, 203, 0.5),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.fab-preview-month:active {
+  transform: scale(0.95);
+}
+
+.fab-preview-month i {
+  width: 24px;
+  height: 24px;
+}
+
+/* Overlay no usado */
+.prev-month-overlay {
+  display: none;
+}
+
+/* Ventana Flotante Draggable */
+.prev-month-panel {
+  position: fixed;
+  top: 100px;
+  right: 50px;
+  width: 420px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: linear-gradient(180deg,
+      rgba(30, 34, 40, 0.98) 0%,
+      rgba(24, 28, 32, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(119, 150, 203, 0.3);
+  border-radius: 16px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  z-index: 1001;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  resize: both;
+}
+
+.prev-month-panel.active {
+  display: flex;
+  animation: floatIn 0.3s ease-out;
+}
+
+/* El panel solo se muestra para admins cuando está activo */
+body.is-admin .prev-month-panel.admin-only.active {
+  display: flex !important;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header del Panel - ARRASTRABLE */
+.prev-month-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: rgba(119, 150, 203, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.prev-month-panel-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+}
+
+.prev-month-panel-header h3 i {
+  width: 18px;
+  height: 18px;
+  color: var(--color-acento-primario);
+}
+
+.btn-close-panel {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-texto-secundario);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-close-panel:hover {
+  background: rgba(215, 122, 122, 0.2);
+  border-color: rgba(215, 122, 122, 0.4);
+  color: #e74c3c;
+}
+
+.btn-close-panel i {
+  width: 16px;
+  height: 16px;
+}
+
+/* Body del Panel */
+.prev-month-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 0.75rem;
+}
+
+/* Loading State */
+.panel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 0.75rem;
+  color: var(--color-texto-secundario);
+}
+
+.panel-loading .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(119, 150, 203, 0.2);
+  border-top-color: var(--color-acento-primario);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Contenido del Calendario Mini */
+.prev-month-content {
+  display: none;
+}
+
+.prev-month-content.loaded {
+  display: block;
+}
+
+/* Tabla Mini del Calendario - MÁS COMPACTA */
+.mini-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.65rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mini-calendar thead {
+  background: rgba(119, 150, 203, 0.12);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.mini-calendar th {
+  padding: 0.35rem 0.1rem;
+  text-align: center;
+  font-weight: 500;
+  color: var(--color-texto-secundario);
+  font-size: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mini-calendar th:first-child {
+  text-align: left;
+  padding-left: 0.4rem;
+  min-width: 60px;
+  max-width: 70px;
+}
+
+.mini-calendar td {
+  padding: 0.2rem 0.1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  color: var(--color-texto-principal);
+}
+
+.mini-calendar td:first-child {
+  text-align: left;
+  padding-left: 0.4rem;
+  font-weight: 500;
+  color: var(--color-texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+  font-size: 0.6rem;
+}
+
+.mini-calendar tbody tr:hover {
+  background: rgba(119, 150, 203, 0.06);
+}
+
+/* Mini celdas de turno - MÁS PEQUEÑAS */
+.mini-shift {
+  display: inline-block;
+  width: 18px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: 2px;
+  font-size: 0.55rem;
+  font-weight: 600;
+}
+
+.mini-shift.domingo-libre {
+  background: rgba(215, 122, 122, 0.25);
+  color: #d77a7a;
+}
+
+.mini-shift.feriado {
+  background: rgba(231, 76, 60, 0.25);
+  color: #e74c3c;
+}
+
+.mini-shift.vacaciones {
+  background: rgba(136, 192, 166, 0.25);
+  color: #88c0a6;
+}
+
+.mini-shift.dia-libre {
+  background: rgba(143, 188, 187, 0.25);
+  color: #8fbcbb;
+}
+
+.mini-shift.nocturno {
+  background: rgba(204, 204, 204, 0.25);
+  color: #cccccc;
+}
+
+/* Los estilos inline (colores de turnos) tienen prioridad */
+.mini-shift[style] {
+  border-radius: 3px;
+}
+
+/* Footer del Panel */
+.prev-month-panel-footer {
+  padding: 0.6rem 1rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.prev-month-panel-footer small {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-texto-secundario);
+  font-size: 0.7rem;
+}
+
+.prev-month-panel-footer small i {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .prev-month-panel {
+    width: 100%;
+    max-width: 100%;
+    right: -100%;
+  }
+
+  .main-content.panel-open {
+    margin-right: 0 !important;
+  }
+
+  .fab-preview-month {
+    bottom: 80px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+  }
 }

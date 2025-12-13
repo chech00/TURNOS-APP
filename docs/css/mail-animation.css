@@ -1,0 +1,235 @@
+/* ===========================================
+   MAIL SEND ANIMATION V2 - HYPERSPEED
+   =========================================== */
+.mail-animation-container {
+    height: 160px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    border-radius: 12px;
+    perspective: 1000px;
+}
+
+/* --- CLOUDS / WIND BACKGROUND --- */
+.wind-line {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    height: 2px;
+    border-radius: 2px;
+    animation: windRush 0.8s linear infinite;
+}
+
+.wind-1 {
+    top: 30%;
+    left: 100%;
+    width: 100px;
+    animation-duration: 0.6s;
+    animation-delay: 0s;
+}
+
+.wind-2 {
+    top: 50%;
+    left: 100%;
+    width: 60px;
+    animation-duration: 0.8s;
+    animation-delay: 0.2s;
+}
+
+.wind-3 {
+    top: 70%;
+    left: 100%;
+    width: 140px;
+    animation-duration: 0.5s;
+    animation-delay: 0.1s;
+}
+
+.wind-4 {
+    top: 20%;
+    left: 100%;
+    width: 40px;
+    animation-duration: 0.7s;
+    animation-delay: 0.4s;
+}
+
+.wind-5 {
+    top: 80%;
+    left: 100%;
+    width: 80px;
+    animation-duration: 0.9s;
+    animation-delay: 0.3s;
+}
+
+@keyframes windRush {
+    0% {
+        transform: translateX(0);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translateX(-500px);
+        opacity: 0;
+    }
+}
+
+/* --- PLANE WRAPPER FOR 3D TILT --- */
+.plane-wrapper {
+    position: relative;
+    z-index: 10;
+    animation: hoverFloat 2s ease-in-out infinite;
+    transform-style: preserve-3d;
+}
+
+.paper-plane {
+    font-size: 5rem;
+    color: #60a5fa;
+    /* Blue-400 */
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
+    animation: jetTakeoff 3.5s cubic-bezier(0.12, 0.8, 0.32, 1) infinite;
+    display: block;
+    /* Add a gradient text effect */
+    background: linear-gradient(135deg, #ffffff 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+}
+
+/* --- EXHAUST TRAIL --- */
+.exhaust-trail {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    /* Behind the plane */
+    width: 0;
+    height: 6px;
+    background: linear-gradient(to right, rgba(96, 165, 250, 0), rgba(96, 165, 250, 0.8) 10%, #fff 50%, rgba(255, 255, 255, 0) 100%);
+    transform-origin: right center;
+    border-radius: 4px;
+    filter: blur(2px);
+    box-shadow: 0 0 15px #3b82f6;
+    animation: thrustPulse 3.5s cubic-bezier(0.12, 0.8, 0.32, 1) infinite;
+    z-index: -1;
+}
+
+/* --- PARTICLES --- */
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: 0;
+    animation: particleFly 1s linear infinite;
+}
+
+.p1 {
+    top: 50%;
+    right: 10px;
+    animation-delay: 0.1s;
+}
+
+.p2 {
+    top: 55%;
+    right: 15px;
+    animation-delay: 0.2s;
+}
+
+.p3 {
+    top: 45%;
+    right: 20px;
+    animation-delay: 0.3s;
+}
+
+/* --- ANIM KEYFRAMES --- */
+
+@keyframes jetTakeoff {
+    0% {
+        transform: translate(-150px, 30px) rotate(-15deg) scale(0.5);
+        opacity: 0;
+    }
+
+    15% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        /* Hovering / Cruising */
+        transform: translate(10px, -5px) rotate(2deg) scale(1.05);
+    }
+
+    60% {
+        /* Anticpation (pull back) */
+        transform: translate(-20px, 5px) rotate(-5deg) scale(0.95);
+    }
+
+    100% {
+        /* ZOOM OUT */
+        transform: translate(400px, -80px) rotate(15deg) scale(1.2);
+        opacity: 0;
+    }
+}
+
+@keyframes thrustPulse {
+    0% {
+        width: 0;
+        opacity: 0;
+    }
+
+    15% {
+        width: 80px;
+        opacity: 0.8;
+    }
+
+    50% {
+        width: 60px;
+        opacity: 0.6;
+    }
+
+    /* Cruising tail */
+    60% {
+        width: 40px;
+        opacity: 0.4;
+    }
+
+    /* Pull back */
+    100% {
+        width: 300px;
+        opacity: 0;
+    }
+
+    /* Zoom zoom */
+}
+
+@keyframes hoverFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes particleFly {
+    0% {
+        transform: translate(0, 0);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translate(-100px, 10px);
+        opacity: 0;
+    }
+}

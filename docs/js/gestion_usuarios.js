@@ -812,8 +812,10 @@ function verificarAccesoSuperAdmin() {
 
             // Mostrar link de registros
             const liRegistros = document.getElementById("li-registros");
+            const liTurnos = document.getElementById("li-turnos");
             const liAnimaciones = document.getElementById("li-animaciones");
             if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
             if (liAnimaciones) liAnimaciones.style.display = "block";
             // Refrescar iconos después de mostrar elementos
             if (typeof refreshIcons === 'function') refreshIcons();

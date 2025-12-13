@@ -4,7 +4,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Turnos Noc - Calendario de Turnos</title>
+  <title>Turnos NOC - Calendario de Turnos | PatagoniaIP</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Sistema de gestión de turnos del Centro de Operaciones de Red (NOC) de PatagoniaIP. Administra horarios, empleados y reportes." />
+  <meta name="author" content="PatagoniaIP" />
+  <meta name="theme-color" content="#1a1d2d" />
+  <meta name="robots" content="noindex, nofollow" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:title" content="Turnos NOC - PatagoniaIP" />
+  <meta property="og:description" content="Sistema de gestión de turnos del NOC" />
+  <meta property="og:type" content="website" />
+
+  <!-- Favicon -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./img/favicon.svg" />
 
   <!-- Preconnect para recursos externos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,12 +34,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
 
   <!-- CSS principal (puede cargarse después del critical) -->
+  <link rel="stylesheet" href="./css/enhancements.css" />
   <link rel="stylesheet" href="./css/styles.css" media="print" onload="this.media='all'">
   <noscript>
+    <link rel="stylesheet" href="./css/enhancements.css" />
     <link rel="stylesheet" href="./css/styles.css">
   </noscript>
   <link rel="stylesheet" href="./css/noc.css" />
   <link rel="stylesheet" href="./css/user-profile-header.css" />
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
   <script defer src="./js/user-profile-header.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer
@@ -78,10 +98,11 @@
 
         <li data-tooltip="Directorio"><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
             <span>Directorio</span></a></li>
-        <li id="li-turnos" class="admin-only" data-tooltip="Turnos"><a href="user.html" id="menu-turnos"><i
-              data-lucide="calendar"></i>
+        <li id="li-turnos" class="superadmin-only" style="display:none;" data-tooltip="Turnos"><a href="index.html"
+            id="menu-turnos"><i data-lucide="calendar"></i>
             <span>Turnos</span></a></li>
-        <li data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i data-lucide="waypoints"></i>
+        <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"><i
+              data-lucide="waypoints"></i>
             <span>Señal de Fibra</span></a></li>
         <li data-tooltip="Documentos Noc"><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i>
             <span>Documentos Noc</span></a></li>
@@ -469,6 +490,36 @@
     </div>
   </div>
 
+  <!-- Botón Flotante para Ver Mes Anterior (Solo Admin) -->
+  <button id="btn-preview-prev-month" class="fab-preview-month admin-only" title="Vista rápida del mes anterior">
+    <i data-lucide="calendar-search"></i>
+  </button>
+
+  <!-- Panel Deslizable - Mes Anterior (Solo Admin) -->
+  <div id="prev-month-panel" class="prev-month-panel admin-only">
+    <div class="prev-month-panel-header">
+      <h3><i data-lucide="history"></i> <span id="prev-month-title">Mes Anterior</span></h3>
+      <button id="close-prev-month-panel" class="btn-close-panel">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="prev-month-panel-body">
+      <div id="prev-month-loading" class="panel-loading">
+        <div class="spinner"></div>
+        <span>Cargando...</span>
+      </div>
+      <div id="prev-month-content" class="prev-month-content">
+        <!-- Contenido del calendario mini se carga dinámicamente -->
+      </div>
+    </div>
+    <div class="prev-month-panel-footer">
+      <small><i data-lucide="info"></i> Solo lectura - Para editar, navega al mes</small>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar el panel -->
+  <div id="prev-month-overlay" class="prev-month-overlay"></div>
+
   <!-- Firebase SDKs (Classic Loading to ensure Globals) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -488,6 +539,7 @@
       }
     });
   </script>
+  <script src="./js/sw-register.js"></script>
 </body>
 
 </html>

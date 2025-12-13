@@ -96,6 +96,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
     // 4) Redirigir después de guardar el log
     localStorage.setItem("userRole", userRole);
+    localStorage.setItem("authProvider", "email"); // Guardar método de autenticación
     window.location.href = "directorio.html";
   } catch (error) {
     console.error("Error en el inicio de sesión:", error);
@@ -343,6 +344,7 @@ if (googleLoginBtn) {
       ]);
 
       localStorage.setItem("userRole", userRole);
+      localStorage.setItem("authProvider", "google"); // Guardar método de autenticación
       window.location.href = "directorio.html";
     } catch (error) {
       console.error("Error en Google Sign-In:", error);

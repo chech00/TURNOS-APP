@@ -9,8 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const cachedRole = localStorage.getItem("userRole");
   if (cachedRole === "superadmin") {
     const liRegistros = document.getElementById("li-registros");
+            const liTurnos = document.getElementById("li-turnos");
     const liUsuarios = document.getElementById("li-usuarios");
     if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
     if (liUsuarios) liUsuarios.style.display = "block";
     document.body.classList.add("is-admin");
   } else if (cachedRole === "admin") {
@@ -53,10 +55,12 @@ function verificarRolUsuario() {
           }
 
           const liRegistros = document.getElementById("li-registros");
+            const liTurnos = document.getElementById("li-turnos");
           const liUsuarios = document.getElementById("li-usuarios");
 
           if (role === "superadmin") {
             if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
             if (liUsuarios) liUsuarios.style.display = "block";
             const liAnimaciones = document.getElementById("li-animaciones");
             if (liAnimaciones) liAnimaciones.style.display = "block";
@@ -1141,7 +1145,7 @@ function cargarFilamentosGrid(nodoId, letter, ponId, cajaId, capacity) {
 
         portDiv.onclick = () => {
           // Editar/Borrar
-          editarFilamento(nodoId, letter, ponId, cajaId, filamento.id, filamento.name, filamento.signal);
+          editarFilamento(nodoId, letter, ponId, cajaId, filamento.id, filamento.name, filamento.signal, totalPuertos);
         };
       } else {
         // PUERTO VACÍO
@@ -1225,12 +1229,13 @@ function crearFilamentoDirecto(nodoId, letter, ponId, cajaId, numero, signal) {
 }
 
 // Editar/Borrar Filamento
-async function editarFilamento(nodoId, letter, ponId, cajaId, fId, fName, fSignal) {
+// Editar/Borrar Filamento
+async function editarFilamento(nodoId, letter, ponId, cajaId, fId, fName, fSignal, capacity) {
   if (!usuarioEsAdmin) return;
 
   const result = await Swal.fire({
     title: fName,
-    text: `Señal actual: ${fSignal}`,
+    text: `Señal actual: ${fSignal || 'Sin señal'}`,
     showDenyButton: true,
     showCancelButton: true,
     confirmButtonText: 'Actualizar Señal',
@@ -1240,13 +1245,25 @@ async function editarFilamento(nodoId, letter, ponId, cajaId, fId, fName, fSigna
   });
 
   if (result.isConfirmed) {
-    // Update Signal logic here if needed
-    const { value: newSignal } = await Swal.fire({ input: 'text', inputLabel: 'Nueva Señal', inputValue: fSignal });
-    if (newSignal) {
+    // Update Signal logic
+    const { value: newSignal } = await Swal.fire({
+      input: 'text',
+      inputLabel: 'Nueva Señal',
+      inputValue: fSignal || ''
+    });
+
+    if (newSignal !== undefined && newSignal !== null) { // Allow empty string if user wants to clear it, though usually we want a value
       db.collection("Nodos").doc(nodoId).collection("PONLetters").doc(letter)
         .collection("PONs").doc(ponId).collection("Cajas").doc(cajaId).collection("Filamentos").doc(fId)
         .update({ signal: newSignal })
-        .then(() => cargarFilamentosGrid(nodoId, letter, ponId, cajaId));
+        .then(() => {
+          Swal.fire("Actualizado", "Potencia actualizada correctamente", "success");
+          cargarFilamentosGrid(nodoId, letter, ponId, cajaId, capacity);
+        })
+        .catch(error => {
+          console.error("Error actualizando señal:", error);
+          Swal.fire("Error", "No se pudo actualizar la señal.", "error");
+        });
     }
   } else if (result.isDenied) {
     db.collection("Nodos").doc(nodoId).collection("PONLetters").doc(letter)
@@ -1254,7 +1271,11 @@ async function editarFilamento(nodoId, letter, ponId, cajaId, fId, fName, fSigna
       .delete()
       .then(() => {
         Swal.fire("Desconectado", "Filamento eliminado.", "success");
-        cargarFilamentosGrid(nodoId, letter, ponId, cajaId);
+        cargarFilamentosGrid(nodoId, letter, ponId, cajaId, capacity);
+      })
+      .catch(error => {
+        console.error("Error eliminando filamento:", error);
+        Swal.fire("Error", "No se pudo eliminar el filamento.", "error");
       });
   }
 }
@@ -1414,7 +1435,9 @@ document.addEventListener("DOMContentLoaded", function () {
       document.body.classList.add("is-admin");
       if (cachedRole === "superadmin") {
         const liRegistros = document.getElementById("li-registros");
+            const liTurnos = document.getElementById("li-turnos");
         if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
       }
     }
   }

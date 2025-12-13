@@ -16,8 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const cachedRole = localStorage.getItem("userRole");
     if (cachedRole === "superadmin") {
         const liRegistros = document.getElementById("li-registros");
+            const liTurnos = document.getElementById("li-turnos");
         const liUsuarios = document.getElementById("li-usuarios");
         if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
         if (liUsuarios) liUsuarios.style.display = "block";
         document.body.classList.add("is-admin");
     } else if (cachedRole === "admin") {
@@ -404,9 +406,11 @@ function verificarAcceso() {
                     // Mostrar Registros y Usuarios para superadmin
                     if (isSuperAdmin) {
                         const liRegistros = document.getElementById("li-registros");
+            const liTurnos = document.getElementById("li-turnos");
                         const liUsuarios = document.getElementById("li-usuarios");
                         const liAnimaciones = document.getElementById("li-animaciones");
                         if (liRegistros) liRegistros.style.display = "block";
+            if (liTurnos) liTurnos.style.display = "block";
                         if (liUsuarios) liUsuarios.style.display = "block";
                         if (liAnimaciones) liAnimaciones.style.display = "block";
                         // Refrescar iconos después de mostrar elementos

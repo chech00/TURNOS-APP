@@ -177,6 +177,7 @@ header {
   height: 80px;
   min-height: 80px;
   padding: 0 2rem;
+  margin: 0;
   background: rgba(35, 39, 46, var(--sidebar-opacity));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1533,6 +1534,9 @@ td.pendiente {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Eliminar espacios */
+  padding-top: 0;
+  gap: 0;
 }
 
 .main-content.expanded {

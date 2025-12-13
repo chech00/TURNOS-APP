@@ -2,9 +2,18 @@
 <html lang="es">
 
 <head>
+  <!-- Logger: Suprime console.log en producción -->
+  <script src="./js/logger.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Señales de Fibra</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Sistema de gestión de turnos del NOC de PatagoniaIP." />
+  <meta name="author" content="PatagoniaIP" />
+  <meta name="theme-color" content="#1a1d2d" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./img/favicon.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet" />
 
   <!-- Tus archivos CSS -->
+  <link rel="stylesheet" href="./css/enhancements.css" />
   <link rel="stylesheet" href="./css/styles.css" />
   <link rel="stylesheet" href="./css/senales-nap-v7.css" />
   <link rel="stylesheet" href="./css/senales.css" />
@@ -44,10 +54,10 @@
 
         <li data-tooltip="Directorio"><a href="directorio.html" id="menu-directorio"><i data-lucide="users"></i>
             <span>Directorio</span></a></li>
-        <li id="li-turnos" class="admin-only" style="display:none;" data-tooltip="Turnos"><a href="user.html"
-            id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
-        <li data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra" class="active"><i
-              data-lucide="waypoints"></i> <span>Señal de
+        <li id="li-turnos" class="superadmin-only" style="display:none;" style="display:none;" data-tooltip="Turnos"><a
+            href="index.html" id="menu-turnos"><i data-lucide="calendar"></i> <span>Turnos</span></a></li>
+        <li id="li-senales" class="admin-only" data-tooltip="Señal de Fibra"><a href="senales.html" id="menu-fibra"
+            class="active"><i data-lucide="waypoints"></i> <span>Señal de
               Fibra</span></a></li>
         <li data-tooltip="Documentos Noc"><a href="documentos.html" id="menu-doc"><i data-lucide="dock"></i>
             <span>Documentos Noc</span></a></li>
@@ -88,6 +98,8 @@
 
   <div id="main-content" class="main-content">
     <header>
+      <!-- Logger: Suprime console.log en producción -->
+      <script src="./js/logger.js"></script>
       <h1>Señal de Fibra Óptica</h1>
       <!-- Premium User Profile Header -->
       <div class="user-profile-header">
@@ -130,6 +142,7 @@
   <script>
     lucide.createIcons();
   </script>
+  <script src="./js/sw-register.js"></script>
 </body>
 
 </html>

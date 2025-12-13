@@ -121,4 +121,35 @@
         display: none;
         /* Simplify completely on mobile */
     }
+
+    .google-auth-badge {
+        display: none;
+        /* Hide on mobile */
+    }
+}
+
+/* =============================================================================
+   GOOGLE AUTH BADGE - Indica conexión con Google
+   ============================================================================= */
+.google-auth-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    margin-left: 0.25rem;
+    transition: all 0.2s ease;
+    cursor: help;
+}
+
+.google-auth-badge:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(66, 133, 244, 0.4);
+    box-shadow: 0 0 8px rgba(66, 133, 244, 0.2);
+}
+
+.google-auth-badge svg {
+    display: block;
 }
