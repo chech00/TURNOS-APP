@@ -3065,13 +3065,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Mostrar elementos solo para admin (Confirmación final)
     if (usuarioEsAdmin) {
+      // Mostrar elementos con clase admin-only
       document.querySelectorAll(".admin-only").forEach((el) => {
+        el.style.display = 'block';
         el.classList.remove("admin-only");
       });
+
+      // === MOSTRAR BOTÓN FAB DEL CALENDARIO FLOTANTE ===
+      const fabButton = document.getElementById("btn-preview-prev-month");
+      if (fabButton) {
+        fabButton.style.display = 'flex';
+        console.log("✅ FAB de calendario flotante activado para admin");
+      }
+
       // Use debounced refreshIcons for performance
       if (typeof refreshIcons === 'function') refreshIcons(); else lucide.createIcons();
-      // Attach listeners for cell selection (fix for late auth)
-      // attachAdminCellListeners(); // Removed
     }
 
     // Botón Auto-Asignar (solo admin)
@@ -4242,16 +4250,30 @@ function initPrevMonthPanel() {
   const closeBtn = document.getElementById("close-prev-month-panel");
   const header = document.querySelector(".prev-month-panel-header");
 
-  if (!fabButton || !panel) return;
+  console.log("[initPrevMonthPanel] FAB button:", fabButton);
+  console.log("[initPrevMonthPanel] Panel:", panel);
+
+  if (!fabButton || !panel) {
+    console.warn("[initPrevMonthPanel] FAB o Panel no encontrados, abortando init");
+    return;
+  }
 
   // Abrir panel
   fabButton.addEventListener("click", () => {
+    console.log("[FAB Click] Abriendo panel del mes anterior...");
     openPrevMonthPanel();
   });
 
   // Cerrar panel con botón X
   if (closeBtn) {
-    closeBtn.addEventListener("click", closePrevMonthPanel);
+    console.log("[initPrevMonthPanel] Botón cerrar encontrado, agregando listener");
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Evitar que el clic propague al header (drag)
+      console.log("[Close Button] Cerrando panel...");
+      closePrevMonthPanel();
+    });
+  } else {
+    console.warn("[initPrevMonthPanel] Botón cerrar NO encontrado");
   }
 
   // Cerrar con Escape
@@ -4337,6 +4359,7 @@ function openPrevMonthPanel() {
 
   // Mostrar panel flotante
   panel.classList.add("active");
+  panel.style.display = "flex"; // Forzar display para superar el inline style
 
   // Mostrar loading
   if (loadingEl) loadingEl.style.display = "flex";
@@ -4353,6 +4376,7 @@ function openPrevMonthPanel() {
 function closePrevMonthPanel() {
   const panel = document.getElementById("prev-month-panel");
   panel.classList.remove("active");
+  panel.style.display = "none"; // Ocultar panel
 }
 
 // Refrescar el panel flotante si está abierto (llamado al cambiar de mes)
@@ -4402,14 +4426,69 @@ async function loadPrevMonthData() {
   // 2. Si no hay datos en localStorage, intentar Firestore
   if (!data || !data.assignments || Object.keys(data.assignments).length === 0) {
     try {
-      // Formato del docId en Firestore: "Enero 2026" (mes capitalizado)
-      const docId = `${monthNameCapitalized} ${year}`;
-      console.log("[Prev Month Panel] Buscando en Firestore con docId:", docId);
+      // Intentar ambos formatos posibles del docId
+      // Formato 1: "Noviembre 2025" (capitalizado)
+      // Formato 2: "noviembre 2025" (minúscula - como lo genera toLocaleString)
+      const docIdCapitalized = `${monthNameCapitalized} ${year}`;
+      const docIdLowercase = `${monthName} ${year}`;
 
-      const doc = await db.collection("calendarios").doc(docId).get();
+      console.log("[Prev Month Panel] Buscando en Firestore con docId:", docIdCapitalized, "o", docIdLowercase);
+
+      // Intentar primero con capitalizado
+      let doc = await db.collection("calendarios").doc(docIdCapitalized).get();
+
+      // Si no existe, intentar con minúscula
+      if (!doc.exists) {
+        doc = await db.collection("calendarios").doc(docIdLowercase).get();
+      }
+
       if (doc.exists) {
-        data = doc.data();
+        const firestoreData = doc.data();
         console.log("[Prev Month Panel] Datos encontrados en Firestore");
+
+        // === CONVERTIR FORMATO HTML A FORMATO ASSIGNMENTS ===
+        // Firestore guarda: { generalHTML: "...", nocturnoHTML: "..." }
+        // Necesitamos: { assignments: { "Nombre": { "1": "M1", ... } } }
+        if (firestoreData.generalHTML && !firestoreData.assignments) {
+          console.log("[Prev Month Panel] Convirtiendo formato HTML a assignments...");
+          data = { assignments: {} };
+
+          // Crear un elemento temporal para parsear el HTML
+          const tempDiv = document.createElement("div");
+          tempDiv.innerHTML = firestoreData.generalHTML;
+
+          // Extraer datos de cada fila
+          tempDiv.querySelectorAll("tbody tr").forEach(row => {
+            const nameCell = row.querySelector("td:first-child");
+            if (!nameCell) return;
+
+            const name = nameCell.textContent.replace(/\s*\(Ex\)\s*$/, "").trim();
+            if (name === "Encargado de Bitácora" || !name) return;
+
+            const shifts = {};
+            row.querySelectorAll("button.calendar-day").forEach(btn => {
+              const day = btn.getAttribute("data-day");
+              let shift = btn.textContent.trim();
+
+              // Detectar vacaciones
+              if (btn.querySelector('[data-lucide="tree-palm"]') ||
+                btn.innerHTML.includes('tree-palm') ||
+                btn.innerHTML.includes('🌴')) {
+                shift = "V";
+              }
+
+              if (shift && day) shifts[day] = shift;
+            });
+
+            if (Object.keys(shifts).length > 0) {
+              data.assignments[name] = shifts;
+            }
+          });
+
+          console.log("[Prev Month Panel] Conversión completada. Empleados:", Object.keys(data.assignments).length);
+        } else {
+          data = firestoreData;
+        }
       } else {
         console.log("[Prev Month Panel] No hay documento en Firestore para:", docId);
       }

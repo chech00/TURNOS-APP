@@ -491,12 +491,13 @@
   </div>
 
   <!-- Botón Flotante para Ver Mes Anterior (Solo Admin) -->
-  <button id="btn-preview-prev-month" class="fab-preview-month admin-only" title="Vista rápida del mes anterior">
+  <button id="btn-preview-prev-month" class="fab-preview-month" style="display: none;"
+    title="Vista rápida del mes anterior">
     <i data-lucide="calendar-search"></i>
   </button>
 
   <!-- Panel Deslizable - Mes Anterior (Solo Admin) -->
-  <div id="prev-month-panel" class="prev-month-panel admin-only">
+  <div id="prev-month-panel" class="prev-month-panel" style="display: none;">
     <div class="prev-month-panel-header">
       <h3><i data-lucide="history"></i> <span id="prev-month-title">Mes Anterior</span></h3>
       <button id="close-prev-month-panel" class="btn-close-panel">

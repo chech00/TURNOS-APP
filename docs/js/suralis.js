@@ -516,37 +516,36 @@ ${currentSignature}`;
             // Get current user info
             const user = firebase.auth().currentUser;
 
-            // === VERIFICACIÓN: ¿El usuario está logueado con Google? ===
-            // Esto es necesario porque el envío de correos requiere el token de Gmail
-            if (user) {
-                const providerData = user.providerData || [];
-                const isGoogleLogin = providerData.some(p => p.providerId === 'google.com');
+            // === VERIFICACIÓN: ¿El usuario INICIÓ SESIÓN con Google? ===
+            // Usamos localStorage porque providerData muestra todos los proveedores vinculados,
+            // no el método que usó para iniciar sesión en esta sesión específica.
+            const authProvider = localStorage.getItem('authProvider');
+            const isGoogleLogin = authProvider === 'google';
 
-                if (!isGoogleLogin) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Inicio de sesión con Google requerido',
-                        html: `
-                            <p style="margin-bottom: 1rem;">Para enviar correos de notificación, necesitas estar conectado con tu <strong>cuenta de Google</strong>.</p>
-                            <p style="font-size: 0.9rem; color: #9CA3AF;">Esto permite que el correo se envíe desde tu Gmail personal.</p>
-                            <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
-                            <p style="font-size: 0.85rem; color: #A1A9B5;">
-                                <strong>¿Cómo hacerlo?</strong><br>
-                                1. Cierra tu sesión actual<br>
-                                2. Inicia sesión con el botón "Google"
-                            </p>
-                        `,
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#7796CB',
-                        background: '#1f2937',
-                        customClass: {
-                            popup: 'swal-dark-popup',
-                            title: 'swal-dark-title',
-                            htmlContainer: 'swal-dark-content'
-                        }
-                    });
-                    return;
-                }
+            if (!isGoogleLogin) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Inicio de sesión con Google requerido',
+                    html: `
+                        <p style="margin-bottom: 1rem;">Para enviar correos de notificación, necesitas estar conectado con tu <strong>cuenta de Google</strong>.</p>
+                        <p style="font-size: 0.9rem; color: #9CA3AF;">Esto permite que el correo se envíe desde tu Gmail personal.</p>
+                        <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+                        <p style="font-size: 0.85rem; color: #A1A9B5;">
+                            <strong>¿Cómo hacerlo?</strong><br>
+                            1. Cierra tu sesión actual<br>
+                            2. Inicia sesión con el botón "Google"
+                        </p>
+                    `,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#7796CB',
+                    background: '#1f2937',
+                    customClass: {
+                        popup: 'swal-dark-popup',
+                        title: 'swal-dark-title',
+                        htmlContainer: 'swal-dark-content'
+                    }
+                });
+                return;
             }
 
             // Get content from the preview
