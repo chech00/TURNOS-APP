@@ -17,3 +17,6 @@ ngrok.zip
 # Tunneling tools
 localtunnel/
 .lt/
+
+# Old uptime data (not needed in repo)
+Uptime PatagoniaIP*/
