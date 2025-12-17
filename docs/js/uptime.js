@@ -9,11 +9,14 @@ import {
 import { getDependentNodes, topology, aliases } from './dependencies.js';
 
 
-// Detectar si estamos en producción (localtunnel) o local
-const isProduction = window.location.hostname.includes('loca.lt');
+
+// Detectar si estamos en producción (localtunnel o GitHub Pages) o local
+const isProduction = window.location.hostname.includes('loca.lt') ||
+    window.location.hostname.includes('github.io');
 const API_URL = isProduction
     ? 'https://mighty-horse-96.loca.lt'
     : 'http://localhost:3000';
+
 
 
 async function callApi(endpoint, method, body) {
