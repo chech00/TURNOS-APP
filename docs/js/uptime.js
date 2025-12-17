@@ -10,11 +10,10 @@ import { getDependentNodes, topology, aliases } from './dependencies.js';
 
 
 
-// Detectar si estamos en producción (localtunnel o GitHub Pages) o local
-const isProduction = window.location.hostname.includes('loca.lt') ||
-    window.location.hostname.includes('github.io');
+// Detectar si estamos en producción (GitHub Pages) o local
+const isProduction = window.location.hostname.includes('github.io');
 const API_URL = isProduction
-    ? 'https://mighty-horse-96.loca.lt'
+    ? 'https://turnos-app-8viu.onrender.com'
     : 'http://localhost:3000';
 
 
