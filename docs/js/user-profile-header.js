@@ -19,9 +19,33 @@
         try {
             const data = JSON.parse(cached);
             applyProfileToUI(data.displayName, data.email, data.role);
+            // Apply sidebar visibility immediately from cache
+            if (data.role) {
+                applySidebarRoleVisibilityFromCache(data.role);
+            }
             console.log('[Profile] Optimistic load from cache:', data.displayName);
         } catch (e) {
             console.warn('[Profile] Failed to parse cache:', e);
+        }
+    }
+
+    /**
+     * Apply sidebar visibility immediately from cached role (before full auth)
+     */
+    function applySidebarRoleVisibilityFromCache(role) {
+        const normalizedRole = role?.toLowerCase() || 'user';
+
+        // Show admin-only elements for admin or superadmin
+        if (normalizedRole === 'admin' || normalizedRole === 'superadmin') {
+            document.body.classList.add('is-admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+        }
+
+        // Show superadmin-only elements for superadmin
+        if (normalizedRole === 'superadmin') {
+            document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'block');
+            const liRegistros = document.getElementById('li-registros');
+            if (liRegistros) liRegistros.style.display = 'block';
         }
     }
 
@@ -42,11 +66,12 @@
         const roleBadge = document.getElementById('user-role-badge');
         const roleText = document.getElementById('user-role-text');
 
-        if (!nameElement || !emailElement || !roleBadge || !roleText) return;
+        // Only require name, roleBadge, and roleText (email is optional)
+        if (!nameElement || !roleBadge || !roleText) return;
 
-        // Update user name and email
+        // Update user name and email (email may be null on some pages)
         nameElement.textContent = displayName;
-        emailElement.textContent = email;
+        if (emailElement) emailElement.textContent = email;
 
         // Update role badge
         const roleMap = {
@@ -124,7 +149,38 @@
             }
         }
 
+        // === APPLY ROLE-BASED SIDEBAR VISIBILITY ===
+        applySidebarRoleVisibility(role);
+
         console.log('[Profile] Updated and cached:', displayName, '(' + role + ')', isGoogleLogin ? '[Google]' : '[Email/Password]');
+    }
+
+    /**
+     * Apply sidebar visibility based on user role
+     * Shows/hides elements with admin-only and superadmin-only classes
+     */
+    function applySidebarRoleVisibility(role) {
+        const normalizedRole = role?.toLowerCase() || 'user';
+
+        // Show admin-only elements for admin or superadmin
+        if (normalizedRole === 'admin' || normalizedRole === 'superadmin') {
+            document.body.classList.add('is-admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+        } else {
+            document.body.classList.remove('is-admin');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
+
+        // Show superadmin-only elements for superadmin
+        if (normalizedRole === 'superadmin') {
+            document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'block');
+            const liRegistros = document.getElementById('li-registros');
+            if (liRegistros) liRegistros.style.display = 'block';
+        } else {
+            document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+        }
+
+        console.log('[Sidebar] Visibility applied for role:', normalizedRole);
     }
 
     /**
@@ -175,11 +231,30 @@
     // Load cached profile IMMEDIATELY (before Firebase loads)
     loadCachedProfile();
 
-    // Initialize Firebase listener when DOM is ready
+    // Initialize with retry logic to wait for firebase.js to export globals
+    function init() {
+        if (window.auth && window.db) {
+            initializeUserProfileHeader();
+        } else {
+            let retries = 0;
+            const maxRetries = 50; // 5 seconds max
+            const interval = setInterval(() => {
+                retries++;
+                if (window.auth && window.db) {
+                    clearInterval(interval);
+                    initializeUserProfileHeader();
+                } else if (retries >= maxRetries) {
+                    clearInterval(interval);
+                    console.error('Firebase Auth/DB timed out in user-profile-header');
+                }
+            }, 100);
+        }
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeUserProfileHeader);
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        initializeUserProfileHeader();
+        init();
     }
 
     // Export function globally for manual updates if needed

@@ -58,6 +58,9 @@
                 <li data-tooltip="Turnos Noc"><a href="noc.html" id="calendar-check"><i
                             data-lucide="calendar-check"></i> <span>Turnos
                             Noc</span></a></li>
+                <li class="admin-only" style="display:none;" data-tooltip="Bitácora Uptime"><a href="uptime.html"><i
+                            data-lucide="activity"></i><span>Bitácora
+                            Uptime</span></a></li>
                 <li data-tooltip="Notificaciones"><a href="suralis.html"><i
                             data-lucide="send"></i><span>Notificaciones</span></a></li>
                 <li data-tooltip="Gestionar Empleados"><a href="gestion_empleados.html" class="active"><i
@@ -152,6 +155,7 @@
 
     <!-- Scripts -->
     <script type="module" src="./js/firebase.js"></script>
+    <script defer src="./js/active-session.js"></script>
     <script type="module" src="./js/gestion_empleados.js"></script>
     <script>
         lucide.createIcons();

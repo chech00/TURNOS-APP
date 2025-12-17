@@ -6,19 +6,21 @@ import { FERIADOS_DEFAULT } from "./modules/logic/holidayLogic.js";
 // Verify imports
 // console.log("NOC Module Loaded. Feriados Default Count:", FERIADOS_DEFAULT.length);
 
-
-// import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
+// Supabase - Carga dinámica para no bloquear el módulo si falla
 const supabaseUrl = "https://jmrzvajipfdqvzilqjvq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcnp2YWppcGZkcXZ6aWxxanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3ODU3MTksImV4cCI6MjA1NDM2MTcxOX0.xQZX2i-6wynnRnEKBb_mwbt63S6vvrr10SilIyug5Mg";
 let supabase = null;
-/*
-try {
-  supabase = createClient(supabaseUrl, supabaseKey);
-} catch (e) {
-  console.error("Supabase initialization failed:", e);
-}
-*/
+
+// Cargar Supabase dinámicamente (no bloquea el módulo si falla)
+(async () => {
+  try {
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+    supabase = createClient(supabaseUrl, supabaseKey);
+    console.log("[Supabase] Cliente inicializado correctamente");
+  } catch (e) {
+    console.error("[Supabase] Error al inicializar (no crítico):", e);
+  }
+})();
 
 // Delayed Firebase check - wait up to 5 seconds before showing error
 let firebaseCheckAttempts = 0;

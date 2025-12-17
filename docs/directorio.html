@@ -66,9 +66,12 @@
                 <li data-tooltip="Turnos Noc"><a href="noc.html" id="calendar-check"><i
                             data-lucide="calendar-check"></i> <span>Turnos
                             Noc</span></a></li>
+                <li class="admin-only" data-tooltip="Bitácora Uptime"><a
+                        href="uptime.html"><i data-lucide="activity"></i><span>Bitácora
+                            Uptime</span></a></li>
                 <li data-tooltip="Notificaciones"><a href="suralis.html"><i
                             data-lucide="send"></i><span>Notificaciones</span></a></li>
-                <li id="li-empleados" class="admin-only" style="display:none;" data-tooltip="Gestionar Empleados">
+                <li id="li-empleados" class="admin-only" data-tooltip="Gestionar Empleados">
                     <a href="gestion_empleados.html">
                         <i data-lucide="user-cog"></i>
                         <span>Gestionar Empleados</span>
@@ -212,6 +215,9 @@
     <!-- Firebase init -->
     <script type="module" src="./js/firebase.js"></script>
 
+    <!-- Active Session Tracker -->
+    <script defer src="./js/active-session.js"></script>
+
     <!-- Directorio functionality -->
     <script defer src="./js/directorio.js"></script>
 
@@ -258,8 +264,8 @@
                 }
 
                 if (cachedRole === "superadmin") {
+                    document.querySelectorAll(".superadmin-only").forEach(el => el.style.display = "block");
                     document.getElementById("li-registros").style.display = "block";
-                    document.getElementById("li-usuarios").style.display = "block";
                 }
             }
 
@@ -313,10 +319,8 @@
                     }
 
                     if (userRole === "superadmin") {
+                        document.querySelectorAll(".superadmin-only").forEach(el => el.style.display = "block");
                         document.getElementById("li-registros").style.display = "block";
-                        document.getElementById("li-usuarios").style.display = "block";
-                        const liAnim = document.getElementById("li-animaciones");
-                        if (liAnim) liAnim.style.display = "block";
                     }
 
                 } catch (error) {
@@ -348,6 +352,7 @@
         // Use debounced refreshIcons for performance
         if (window.refreshIcons) refreshIcons(); else lucide.createIcons();
     </script>
-    <script src="./js/sw-register.js"></script></body>
+    <script src="./js/sw-register.js"></script>
+</body>
 
 </html>

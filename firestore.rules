@@ -216,11 +216,38 @@ service cloud.firestore {
     }
     
     // =======================================================================
+    // ACTIVE SESSIONS - Sesiones activas en tiempo real
+    // =======================================================================
+    match /activeSessions/{sessionId} {
+      // Superadmins pueden leer todas las sesiones
+      allow read: if isSuperAdmin();
+      
+      // Usuarios pueden crear SU PROPIA sesión (sessionId = uid)
+      allow create: if isAuthenticated() && request.auth.uid == sessionId;
+      
+      // Usuarios pueden actualizar SU PROPIA sesión
+      // Superadmins pueden actualizar CUALQUIER sesión (para marcar como terminada)
+      allow update: if isAuthenticated() && (request.auth.uid == sessionId || isSuperAdmin());
+      
+      // Superadmins pueden eliminar cualquier sesión (para terminar remotamente)
+      // Los usuarios también pueden eliminar su propia sesión (al hacer logout)
+      allow delete: if isAuthenticated() && (isSuperAdmin() || request.auth.uid == sessionId);
+    }
+    
+    // =======================================================================
     // ANIMACIONES - Solo superadmin puede modificar
     // =======================================================================
     match /animaciones/{document=**} {
       allow read: if isAuthenticated();
       allow write: if isSuperAdmin();
+    }
+
+    // =======================================================================
+    // UPTIME LOGS - Bitácora de incidentes
+    // =======================================================================
+    match /uptime_logs/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
     
     // =======================================================================

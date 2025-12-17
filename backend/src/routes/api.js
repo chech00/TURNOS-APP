@@ -9,6 +9,7 @@ const shiftController = require("../controllers/shiftController");
 const fileController = require("../controllers/fileController");
 const telegramController = require("../controllers/telegramController");
 const emailController = require("../controllers/emailController");
+const uptimeController = require("../controllers/uptimeController");
 
 // Rate Limiters
 const uploadLimiter = rateLimit({
@@ -56,6 +57,20 @@ router.get("/cron-status", (req, res) => {
         timezone: "America/Santiago"
     });
 });
+
+// --- Uptime Routes (Bypass Firestore Rules) ---
+router.post("/uptime/create", checkAuth, uptimeController.createIncident);
+router.put("/uptime/:id", checkAuth, uptimeController.updateIncident);
+router.get("/uptime/last", checkAuth, uptimeController.getLastIncident);
+router.post("/uptime/:id/close", checkAuth, uptimeController.closeIncident);
+router.get("/uptime/list", checkAuth, uptimeController.getIncidents);
+router.get("/uptime/nodes", checkAuth, uptimeController.getNodes);
+router.get("/uptime/search-data", checkAuth, uptimeController.getNodesWithPons);
+
+// New optimized endpoints
+router.get("/uptime/summary", checkAuth, uptimeController.getMonthlySummary);
+router.get("/uptime/paginated", checkAuth, uptimeController.getListPaginated);
+router.get("/uptime/live", checkAuth, uptimeController.getLiveStatus); // New Live Lab Endpoint
 
 // --- Other Routes ---
 // "public" route

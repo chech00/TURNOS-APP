@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Logger: Suprime console.log en producción -->
+    <script src="./js/logger.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitácora Uptime | PatagoniaIP</title>
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/lucide-instant.js"></script>
+
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="./css/enhancements.css" />
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/user-profile-header.css">
+
+    <!-- Estilos específicos para esta vista -->
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: clamp(0.75rem, 2vw, 1.5rem);
+            margin-bottom: clamp(1rem, 3vh, 2rem);
+        }
+
+        .stat-card {
+            background: var(--color-fondo-secundario);
+            padding: clamp(0.75rem, 2vh, 1.5rem);
+            border-radius: clamp(8px, 1vw, 12px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-title {
+            color: var(--color-texto-secundario);
+            font-size: clamp(0.7rem, 1.5vw, 0.9rem);
+            font-weight: 500;
+            margin-bottom: clamp(0.25rem, 0.5vh, 0.5rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            color: var(--color-texto-principal);
+            font-size: clamp(1.25rem, 4vw, 2rem);
+            font-weight: 700;
+        }
+
+        .table-container {
+            background: var(--color-fondo-secundario);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .table-header-ctrl {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--color-texto-secundario);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--color-texto-principal);
+            font-size: 0.9rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: rgba(215, 122, 122, 0.2);
+            color: #ff8a8a;
+        }
+
+        .badge-warning {
+            background: rgba(232, 194, 126, 0.2);
+            color: #f5d491;
+        }
+
+        .badge-info {
+            background: rgba(58, 134, 255, 0.2);
+            color: #6db3ff;
+        }
+
+        .badge-secondary {
+            background: rgba(161, 169, 181, 0.2);
+            color: #c4cddb;
+        }
+
+        .truncate-cell {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Animation */
+        .fade-in-row {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            align-items: flex-start;
+            justify-content: center;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: var(--color-fondo-secundario) !important;
+            padding: clamp(0.75rem, 2vh, 1.5rem) !important;
+            padding-bottom: clamp(1.5rem, 4vh, 2.5rem) !important;
+            border-radius: clamp(8px, 1.5vw, 12px) !important;
+            width: min(94%, 540px) !important;
+            max-width: 94% !important;
+            margin: auto !important;
+            min-height: fit-content !important;
+            max-height: none !important;
+            overflow: visible !important;
+            overflow-x: hidden !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            position: relative !important;
+            animation: slideIn 0.3s ease-out;
+            /* Scrollbar sutil */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .modal-content .form-group {
+            margin-bottom: clamp(0.3rem, 1vh, 0.75rem);
+        }
+
+        .modal-content label {
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+            margin-bottom: 0.2rem;
+        }
+
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            font-size: clamp(0.75rem, 1.3vw, 0.95rem);
+            padding: clamp(0.35rem, 0.8vh, 0.6rem);
+        }
+
+        .modal-content .primary-btn {
+            padding: clamp(0.4rem, 1vh, 0.65rem);
+            font-size: clamp(0.75rem, 1.3vw, 0.95rem);
+            margin-top: 0.5rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: clamp(0.5rem, 1.5vh, 1rem);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.3rem;
+        }
+
+        .modal-header h2 {
+            font-size: clamp(0.9rem, 2vw, 1.25rem);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .modal-header h2 i {
+            width: clamp(16px, 2vw, 22px);
+            height: clamp(16px, 2vw, 22px);
+        }
+
+        .close-modal {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            cursor: pointer;
+            color: var(--color-texto-secundario);
+        }
+
+        .close-modal:hover {
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: clamp(0.4rem, 1vh, 0.8rem);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.2rem;
+            color: var(--color-texto-secundario);
+            font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: clamp(0.35rem, 0.8vh, 0.6rem);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: clamp(0.75rem, 1.3vw, 0.95rem);
+        }
+
+        .full-width {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .secondary-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: clamp(0.3rem, 0.8vh, 0.5rem) clamp(0.5rem, 1vw, 1rem);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: clamp(0.75rem, 1.3vw, 0.9rem);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Contenedor de copia de último incidente - más compacto */
+        .modal-content>.modal-body>div:first-child {
+            margin-bottom: 0.5rem !important;
+            padding: 0.4rem !important;
+        }
+
+        /* Separador visual - siempre compacto */
+        .modal-content [style*="O usa la selección"] {
+            padding: 0.3rem !important;
+            margin: 0.4rem 0 !important;
+            font-size: 0.75rem !important;
+        }
+
+        /* PON selection container - más compacto */
+        #pon-selection-container {
+            padding: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        #pon-selection-container label {
+            margin-bottom: 0.3rem !important;
+            font-size: 0.75rem !important;
+        }
+
+        #pon-selection-container>div {
+            gap: 0.3rem !important;
+            margin-bottom: 0.4rem !important;
+        }
+
+        /* Search suggestions - altura limitada */
+        #search-suggestions {
+            max-height: 120px !important;
+        }
+
+        /* ========== RESPONSIVE: Pantallas muy pequeñas (altura < 650px) ========== */
+        @media screen and (max-height: 650px) {
+            .modal-content {
+                padding: 0.4rem 0.6rem;
+            }
+
+            .modal-header {
+                margin-bottom: 0.4rem;
+                padding-bottom: 0.2rem;
+            }
+
+            .modal-header h2 {
+                font-size: 0.85rem;
+            }
+
+            .modal-content .form-group {
+                margin-bottom: 0.25rem;
+            }
+
+            .modal-content label {
+                font-size: 0.7rem;
+                margin-bottom: 0.1rem;
+            }
+
+            .modal-content input,
+            .modal-content select {
+                padding: 0.3rem 0.4rem;
+                font-size: 0.8rem;
+            }
+
+            /* Ocultar elementos decorativos para ganar espacio */
+            .modal-content [style*="O usa la selección"] {
+                display: none !important;
+            }
+
+            /* Caja de copiar último incidente más compacta */
+            .modal-content>.modal-body>div:first-child {
+                padding: 0.3rem !important;
+                margin-bottom: 0.3rem !important;
+            }
+
+            #copy-last-incident-btn {
+                padding: 0.3rem 0.5rem !important;
+                font-size: 0.75rem !important;
+            }
+
+            .modal-content .primary-btn {
+                padding: 0.35rem !important;
+                margin-top: 0.3rem !important;
+            }
+
+            #search-suggestions {
+                max-height: 80px !important;
+            }
+        }
+
+        /* ========== RESPONSIVE: Pantallas extremadamente pequeñas (altura < 550px) ========== */
+        @media screen and (max-height: 550px) {
+            .modal-content {
+                padding: 0.3rem 0.5rem;
+                max-height: calc(100vh - 1rem);
+            }
+
+            .modal-header h2 i {
+                display: none;
+            }
+
+            /* Ocultar la sección de búsqueda rápida completamente */
+            #quick-search-input,
+            .modal-content [style*="Búsqueda Rápida"] {
+                display: none !important;
+            }
+
+            /* Colapsar el contenedor de PON cuando no está en uso */
+            #pon-selection-container[style*="display: none"] {
+                display: none !important;
+            }
+        }
+
+        /* Ancho de pantalla pequeño (móvil/tablet vertical) */
+        @media screen and (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+            }
+
+            .modal-content [style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Responsive table - cards on mobile */
+            .table-responsive table {
+                display: block;
+            }
+
+            .table-responsive thead {
+                display: none;
+            }
+
+            .table-responsive tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .table-responsive tr {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 1rem;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .table-responsive td {
+                border-bottom: none;
+                padding: 0.25rem 0;
+            }
+
+            .table-responsive td::before {
+                content: attr(data-label);
+                display: block;
+                font-size: 0.7rem;
+                color: var(--color-texto-secundario);
+                text-transform: uppercase;
+                margin-bottom: 0.25rem;
+            }
+
+            /* Charts responsive */
+            .charts-section {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+
+            .chart-card {
+                padding: 1rem !important;
+                overflow: hidden;
+            }
+
+            .chart-card canvas {
+                max-height: 200px !important;
+                width: 100% !important;
+            }
+
+            /* Filter bar responsive */
+            .filter-bar {
+                flex-direction: column !important;
+            }
+
+            .filter-bar>div {
+                width: 100% !important;
+                min-width: unset !important;
+            }
+        }
+
+        /* Confirmation Modal */
+        .confirm-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirm-modal {
+            background: var(--color-fondo-secundario);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .confirm-modal-overlay.active .confirm-modal {
+            transform: scale(1);
+        }
+
+        .confirm-modal h3 {
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .confirm-modal p {
+            color: var(--color-texto-secundario);
+            margin-bottom: 1.5rem;
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--color-texto-secundario);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        /* KPI Trend Indicators */
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .stat-trend.up {
+            color: #22c55e;
+        }
+
+        .stat-trend.down {
+            color: #ef4444;
+        }
+
+        .stat-trend.neutral {
+            color: #9ca3af;
+        }
+
+        /* Form Validation States */
+        input.valid,
+        select.valid {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        }
+
+        input.invalid,
+        select.invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Tooltip Styles */
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 0.25rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            font-size: 0.65rem;
+            color: #9ca3af;
+            cursor: help;
+            position: relative;
+        }
+
+        .tooltip-icon:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Keyboard Shortcut Hint */
+        .shortcut-hint {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .shortcut-hint kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Accordion PON Selector */
+        .pon-accordion {
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .pon-accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .pon-accordion-header:hover {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .pon-accordion-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .pon-accordion-badge {
+            background: var(--color-acento-primario);
+            color: #fff;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .pon-accordion-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .pon-accordion-toggle {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s;
+        }
+
+        .pon-accordion.open .pon-accordion-toggle {
+            transform: rotate(180deg);
+        }
+
+        .pon-accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .pon-accordion.open .pon-accordion-content {
+            max-height: 300px;
+        }
+
+        .pon-accordion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
+            gap: 0.35rem;
+            padding: 0.75rem;
+        }
+
+        .pon-chip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.35rem 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .pon-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .pon-chip.selected {
+            background: var(--color-acento-primario);
+            border-color: var(--color-acento-primario);
+            color: #fff;
+        }
+
+        .btn-select-all {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .btn-select-all:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Updated Modal Styling for 1100px Grid Layout */
+        #modal-new-incident .modal-content {
+            background: linear-gradient(145deg, rgba(30, 35, 45, 0.98) 0%, rgba(18, 22, 30, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            backdrop-filter: blur(20px);
+            max-width: 1400px !important;
+            /* Wide but not extreme */
+            width: 95vw !important;
+            /* Comfortable viewport usage */
+        }
+
+        #modal-new-incident .modal-header {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #modal-new-incident .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        #modal-new-incident .modal-header h2 svg,
+        #modal-new-incident .modal-header h2 i {
+            color: #f59e0b;
+        }
+
+        #modal-new-incident .modal-body {
+            padding: 1.5rem;
+        }
+
+        #modal-new-incident .form-group {
+            margin-bottom: 1rem;
+        }
+
+        #modal-new-incident .form-group label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-bottom: 0.4rem;
+            display: block;
+            font-weight: 500;
+        }
+
+        #modal-new-incident input,
+        #modal-new-incident select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #modal-new-incident input:focus,
+        #modal-new-incident select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        #modal-new-incident .primary-btn.full-width {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 0.5rem;
+        }
+
+        #modal-new-incident .primary-btn.full-width:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        #modal-new-incident .close-modal {
+            position: static !important;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #modal-new-incident .close-modal:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Premium Diagnose Modal Styling */
+        #modal-diagnose .modal-content {
+            background: linear-gradient(145deg, rgba(30, 35, 45, 0.98) 0%, rgba(18, 22, 30, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            backdrop-filter: blur(20px);
+        }
+
+        #modal-diagnose .modal-header {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+        }
+
+        #modal-diagnose .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        #modal-diagnose .modal-header h2 svg,
+        #modal-diagnose .modal-header h2 i {
+            color: #8b5cf6;
+        }
+
+        #modal-diagnose .modal-body {
+            padding: 1.5rem;
+        }
+
+        #modal-diagnose .form-group {
+            margin-bottom: 1rem;
+        }
+
+        #modal-diagnose .form-group label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-bottom: 0.4rem;
+            display: block;
+            font-weight: 500;
+        }
+
+        #modal-diagnose input,
+        #modal-diagnose select,
+        #modal-diagnose textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        #modal-diagnose textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        #modal-diagnose input:focus,
+        #modal-diagnose select:focus,
+        #modal-diagnose textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        #modal-diagnose .primary-btn {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 0.5rem;
+        }
+
+        #modal-diagnose .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        #modal-diagnose .close-modal {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        #modal-diagnose .close-modal:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Area Button Group */
+        .area-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .area-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .area-btn.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(59, 130, 246, 0.2) 100%);
+            border-color: #8b5cf6;
+            color: #fff;
+        }
+
+        .area-btn.active svg {
+            stroke: #a78bfa;
+        }
+
+        /* Battery Button */
+        .battery-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 2px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .battery-btn:hover {
+            background: rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .battery-btn svg {
+            stroke: #f59e0b;
+        }
+
+        /* Premium Battery Modal Styling */
+        #modal-battery .modal-content {
+            background: linear-gradient(145deg, rgba(30, 35, 45, 0.98) 0%, rgba(18, 22, 30, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            backdrop-filter: blur(20px);
+            /* max-width controlled inline or by class */
+        }
+
+        #modal-battery .modal-header {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(234, 88, 12, 0.1) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #modal-battery .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        #modal-battery .close-modal {
+            position: static !important;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #modal-battery .close-modal:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        #modal-battery .modal-body {
+            padding: 1.5rem;
+        }
+
+        #modal-battery ul {
+            margin: 0 0 1.5rem;
+            padding-left: 1.2rem;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        #modal-battery li {
+            margin-bottom: 0.3rem;
+        }
+
+        #modal-battery strong {
+            color: #f59e0b;
+        }
+
+        #modal-battery select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        #modal-battery select:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        #modal-battery .primary-btn {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 1rem;
+        }
+
+        #modal-battery .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        /* --- UTILITY CLASSES PARA LIVE MONITOR (Polyfill Tailwind) --- */
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .px-3 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        .py-1 {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+
+        .rounded-full {
+            border-radius: 9999px;
+        }
+
+        .bg-gray-800 {
+            background-color: #1f2937;
+        }
+
+        .border {
+            border-width: 1px;
+        }
+
+        .border-gray-700 {
+            border-color: #374151;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+            line-height: 1rem;
+        }
+
+        .font-mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .ml-4 {
+            margin-left: 1rem;
+        }
+
+        .relative {
+            position: relative;
+        }
+
+        .h-2 {
+            height: 0.5rem;
+        }
+
+        .w-2 {
+            width: 0.5rem;
+        }
+
+        .bg-gray-400 {
+            background-color: #9ca3af;
+        }
+
+        .opacity-75 {
+            opacity: 0.75;
+        }
+
+        .bg-gray-500 {
+            background-color: #6b7280;
+        }
+
+        .bg-green-500 {
+            background-color: #22c55e !important;
+        }
+
+        .bg-red-500 {
+            background-color: #ef4444 !important;
+        }
+
+        .text-gray-400 {
+            color: #9ca3af;
+        }
+
+        .text-green-400 {
+            color: #4ade80 !important;
+        }
+
+        .animate-ping {
+            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+
+            75%,
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script type="module" src="./js/firebase.js"></script>
+    <script defer src="./js/active-session.js"></script>
+    <script defer src="./js/user-profile-header.js"></script>
+
+    <!-- Logic -->
+    <script type="module" src="./js/uptime.js"></script>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <button id="menu-toggle" class="menu-btn"><i data-lucide="menu"></i></button>
+        <div class="sidebar-header">
+            <img src="https://i.ibb.co/HqrX2cr/LOGO-COLOR-2-SLOGAN-768x185.png" alt="Logo" class="logo-sidebar" />
+        </div>
+        <nav class="sidebar-menu">
+            <ul>
+                <li data-tooltip="Directorio"><a href="directorio.html"><i
+                            data-lucide="users"></i><span>Directorio</span></a></li>
+                <li id="li-turnos" class="superadmin-only" style="display:none;" data-tooltip="Turnos"><a
+                        href="index.html"><i data-lucide="calendar"></i><span>Turnos</span></a></li>
+                <li id="li-senales" class="admin-only" style="display:none;" data-tooltip="Señal de Fibra"><a
+                        href="senales.html"><i data-lucide="waypoints"></i><span>Señal de Fibra</span></a></li>
+                <li data-tooltip="Documentos Noc"><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos
+                            Noc</span></a></li>
+                <li data-tooltip="Turnos Noc"><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos
+                            Noc</span></a></li>
+
+                <!-- ACTIVE LINK -->
+                <li data-tooltip="Bitácora Uptime"><a href="uptime.html" class="active"><i
+                            data-lucide="activity"></i><span>Bitácora Uptime</span></a></li>
+
+                <li data-tooltip="Notificaciones"><a href="suralis.html"><i
+                            data-lucide="send"></i><span>Notificaciones</span></a></li>
+
+                <li id="li-empleados" class="admin-only" style="display:none;" data-tooltip="Gestionar Empleados">
+                    <a href="gestion_empleados.html"><i data-lucide="user-cog"></i><span>Gestionar Empleados</span></a>
+                </li>
+                <li id="li-usuarios" class="superadmin-only" style="display:none;" data-tooltip="Cuentas de Sistema">
+                    <a href="gestion_usuarios.html"><i data-lucide="shield-check"></i><span>Cuentas de
+                            Sistema</span></a>
+                </li>
+                <li id="li-animaciones" class="superadmin-only" style="display:none;" data-tooltip="Animaciones">
+                    <a href="animaciones.html"><i data-lucide="sparkles"></i><span>Animaciones</span></a>
+                </li>
+                <li id="li-registros" style="display:none;" data-tooltip="Registros">
+                    <a href="registros.html"><i data-lucide="file-text"></i><span>Registros</span></a>
+                </li>
+            </ul>
+        </nav>
+        <button id="logout-btn" class="primary-btn logout-btn">
+            <i data-lucide="log-out"></i> <span>Cerrar sesión</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="main-content">
+        <header>
+            <h1>Centro de Control de Uptime</h1>
+
+            <!-- LIVE MONITOR INDICATOR -->
+            <div id="live-monitor-status"
+                class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800 border border-gray-700 text-xs font-mono ml-4"
+                style="display: inline-flex;">
+                <span class="relative flex h-2 w-2">
+                    <span id="live-ping"
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-400 opacity-75"></span>
+                    <span id="live-dot" class="relative inline-flex rounded-full h-2 w-2 bg-gray-500"></span>
+                </span>
+                <span id="live-text" class="text-gray-400">Lab Disconnected</span>
+            </div>
+            <div class="user-profile-header">
+                <div class="user-avatar">
+                    <i data-lucide="user"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name" id="user-display-name">Cargando...</span>
+                    <!-- <span class="user-email" id="user-display-email">...</span> -->
+                </div>
+                <div class="user-role-badge" id="user-role-badge">
+                    <i data-lucide="shield"></i>
+                    <span id="user-role-text">...</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- 1. Action Bar -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; margin-top: 2rem;">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem;">Estado de la Red</h2>
+                    <p style="color: var(--color-texto-secundario); margin: 0;">Monitoreo y gestión de incidentes en
+                        tiempo real</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="battery-btn" onclick="window.openBatteryModal()"
+                        title="Registro rápido de nodo en batería">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect width="16" height="10" x="2" y="7" rx="2" ry="2" />
+                            <line x1="22" x2="22" y1="11" y2="13" />
+                            <line x1="6" x2="6" y1="11" y2="13" />
+                            <line x1="10" x2="10" y1="11" y2="13" />
+                        </svg>
+                        EN BATERÍA
+                    </button>
+                    <button class="primary-btn" onclick="window.openModal('modal-new-incident')"
+                        style="background: #ef4444; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); animation: pulse-red 2s infinite; padding: 0.6rem 1rem; font-size: 0.85rem;">
+                        <i data-lucide="alert-triangle"></i> REPORTAR INCIDENTE
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title"><i data-lucide="alert-circle" style="color: #ef4444;"></i> Incidencias
+                        Activas</div>
+                    <div class="stat-value" id="stat-active-events" style="color: #ef4444;">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i data-lucide="check-circle" style="color: #22c55e;"></i> Uptime Mensual
+                    </div>
+                    <div class="stat-value" id="stat-uptime-percent">99.8%</div> <!-- Placeholder -->
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i data-lucide="users"></i> Clientes Afectados (Activos)</div>
+                    <div class="stat-value" id="stat-affected-clients">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title"><i data-lucide="clock"></i> MTTR (Promedio)</div>
+                    <div class="stat-value" id="stat-mttr">0h 0m</div>
+                </div>
+            </div>
+
+            <!-- Analytics Charts Section -->
+            <div class="charts-section"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="chart-card"
+                    style="background: var(--color-fondo-secundario); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <canvas id="uptime-line-chart" style="height: 250px; max-height: 250px;"></canvas>
+                </div>
+                <div class="chart-card"
+                    style="background: var(--color-fondo-secundario); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <canvas id="top-nodes-chart" style="height: 250px; max-height: 250px;"></canvas>
+                </div>
+            </div>
+
+            <!-- 2. ACTIVE INCIDENTS PANEL (Hidden if empty) -->
+            <div id="active-incidents-container" class="table-container"
+                style="margin-bottom: 2rem; border: 1px solid #ef4444; display: none;">
+                <div class="table-header-ctrl" style="background: rgba(239, 68, 68, 0.1);">
+                    <h2 style="color: #ef4444; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="siren" class="animate-pulse"></i> INCIDENTES EN CURSO
+                    </h2>
+                </div>
+                <div class="table-responsive">
+                    <table id="active-incidents-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Hora Inicio</th>
+                                <th>Nodo / Sitio</th>
+                                <th>Falla Reportada</th>
+                                <th>PONs Afectados</th>
+                                <th>Clientes Af.</th>
+                                <th>Tiempo Transcurrido</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-incidents-body">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. Historical Logs -->
+            <div class="table-container">
+                <div class="table-header-ctrl">
+                    <h2>Historial de Incidentes Cerrados</h2>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="last-update-indicator"
+                            style="font-size: 0.75rem; color: var(--color-texto-secundario);">
+                            Última actualización: --
+                        </span>
+                        <button class="primary-btn" onclick="window.loadUptimeLogs()"
+                            style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            <i data-lucide="refresh-cw"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-bar"
+                    style="display: flex; flex-wrap: wrap; gap: 0.75rem; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 1rem; align-items: flex-end;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--color-texto-secundario); margin-bottom: 0.25rem;">Nodo</label>
+                        <select id="filter-node" onchange="window.applyFilters()"
+                            style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff;">
+                            <option value="">Todos los nodos</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 130px;">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--color-texto-secundario); margin-bottom: 0.25rem;">Desde</label>
+                        <input type="date" id="filter-date-from"
+                            style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff;">
+                    </div>
+                    <div style="flex: 1; min-width: 130px;">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--color-texto-secundario); margin-bottom: 0.25rem;">Hasta</label>
+                        <input type="date" id="filter-date-to"
+                            style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff;">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label
+                            style="display: block; font-size: 0.75rem; color: var(--color-texto-secundario); margin-bottom: 0.25rem;">Tipo
+                            de Falla</label>
+                        <select id="filter-type" onchange="window.applyFilters()"
+                            style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff;">
+                            <option value="">Todos los tipos</option>
+                            <option value="Corte de F.O Troncal">Corte F.O Troncal</option>
+                            <option value="Corte de F.O PON">Corte F.O PON</option>
+                            <option value="Corte de F.O NAP">Corte F.O NAP</option>
+                            <option value="Falla de energía">Falla de Energía</option>
+                            <option value="Batería agotada">Batería Agotada</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+                        <button class="primary-btn" onclick="window.applyFilters()" title="Aplicar rango de fechas"
+                            style="padding: 0.5rem 0.75rem; background: #3b82f6; border-color: #3b82f6;">
+                            <i data-lucide="calendar-range"></i>
+                        </button>
+                        <button class="primary-btn" onclick="window.clearFilters()"
+                            style="padding: 0.5rem 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.2);">
+                            <i data-lucide="x"></i> Limpiar
+                        </button>
+                        <button class="primary-btn" onclick="window.exportToCSV()"
+                            style="padding: 0.5rem 1rem; background: #22c55e; border-color: #22c55e;">
+                            <i data-lucide="download"></i> Exportar CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <div id="loading-spinner"
+                        style="padding: 2rem; display: flex; justify-content: center; align-items: center; color: var(--color-acento-primario);">
+                        <i data-lucide="loader-2" class="animate-spin" style="width: 32px; height: 32px;"></i>
+                    </div>
+                    <table id="uptime-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Nodo</th>
+                                <th>Tipo de Falla</th>
+                                <th>Inicio</th>
+                                <th>Término</th>
+                                <th>Duración</th>
+                                <th>Clientes</th>
+                                <th>PONs</th>
+                                <th>% Uptime</th>
+                                <th>Motivo / Observación</th>
+                                <th>Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uptime-table-body">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 PatagoniaIP SpA - Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Modal: Nuevo Incidente -->
+    <div id="modal-new-incident" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="alert-triangle"></i> Reportar Nuevo Incidente</h2>
+                <span class="close-modal" onclick="window.closeModal('modal-new-incident')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body">
+                    <style>
+                        /* 3-Column Widescreen Layout */
+                        .split-view-container {
+                            display: grid;
+                            grid-template-columns: 25% 30% 1fr;
+                            /* FLUID Percentages */
+                            gap: 1.5rem;
+                            height: 100%;
+                            min-height: 400px;
+                        }
+
+                        .col-section {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 1.25rem;
+                        }
+
+                        .col-divider {
+                            border-right: 1px solid rgba(255, 255, 255, 0.05);
+                            padding-right: 1.5rem;
+                        }
+
+                        .col-header {
+                            font-size: 0.85rem;
+                            color: #9ca3af;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            font-weight: 700;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            padding-bottom: 0.5rem;
+                            margin-bottom: 0.5rem;
+                        }
+
+                        /* Compact Inputs */
+                        .col-section .form-group {
+                            margin-bottom: 0.5rem;
+                        }
+
+                        .col-section label {
+                            font-size: 0.75rem;
+                            color: #6b7280;
+                            margin-bottom: 0.25rem;
+                            font-weight: 600;
+                            display: block;
+                        }
+
+                        /* Responsive Behavior */
+                        @media (max-width: 1200px) {
+                            .split-view-container {
+                                grid-template-columns: 1fr 1fr;
+                                /* Switch to 2 columns */
+                            }
+
+                            /* Col 1 & 2 merged visually or stacked? Let's stack 3 below 1&2 usually, but grid auto-flow is better */
+                            .col-section:nth-child(3) {
+                                grid-column: span 2;
+                                /* Span full width on 2-col layout */
+                            }
+
+                            .col-divider:nth-child(2) {
+                                border-right: none;
+                            }
+
+                            /* Remove border for mid col */
+                        }
+
+                        @media (max-width: 850px) {
+                            .split-view-container {
+                                grid-template-columns: 1fr;
+                                /* Stack all */
+                                min-height: auto;
+                            }
+
+                            .col-divider {
+                                border-right: none;
+                                padding-right: 0;
+                                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                                padding-bottom: 1.5rem;
+                            }
+
+                            .col-section:nth-child(3) {
+                                grid-column: span 1;
+                            }
+                        }
+                    </style>
+
+                    <div class="split-view-container">
+                        <!-- COLUMN 1: Identificación & Clasificación -->
+                        <div class="col-section col-divider">
+                            <div class="col-header">1. Datos Generales</div>
+
+                            <!-- Ticket -->
+                            <div class="form-group">
+                                <label><i data-lucide="hash" style="width:12px;"></i> N° Ticket Externo</label>
+                                <input type="text" id="new-incident-ticket" placeholder="Ej: T123456"
+                                    style="font-family: monospace; text-transform: uppercase; background: rgba(0,0,0,0.2);">
+                            </div>
+
+                            <!-- Time -->
+                            <div class="form-group">
+                                <label>Inicio</label>
+                                <input type="text" id="new-incident-time" disabled value="AHORA MISMO"
+                                    style="background: transparent; color: #9ca3af; border: none; padding: 0;">
+                            </div>
+
+                            <!-- Type (Moved here to balance height) -->
+                            <div class="form-group">
+                                <label>Tipo de Falla</label>
+                                <select id="new-incident-type" style="padding: 0.6rem; background: rgba(0,0,0,0.2);">
+                                    <option value="Sin Clasificar (Investigando)">Sin Clasificar (Investigando)</option>
+                                    <option value="Corte de F.O Troncal">Corte de F.O Troncal</option>
+                                    <option value="Corte de F.O PON">Corte de F.O PON</option>
+                                    <option value="Falla de energía">Falla de energía</option>
+                                    <option value="Falla de equipo activo">Falla de equipo activo</option>
+                                    <option value="Mantenimiento Programado">Mantenimiento Programado</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 2: Ubicación / Nodo -->
+                        <div class="col-section col-divider">
+                            <div class="col-header">2. Ubicación Afectada</div>
+
+                            <!-- Smart Search -->
+                            <div class="form-group" style="position: relative;">
+                                <label>Buscar Nodo</label>
+                                <input type="text" id="quick-search-input" placeholder="🔍 Buscar..."
+                                    style="width: 100%; padding: 0.6rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: white;">
+                                <div id="search-suggestions"
+                                    style="position: absolute; top: 100%; left: 0; right: 0; max-height: 300px; overflow-y: auto; display: none; background: #1f2937; border: 1px solid #374151; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; color: #4b5563; font-size: 0.7rem;">- O -</div>
+
+                            <!-- Manual Node -->
+                            <div class="form-group">
+                                <label>Selección Manual</label>
+                                <select id="new-incident-node" class="styled-select" style="padding: 0.6rem;">
+                                    <option value="">Seleccionar Nodo...</option>
+                                </select>
+                            </div>
+
+                            <!-- Dependency Alert Placeholder (Can grow tall) -->
+                            <div id="dependency-alert"
+                                style="display: none; padding: 0.5rem; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 6px; font-size: 0.75rem; color: #facc15;">
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 3: Alcance (PONs) -->
+                        <div class="col-section">
+                            <div class="col-header" style="display: flex; justify-content: space-between;">
+                                3. Alcance
+                                <span id="selected-pons-count"
+                                    style="font-size: 0.7rem; color: #9ca3af; background: rgba(255,255,255,0.05); padding: 1px 6px; border-radius: 4px; font-weight:normal;">0
+                                    sel.</span>
+                            </div>
+
+                            <div id="pon-selection-container" style="display: none; flex: 1; flex-direction: column;">
+                                <div
+                                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; flex: 1; display: flex; flex-direction: column;">
+                                    <!-- Full Node Toggle -->
+                                    <div id="full-node-option"
+                                        style="margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.1);">
+                                        <label
+                                            class="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded transition-colors"
+                                            for="full-node-down-checkbox">
+                                            <input type="checkbox" id="full-node-down-checkbox"
+                                                style="width: 16px; height: 16px; accent-color: #ef4444;">
+                                            <span style="color: #ef4444; font-weight: 600; font-size: 0.8rem;">🚨 TODO
+                                                EL NODO</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Accordion Container -->
+                                    <div id="pon-multi-select-container"
+                                        style="flex: 1; overflow-y: auto; max-height: 250px; padding-right: 0.5rem;">
+                                    </div>
+
+                                    <!-- Selected List Summary -->
+                                    <div id="selected-pons-list"
+                                        style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 4px;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div style="margin-top: auto; padding-top: 1rem;">
+                                <button type="button" id="btn-submit-incident" class="primary-btn"
+                                    onclick="window.submitNewIncident()"
+                                    style="padding: 0.8rem; font-size: 1rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); width: 100%;">
+                                    Confirmar e Iniciar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Diagnosticar / Actualizar -->
+    <div id="modal-diagnose" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2><i data-lucide="stethoscope"></i> Diagnóstico y Actualización</h2>
+                <span class="close-modal" onclick="window.closeModal('modal-diagnose')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="diagnose-ticket-id">
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Clasificación de Falla</label>
+                        <select id="diagnose-type" class="styled-select">
+                            <option value="Corte de F.O PON">Corte de F.O PON</option>
+                            <option value="Corte de F.O Troncal">Corte de F.O Troncal</option>
+                            <option value="Corte de F.O NAP">Corte de F.O NAP</option>
+                            <option value="UPS en Bateria">UPS en Bateria</option>
+                            <option value="Nodo sin energia">Nodo sin energia</option>
+                            <option value="Sin conectividad por energia">Sin conectividad por energia</option>
+                            <option value="Sin conectividad por dependencia">Sin conectividad por dependencia</option>
+                            <option value="Sin conectividad BRAS">Sin conectividad BRAS</option>
+                            <option value="Sin conectividad Switch Dst">Sin conectividad Switch Dst</option>
+                            <option value="Sin conectividad Switch Acc">Sin conectividad Switch Acc</option>
+                            <option value="Sin conectividad OLT">Sin conectividad OLT</option>
+                            <option value="Sin conectividad RF">Sin conectividad RF</option>
+                            <option value="Mantenimiento Programado">Mantenimiento Programado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Motivo Específico</label>
+                        <select id="diagnose-reason" class="styled-select">
+                            <option value="">-- Seleccionar Motivo --</option>
+                            <optgroup label="Cortes de Fibra Óptica">
+                                <option value="Corte F.O por terceros">Corte F.O por terceros</option>
+                                <option value="Corte F.O por roedor">Corte F.O por roedor</option>
+                                <option value="Corte F.O por camion">Corte F.O por camion</option>
+                                <option value="Corte F.O por retroexcavadora">Corte F.O por retroexcavadora</option>
+                                <option value="Corte F.O caida de poste">Corte F.O caida de poste</option>
+                                <option value="Corte de F.O por arbustos">Corte de F.O por arbustos</option>
+                                <option value="Corte de F.O quemada">Corte de F.O quemada</option>
+                            </optgroup>
+                            <optgroup label="Energía">
+                                <option value="Corte de energia no programado">Corte de energia no programado
+                                    (Saesa/Creel)</option>
+                                <option value="Corte de energia programado">Corte de energia programado</option>
+                                <option value="Corte de energia por dueños">Corte de energia por dueños</option>
+                                <option value="Falla UPS">Falla UPS</option>
+                                <option value="Generador sin combustible">Generador sin combustible</option>
+                                <option value="Sin energia de respaldo">Sin energia de respaldo</option>
+                            </optgroup>
+                            <optgroup label="Hardware / Lógica">
+                                <option value="Falla Hw OLT">Falla Hw OLT</option>
+                                <option value="Falla Hw Switch Acceso">Falla Hw Sw Acceso</option>
+                                <option value="Falla Hw BRAS">Falla Hw BRAS</option>
+                                <option value="Falla modulo SFP">Falla modulo SFP</option>
+                                <option value="Atenuacion F.O exterior">Atenuacion F.O exterior</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Área Responsable</label>
+                    <input type="hidden" id="diagnose-area" value="NOC">
+                    <div class="area-button-group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="area-btn active" data-area="NOC" onclick="window.selectArea(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <rect width="20" height="14" x="2" y="3" rx="2" />
+                                <path d="M8 21h8" />
+                                <path d="M12 17v4" />
+                            </svg>
+                            NOC
+                        </button>
+                        <button type="button" class="area-btn" data-area="Planta Externa"
+                            onclick="window.selectArea(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" />
+                                <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9" />
+                                <path d="M12 3v6" />
+                            </svg>
+                            Planta Ext.
+                        </button>
+                        <button type="button" class="area-btn" data-area="Ingenieria" onclick="window.selectArea(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                            </svg>
+                            Ingeniería
+                        </button>
+                        <button type="button" class="area-btn" data-area="Infraestructuras"
+                            onclick="window.selectArea(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+                                <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+                                <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+                            </svg>
+                            Infraestructura
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Cantidad Clientes Afectados</label>
+                        <input type="number" id="diagnose-clients" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group"
+                        style="display: flex; align-items: center; justify-content: center; padding-top: 1.5rem;">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="diagnose-clients-bool">
+                            <span class="checkmark"></span>
+                            ¿Afectación de Servicio?
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observaciones / Actividad</label>
+                    <textarea id="diagnose-obs" rows="3" placeholder="Detalles técnicos de la falla..."></textarea>
+                </div>
+
+                <button class="primary-btn full-width" onclick="window.saveDiagnosis()">Guardar Diagnóstico</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Cerrar Incidente -->
+    <div id="modal-close-incident" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="check-circle"></i> Restaurar Servicio</h2>
+                <span class="close-modal" onclick="window.closeModal('modal-close-incident')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>¿Confirmas que el servicio ha sido restaurado?</p>
+                <p style="color: var(--color-texto-secundario); font-size: 0.9rem;">Esto marcará la hora exacta de
+                    término y calculará la duración final.</p>
+                <input type="hidden" id="close-ticket-id">
+
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="secondary-btn" onclick="window.closeModal('modal-close-incident')">Cancelar</button>
+                    <button class="primary-btn" onclick="window.confirmCloseIncident()"
+                        style="background: #22c55e; border-color: #22c55e;">
+                        <i data-lucide="check"></i> Confirmar Restauración
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de inicialización de UI -->
+    <script>
+        // Toggle Sidebar
+        const menuBtn = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (menuBtn && sidebar) {
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        }
+
+        // Initial Icons
+        if (window.lucide) window.lucide.createIcons();
+    </script>
+
+    <!-- Confirmation Modal (Generic) -->
+    <div id="confirm-modal-overlay" class="confirm-modal-overlay">
+        <div class="confirm-modal">
+            <h3 id="confirm-modal-title">¿Confirmar acción?</h3>
+            <p id="confirm-modal-message">Esta acción no se puede deshacer.</p>
+            <div class="confirm-modal-buttons">
+                <button class="primary-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2);"
+                    onclick="window.hideConfirm()">
+                    Cancelar
+                </button>
+                <button id="confirm-modal-btn" class="primary-btn" style="background: #ef4444; border-color: #ef4444;">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nodo en Batería (Rápido) -->
+    <div id="modal-battery" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="#f59e0b" stroke-width="2">
+                        <rect width="16" height="10" x="2" y="7" rx="2" ry="2" />
+                        <line x1="22" x2="22" y1="11" y2="13" />
+                        <line x1="6" x2="6" y1="11" y2="13" />
+                        <line x1="10" x2="10" y1="11" y2="13" />
+                    </svg>
+                    Nodo en Batería
+                </h2>
+                <span class="close-modal" onclick="window.closeModal('modal-battery')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p style="margin: 0 0 1rem; color: #9ca3af; font-size: 0.9rem;">
+                    Registro rápido - Se creará automáticamente con:
+                </p>
+                <ul>
+                    <li>Tipo: <strong>UPS en Batería</strong></li>
+                    <li>Sin afectación de servicio</li>
+                    <li>Clientes afectados: 0</li>
+                    <li>Área: Infraestructuras</li>
+                </ul>
+
+                <div class="form-group">
+                    <label style="font-weight: 500; margin-bottom: 0.5rem; display: block;">Selecciona el Nodo</label>
+                    <select id="battery-node">
+                        <option value="">-- Seleccione Nodo --</option>
+                    </select>
+                </div>
+
+                <button class="primary-btn" onclick="window.submitBatteryIncident()">
+                    ⚡ Registrar en Batería
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline Scripts -->
+    <script>
+        window.selectArea = function (btn) {
+            document.querySelectorAll('.area-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('diagnose-area').value = btn.dataset.area;
+        };
+
+        // Battery Modal Functions moved to uptime.js
+
+        window.submitBatteryIncident = async function () {
+            const nodeSelect = document.getElementById('battery-node');
+            const nodeName = nodeSelect.options[nodeSelect.selectedIndex]?.text;
+            const nodeId = nodeSelect.value;
+
+            if (!nodeId) {
+                alert("Por favor seleccione un Nodo.");
+                return;
+            }
+
+            const ticketId = 'T' + Math.floor(100000 + Math.random() * 900000);
+            const now = new Date();
+
+            const docData = {
+                ticket_id: ticketId,
+                node: nodeName,
+                node_id: nodeId,
+                failure_type: "UPS en Bateria",
+                failure_reason: "",
+                owner_area: "Infraestructuras",
+                start_date: now,
+                end_date: null,
+                affected_customers: 0,
+                has_affected_customers: false,
+                affected_pons: ["NODO_COMPLETO"],
+                notes: "Registro rápido - Nodo en batería",
+                created_at: now
+            };
+
+            try {
+                // Use the API if available
+                if (typeof callApi === 'function') {
+                    await callApi('/uptime/create', 'POST', docData);
+                } else if (window.db) {
+                    await window.db.collection('uptime_logs').add(docData);
+                }
+
+                window.closeModal('modal-battery');
+
+                if (window.showToast) {
+                    window.showToast(`⚡ Nodo ${nodeName} registrado en batería`, 'success');
+                }
+
+                // Refresh data
+                if (typeof loadUptimeLogs === 'function') {
+                    await loadUptimeLogs();
+                } else if (window.loadUptimeLogs) {
+                    await window.loadUptimeLogs();
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            }
+        };
+    </script>
+</body>
+
+</html>

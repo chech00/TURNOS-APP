@@ -38,6 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Listener
     listenToServiceStates();
 
+    // === Authentication State ===
+    // Esperar a que Firebase restaure la sesión antes de configurar firmas
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            console.log("👤 Usuario detectado en suralis.js:", user.email);
+            setupSignatures();
+        } else {
+            console.warn("👤 No hay usuario activo en suralis.js");
+        }
+    });
+
     // === Search Functionality ===
     const setupSearch = () => {
         if (!searchInput) return;
@@ -460,15 +471,24 @@ ${currentSignature}`;
         const signaturesData = document.querySelectorAll('#signaturesData span');
 
         // Get current user's email
+        // Get current user's email
         const user = firebase.auth().currentUser;
-        const userEmail = user?.email?.toLowerCase() || '';
+        if (!user) {
+            console.warn("⚠️ setupSignatures: Usuario no autenticado todavía.");
+            return;
+        }
+        const userEmail = user.email?.toLowerCase().trim() || '';
+
 
         console.log('📝 Buscando firma para:', userEmail);
 
         let matchedSignature = null;
 
         signaturesData.forEach(sig => {
-            const sigEmail = sig.dataset.email?.toLowerCase() || '';
+            // Normalizamos el email del dataset
+            const sigEmail = sig.dataset.email?.toLowerCase().trim() || '';
+
+            // Check exact match OR alias match if we had logic for it
             if (sigEmail === userEmail) {
                 matchedSignature = {
                     url: sig.dataset.url,
@@ -712,11 +732,79 @@ ${currentSignature}`;
 
             } catch (error) {
                 console.error('Error sending email:', error);
+
+                // ERROR SPECIFIC HANDLING
+                if (error.message && (error.message.includes("NO_GMAIL_TOKEN") || error.message.includes("GMAIL_TOKEN_EXPIRED"))) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Permisos de Gmail Requeridos',
+                        html: `
+                            <p>Para enviar correos, necesitamos renovar tu permiso de Gmail.</p>
+                            <p style="font-size:0.9rem;margin-top:0.5rem;color:#A1A9B5;">Esto sucede cuando la sesión expira o no se concedieron permisos inicialmente.</p>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Re-conectar Google',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#E8C27E'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            reauthorizeGoogle();
+                        }
+                    });
+                    return;
+                }
+
                 Swal.fire({
                     icon: 'error',
                     title: 'Error al enviar',
                     text: error.message || 'No se pudo enviar el correo. Verifica tu conexión.',
                     confirmButtonColor: '#7796CB'
+                });
+            }
+        };
+
+        // === Re-authorize Google ===
+        const reauthorizeGoogle = async () => {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('https://www.googleapis.com/auth/gmail.send');
+
+                // Force prompt to ensure we get a new refresh token if needed
+                provider.setCustomParameters({
+                    prompt: 'consent'
+                });
+
+                // Use linkWithPopup if we want to link, but signInWithPopup is safer for re-auth of same account
+                // Warning: signInWithPopup might throw if different account.
+                const result = await firebase.auth().signInWithPopup(provider);
+                const user = result.user;
+                const credential = result.credential;
+                const accessToken = credential?.accessToken;
+
+                if (accessToken) {
+                    console.log("✅ Re-autorización exitosa. Nuevo token obtenido.");
+
+                    // Update Firestore explicitly here ensures backend gets it immediately
+                    await db.collection("userRoles").doc(user.uid).update({
+                        gmailAccessToken: accessToken,
+                        gmailTokenUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Conectado',
+                        text: 'Permisos de Gmail actualizados. Intenta enviar el reporte nuevamente.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error re-authorizing:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo re-conectar con Google.'
                 });
             }
         };
@@ -846,36 +934,22 @@ ${currentSignature}`;
             console.log('📝 Usuario autenticado, configurando firma para:', user.email);
             setupSignatures();
 
-            // Check user role and hide superadmin elements if not superadmin
+            // Check user role for superadmin-specific buttons (not sidebar)
             try {
                 const userDoc = await db.collection('userRoles').doc(user.uid).get();
                 if (userDoc.exists) {
                     currentUserRole = userDoc.data().rol;
                     console.log('🔑 Rol del usuario:', currentUserRole);
 
-                    // Hide superadmin-only elements if not superadmin
-                    if (currentUserRole !== 'superadmin') {
-                        document.querySelectorAll('.superadmin-only').forEach(el => {
-                            el.style.display = 'none';
-                        });
-                    } else {
-                        // Show superadmin elements
-                        document.querySelectorAll('.superadmin-only').forEach(el => {
-                            // Use flex for the recipients button, block for others
-                            if (el.classList.contains('manage-recipients-btn')) {
-                                el.style.display = 'flex';
-                            } else {
-                                el.style.display = 'block';
-                            }
-                        });
+                    // Only handle the manage-recipients button (uses flex display)
+                    // Sidebar visibility is now handled centrally by user-profile-header.js
+                    const recipientsBtn = document.querySelector('.manage-recipients-btn');
+                    if (recipientsBtn) {
+                        recipientsBtn.style.display = currentUserRole === 'superadmin' ? 'flex' : 'none';
                     }
                 }
             } catch (error) {
                 console.error('Error checking user role:', error);
-                // Hide superadmin elements on error
-                document.querySelectorAll('.superadmin-only').forEach(el => {
-                    el.style.display = 'none';
-                });
             }
         }
     });

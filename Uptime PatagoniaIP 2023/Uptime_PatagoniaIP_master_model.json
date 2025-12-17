@@ -1,0 +1,836 @@
+{
+  "model_id": "uptime-patagoniaip",
+  "model_version": "1.0.0",
+  "generated_at": "2025-12-14T05:01:18.312667",
+  "timezone": "America/Santiago",
+  "purpose": "Replicar en web el libro Excel de Uptime/SLA, permitiendo ingestión automática desde The Dude y recálculo de KPIs.",
+  "excel_source": {
+    "filename": "Uptime PatagoniaIP 2023.xlsx",
+    "sheets": [
+      {
+        "name": "Uptime OKR",
+        "rows": 2317,
+        "cols": 27,
+        "formula_cells": 3204
+      },
+      {
+        "name": "Hoja 8",
+        "rows": 8,
+        "cols": 7,
+        "formula_cells": 25
+      },
+      {
+        "name": "KPI",
+        "rows": 138,
+        "cols": 10,
+        "formula_cells": 0
+      },
+      {
+        "name": "FICHAS NODOS",
+        "rows": 1000,
+        "cols": 2,
+        "formula_cells": 0
+      },
+      {
+        "name": "Indicadores",
+        "rows": 123,
+        "cols": 13,
+        "formula_cells": 572
+      },
+      {
+        "name": "Tabla horas mes",
+        "rows": 999,
+        "cols": 12,
+        "formula_cells": 108
+      }
+    ]
+  },
+  "domain": {
+    "metric_name": "Uptime / Disponibilidad",
+    "unit_time": "minutes",
+    "objective_uptime_default": 0.998,
+    "notes": [
+      "La hoja 'Uptime OKR' contiene el registro de incidentes/eventos (inicio/fin, nodo, tipo de falla, clientes afectados).",
+      "La hoja 'Indicadores' calcula KPIs agregados (uptime global, % falla, conteos por tipo de falla, etc.).",
+      "La hoja 'Hoja 8' es un resumen de conteos por nodo y por categoría de falla/motivo usando COUNTIFS.",
+      "La hoja 'Tabla horas mes' provee el total de horas/minutos por mes y fija el uptime objetivo 0.998 por mes."
+    ]
+  },
+  "entities": {
+    "incident": {
+      "description": "Evento de caída/degradación que puede afectar a clientes y se usa para calcular downtime y uptime.",
+      "primary_sheet": "Uptime OKR",
+      "header_row": 1,
+      "fields": [
+        {
+          "name": "start_time",
+          "excel_ref": "Uptime OKR!B:B",
+          "label": "Fecha de Inicio",
+          "type": "datetime",
+          "source": "The Dude"
+        },
+        {
+          "name": "end_time",
+          "excel_ref": "Uptime OKR!C:C",
+          "label": "Fecha de termino",
+          "type": "datetime",
+          "source": "The Dude"
+        },
+        {
+          "name": "restore_time",
+          "excel_ref": "Uptime OKR!D:D",
+          "label": "Tiempo de reposicion",
+          "type": "duration",
+          "derived_from_excel_formula": true
+        },
+        {
+          "name": "node",
+          "excel_ref": "Uptime OKR!E:E",
+          "label": "DC/Nodo",
+          "type": "string",
+          "source": "The Dude (tag/host/group)"
+        },
+        {
+          "name": "process",
+          "excel_ref": "Uptime OKR!F:F",
+          "label": "Proceso",
+          "type": "string"
+        },
+        {
+          "name": "failure_type",
+          "excel_ref": "Uptime OKR!G:G",
+          "label": "Falla",
+          "type": "string"
+        },
+        {
+          "name": "activity",
+          "excel_ref": "Uptime OKR!H:H",
+          "label": "Actividad",
+          "type": "string"
+        },
+        {
+          "name": "owner_area",
+          "excel_ref": "Uptime OKR!I:I",
+          "label": "Area encargada solucion",
+          "type": "string"
+        },
+        {
+          "name": "failure_reason",
+          "excel_ref": "Uptime OKR!J:J",
+          "label": "Motivo de falla",
+          "type": "string"
+        },
+        {
+          "name": "affected_customers",
+          "excel_ref": "Uptime OKR!K:K",
+          "label": "Q clientes afectados",
+          "type": "number"
+        },
+        {
+          "name": "has_affected_customers",
+          "excel_ref": "Uptime OKR!L:L",
+          "label": "Clientes afectados (Si o No)",
+          "type": "boolean",
+          "derived_from_excel_formula": true
+        },
+        {
+          "name": "pct_customers_affected_total_network",
+          "excel_ref": "Uptime OKR!M:M",
+          "label": "% clientes afectados total en la red",
+          "type": "number",
+          "derived_from_excel_formula": true
+        },
+        {
+          "name": "pct_uptime_customer_per_failure",
+          "excel_ref": "Uptime OKR!N:N",
+          "label": "% Uptime cliente x falla",
+          "type": "number",
+          "derived_from_excel_formula": true
+        },
+        {
+          "name": "customer_outage_time",
+          "excel_ref": "Uptime OKR!O:O",
+          "label": "Tiempo falla x cliente sin servicio",
+          "type": "number",
+          "derived_from_excel_formula": true
+        },
+        {
+          "name": "notes",
+          "excel_ref": "Uptime OKR!P:P",
+          "label": "Observacion",
+          "type": "string"
+        }
+      ],
+      "input_fields_recommended": [
+        "start_time",
+        "end_time",
+        "node",
+        "process",
+        "failure_type",
+        "activity",
+        "owner_area",
+        "failure_reason",
+        "affected_customers",
+        "notes"
+      ]
+    },
+    "node_catalog": {
+      "description": "Catálogo de nodos con ID y nombre.",
+      "primary_sheet": "FICHAS NODOS",
+      "fields": [
+        {
+          "name": "node_id",
+          "excel_ref": "FICHAS NODOS!A:A",
+          "type": "number",
+          "label": "ID"
+        },
+        {
+          "name": "node_name",
+          "excel_ref": "FICHAS NODOS!B:B",
+          "type": "string",
+          "label": "NOMBRE"
+        }
+      ]
+    },
+    "month_calendar": {
+      "description": "Tabla de minutos por mes y uptime objetivo.",
+      "primary_sheet": "Tabla horas mes",
+      "fields": [
+        {
+          "name": "Año",
+          "excel_col": "A",
+          "excel_ref": "Tabla horas mes!A:A"
+        },
+        {
+          "name": "Mes",
+          "excel_col": "B",
+          "excel_ref": "Tabla horas mes!B:B"
+        },
+        {
+          "name": "Horas del mes",
+          "excel_col": "C",
+          "excel_ref": "Tabla horas mes!C:C"
+        },
+        {
+          "name": "Minutos del mes",
+          "excel_col": "D",
+          "excel_ref": "Tabla horas mes!D:D"
+        },
+        {
+          "name": "Total de clientes",
+          "excel_col": "E",
+          "excel_ref": "Tabla horas mes!E:E"
+        },
+        {
+          "name": "Horas por clientes",
+          "excel_col": "F",
+          "excel_ref": "Tabla horas mes!F:F"
+        },
+        {
+          "name": "Uptime Actual",
+          "excel_col": "G",
+          "excel_ref": "Tabla horas mes!G:G"
+        },
+        {
+          "name": "Uptime Objetivo",
+          "excel_col": "H",
+          "excel_ref": "Tabla horas mes!H:H"
+        }
+      ]
+    }
+  },
+  "calculations": {
+    "kpis_from_excel": {
+      "sheet": "Indicadores",
+      "kpis": [
+        {
+          "label": "Horas Enero - Mayo 2023",
+          "cell": "C3",
+          "formula": "=SUM(E3:I3)"
+        },
+        {
+          "label": "Total clientes promedio",
+          "cell": "C4",
+          "formula": "=AVERAGE(E4:I4)"
+        },
+        {
+          "label": "Horas mes por total clientes mes",
+          "cell": "C5",
+          "formula": "=(C3*C4)"
+        },
+        {
+          "label": "Horas promedio reposicion servicio con afectacion a clientes",
+          "cell": "C6",
+          "formula": "=AVERAGEIF('Uptime OKR'!L2:L313,\"Si\",'Uptime OKR'!D2:D313)"
+        },
+        {
+          "label": "Total clientes afectados",
+          "cell": "C7",
+          "formula": "=SUM('Uptime OKR'!K2:K313)"
+        },
+        {
+          "label": "Tiempo total de fallas por clientes afectados",
+          "cell": "C8",
+          "formula": "=SUM('Uptime OKR'!O2:O313)"
+        },
+        {
+          "label": "% de falla",
+          "cell": "C9",
+          "formula": "=(C8/C5)"
+        },
+        {
+          "label": "Uptime",
+          "cell": "C10",
+          "formula": "=1-C9"
+        },
+        {
+          "label": "Corte de F.O Troncal",
+          "cell": "C14",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B14)"
+        },
+        {
+          "label": "Corte de F.O PON",
+          "cell": "C15",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B15)"
+        },
+        {
+          "label": "Corte de F.O NAP",
+          "cell": "C16",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B16)"
+        },
+        {
+          "label": "UPS en Bateria",
+          "cell": "C17",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B17)"
+        },
+        {
+          "label": "Nodo sin energia",
+          "cell": "C18",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B18)"
+        },
+        {
+          "label": "Sin conectividad por dependencia",
+          "cell": "C19",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B19)"
+        },
+        {
+          "label": "Sin conectividad por energia",
+          "cell": "C20",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B20)"
+        },
+        {
+          "label": "Sin conectividad BRAS",
+          "cell": "C21",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B21)"
+        },
+        {
+          "label": "Sin conectividad Switch Dst",
+          "cell": "C22",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B22)"
+        },
+        {
+          "label": "Sin conectividad Switch Acc",
+          "cell": "C23",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B23)"
+        },
+        {
+          "label": "Sin conectividad OLT",
+          "cell": "C24",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B24)"
+        },
+        {
+          "label": "Sin conectividad RF",
+          "cell": "C25",
+          "formula": "=COUNTIF('Uptime OKR'!$G$2:$G$313,B25)"
+        },
+        {
+          "label": "Total",
+          "cell": "C26",
+          "formula": "=SUM(C14:C25)"
+        },
+        {
+          "label": "Corte F.O por roedor",
+          "cell": "C29",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B29,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte F.O por camion",
+          "cell": "C30",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B30,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte F.O por retroexcavadora",
+          "cell": "C31",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B31,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte F.O caida de poste",
+          "cell": "C32",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B32,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O por arbustos",
+          "cell": "C33",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B33,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O por terceros",
+          "cell": "C34",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B34,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O quemada",
+          "cell": "C35",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B35,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O soterrada por terceros",
+          "cell": "C36",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B36,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O soterrada por roedor",
+          "cell": "C37",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B37,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O soterrada por retroexcavadora",
+          "cell": "C38",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B38,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O intervencion interna",
+          "cell": "C39",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B39,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla UPS",
+          "cell": "C40",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B40,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Generador sin combustible",
+          "cell": "C41",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B41,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Sin conectividad por dependencia",
+          "cell": "C42",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B42,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Sin energia de respaldo",
+          "cell": "C43",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B43,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de energia programado",
+          "cell": "C44",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B44,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de energia no programado",
+          "cell": "C45",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B45,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de energia por dueños",
+          "cell": "C46",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B46,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Hw Sw Dst",
+          "cell": "C47",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B47,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Hw BRAS",
+          "cell": "C48",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B48,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Hw Sw Acceso",
+          "cell": "C49",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B49,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Hw OLT",
+          "cell": "C50",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B50,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Lg Sw Dst",
+          "cell": "C51",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B51,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Lg BRAS",
+          "cell": "C52",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B52,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Lg Sw Acceso",
+          "cell": "C53",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B53,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Falla Lg OLT",
+          "cell": "C54",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B54,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Atenuacion F.O interior",
+          "cell": "C55",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B55,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Atenuacion F.O exterior",
+          "cell": "C56",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B56,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Total",
+          "cell": "C57",
+          "formula": "=SUM(C29:C56)"
+        },
+        {
+          "label": "Corte F.O por roedor",
+          "cell": "C62",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B62,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte F.O por camion",
+          "cell": "C63",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B63,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte F.O por retroexcavadora",
+          "cell": "C64",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B64,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte F.O caida de poste",
+          "cell": "C65",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B65,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O por arbustos",
+          "cell": "C66",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B66,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O por terceros",
+          "cell": "C67",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B67,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O quemada",
+          "cell": "C68",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B68,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O soterrada por terceros",
+          "cell": "C69",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B69,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O soterrada por roedor",
+          "cell": "C70",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B70,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O soterrada por retroexcavadora",
+          "cell": "C71",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B71,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Corte de F.O intervencion interna",
+          "cell": "C72",
+          "formula": "=COUNTIFS('Uptime OKR'!$J$2:$J$313,B72,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Total",
+          "cell": "C73",
+          "formula": "=SUM(C62:C72)"
+        },
+        {
+          "label": "ALERCE SUR",
+          "cell": "C79",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B79,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "ALERCE 3",
+          "cell": "C80",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B80,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "RE PTO VARAS PRINCIPAL",
+          "cell": "C81",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B81,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "DATA CENTER PTO.MONTT",
+          "cell": "C82",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B82,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "LONCOTORO",
+          "cell": "C83",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B83,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "LAS QUEMAS 2",
+          "cell": "C84",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B84,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "QUENUIR",
+          "cell": "C85",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B85,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "CASMA",
+          "cell": "C86",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B86,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "FRUTILLAR",
+          "cell": "C87",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B87,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "PUERTO CHICO",
+          "cell": "C88",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B88,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "VOLCAN OSORNO",
+          "cell": "C89",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B89,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "CASCADAS",
+          "cell": "C90",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B90,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "LLANQUIHUE",
+          "cell": "C91",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B91,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "QUILANTO",
+          "cell": "C92",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B92,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "CONTAO",
+          "cell": "C93",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B93,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "LOS MUERMOS",
+          "cell": "C94",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B94,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "PANITAO",
+          "cell": "C95",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B95,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "FRESIA OFICINA",
+          "cell": "C96",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B96,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "DATA CENTER PV",
+          "cell": "C97",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B97,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "DATACENTER UFINET",
+          "cell": "C98",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B98,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "DATACENTER LIDICE II GTD",
+          "cell": "C99",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B99,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "RADALES",
+          "cell": "C100",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B100,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "NVA BRAUNAU ARMARIO",
+          "cell": "C101",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B101,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "OFICINA ANDRES BELLO",
+          "cell": "C102",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B102,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "RIO SUR",
+          "cell": "C103",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B103,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "ENSENADA",
+          "cell": "C104",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B104,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "COCHAMO",
+          "cell": "C105",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B105,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "OSORNO",
+          "cell": "C106",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B106,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "HORNOPIREN",
+          "cell": "C107",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B107,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "ENTRE LAGOS",
+          "cell": "C108",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B108,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "PUELO",
+          "cell": "C109",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B109,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "LENCA",
+          "cell": "C110",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B110,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "NOCHACO",
+          "cell": "C111",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B111,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "RE PANAL PLUS 1",
+          "cell": "C114",
+          "formula": "=COUNTIFS('Uptime OKR'!$E$2:$E$313,$B114,'Uptime OKR'!$L$2:$L$313,\"No\")"
+        },
+        {
+          "label": "Total",
+          "cell": "C115",
+          "formula": "=SUM(C79:C114)"
+        }
+      ]
+    },
+    "node_failure_counts": {
+      "sheet": "Hoja 8",
+      "nodes": [
+        "ALERCE 3",
+        "LLANQUIHUE",
+        "NVA BRAUNAU ARMARIO",
+        "LAS QUEMAS 2",
+        "QUILANTO"
+      ],
+      "categories": [
+        {
+          "excel_col": "C",
+          "label": "Corte de energia no programado"
+        },
+        {
+          "excel_col": "D",
+          "label": "Corte de energia programado"
+        },
+        {
+          "excel_col": "E",
+          "label": "Falla UPS"
+        },
+        {
+          "excel_col": "F",
+          "label": "UPS en Bateria"
+        },
+        {
+          "excel_col": "G",
+          "label": "Nodo sin energia"
+        }
+      ],
+      "description": "Matriz de conteos por nodo y categoría (COUNTIFS) usando columnas de 'Uptime OKR'."
+    }
+  },
+  "sheet_dependency_graph": [
+    {
+      "target_sheet": "Hoja 8",
+      "source_sheet": "Uptime OKR",
+      "ref_count": 25
+    },
+    {
+      "target_sheet": "Indicadores",
+      "source_sheet": "Uptime OKR",
+      "ref_count": 255
+    },
+    {
+      "target_sheet": "Tabla horas mes",
+      "source_sheet": "Uptime OKR",
+      "ref_count": 36
+    },
+    {
+      "target_sheet": "Uptime OKR",
+      "source_sheet": "Indicadores",
+      "ref_count": 776
+    }
+  ],
+  "recommended_web_views": [
+    {
+      "view_id": "incidents_table",
+      "title": "Incidentes (Uptime OKR)",
+      "source": "entities.incident",
+      "features": [
+        "tabla editable",
+        "filtros por fecha/nodo/falla/motivo/área",
+        "export CSV",
+        "validación de fechas"
+      ]
+    },
+    {
+      "view_id": "dashboard_indicadores",
+      "title": "Dashboard Indicadores",
+      "source": "calculations.kpis_from_excel",
+      "features": [
+        "cards KPI",
+        "gráficos % falla vs uptime",
+        "conteos por tipo de falla"
+      ]
+    },
+    {
+      "view_id": "resumen_nodo_fallas",
+      "title": "Resumen por Nodo (Hoja 8)",
+      "source": "calculations.node_failure_counts",
+      "features": [
+        "tabla/matriz",
+        "drilldown al listado de incidentes filtrado"
+      ]
+    }
+  ],
+  "integration": {
+    "source_system": "The Dude",
+    "ingestion_mode": "automático",
+    "expected_mapping": {
+      "start_time": "downtime start (timestamp)",
+      "end_time": "downtime end (timestamp)",
+      "node": "device/group/site tag",
+      "failure_reason": "event type / probe / mensaje",
+      "affected_customers": "si no existe en The Dude, se completa desde inventario/CMDB o manualmente"
+    },
+    "notes": [
+      "The Dude normalmente mide disponibilidad por dispositivo/servicio; para replicar este Excel se debe almacenar eventos (incidentes) y no solo porcentajes.",
+      "Si quieres uptime mensual por nodo, se calcula sumando restore_time (o customer_outage_time) en el mes y dividiendo por minutos del mes."
+    ]
+  }
+}

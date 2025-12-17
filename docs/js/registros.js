@@ -4,6 +4,10 @@ const auth = window.auth;
 const db = window.db;
 
 let allLogsCache = []; // Store fetched logs for client-side filtering
+let chartLogins = null;
+let chartMethods = null;
+let unsubscribeSessions = null;
+let currentUserUid = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -22,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "login.html";
       return;
     }
+
+    currentUserUid = user.uid;
 
     // Leer rol desde Firestore
     const userDoc = await db.collection("userRoles").doc(user.uid).get();
@@ -45,15 +51,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("is-admin");
     showAdminElements();
 
-    // 2. Cargar logs de inicios de sesión
+    // Nota: La sesión activa se registra automáticamente via active-session.js
+
+    // Cargar datos
     initFilters();
-    cargarRegistrosDeLogins(); // Load all initial
+    cargarRegistrosDeLogins();
+    initDashboard();
+    initActiveSessions();
   });
 
   // 3. Logout setup
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
+    logoutBtn.addEventListener("click", async () => {
+      // La limpieza de sesión se maneja en active-session.js via cleanupActiveSession()
+      if (typeof window.cleanupActiveSession === 'function') {
+        await window.cleanupActiveSession();
+      }
       auth.signOut().then(() => {
         localStorage.removeItem('userRole');
         window.location.href = "login.html";
@@ -75,9 +89,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // 5. Buttons
   const btnBackup = document.getElementById("btnDownloadBackup");
   const btnClean = document.getElementById("btnCleanLogs");
+  const btnRefresh = document.getElementById("btnRefreshSessions");
+
   if (btnBackup) btnBackup.addEventListener("click", downloadSystemBackup);
   if (btnClean) btnClean.addEventListener("click", cleanOldLogs);
-
+  if (btnRefresh) btnRefresh.addEventListener("click", () => {
+    btnRefresh.classList.add("spinning");
+    setTimeout(() => btnRefresh.classList.remove("spinning"), 1000);
+  });
 });
 
 function showAdminElements() {
@@ -343,4 +362,368 @@ async function cleanOldLogs() {
     console.error("Error al limpiar logs:", error);
     Swal.fire("Error", "Hubo un problema al intentar limpiar los logs.", "error");
   }
+}
+
+// =============================================================================
+// ACTIVE SESSIONS MANAGEMENT
+// =============================================================================
+
+async function registerActiveSession(user, role) {
+  try {
+    const sessionData = {
+      uid: user.uid,
+      email: user.email,
+      role: role,
+      loginTime: firebase.firestore.FieldValue.serverTimestamp(),
+      lastActivity: firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent: navigator.userAgent.substring(0, 100),
+      page: 'registros'
+    };
+
+    await db.collection("activeSessions").doc(user.uid).set(sessionData);
+    console.log("[Sessions] Sesión registrada");
+
+    // Heartbeat cada 30 segundos para mantener la sesión activa
+    setInterval(async () => {
+      try {
+        await db.collection("activeSessions").doc(user.uid).update({
+          lastActivity: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {
+        console.warn("[Sessions] Heartbeat failed:", e);
+      }
+    }, 30000);
+
+  } catch (error) {
+    console.error("[Sessions] Error registering session:", error);
+  }
+}
+
+function initActiveSessions() {
+  const sessionsGrid = document.getElementById("sessions-grid");
+  if (!sessionsGrid) return;
+
+  // Real-time listener for active sessions
+  unsubscribeSessions = db.collection("activeSessions")
+    .orderBy("loginTime", "desc")
+    .onSnapshot((snapshot) => {
+      const sessions = [];
+      const now = new Date();
+      const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes timeout
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        data.id = doc.id;
+
+        // Check if session is still active (activity within last 5 minutes)
+        if (data.lastActivity) {
+          const lastActivity = data.lastActivity.toDate();
+          const isActive = (now - lastActivity) < TIMEOUT_MS;
+          if (isActive) {
+            sessions.push(data);
+          } else {
+            // Clean up stale session
+            db.collection("activeSessions").doc(doc.id).delete().catch(() => { });
+          }
+        }
+      });
+
+      renderSessionCards(sessions);
+
+      // Update stat card
+      const statActiveNow = document.getElementById("stat-active-now");
+      if (statActiveNow) {
+        statActiveNow.textContent = sessions.length;
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }, (error) => {
+      console.error("[Sessions] Listener error:", error);
+    });
+}
+
+function renderSessionCards(sessions) {
+  const sessionsGrid = document.getElementById("sessions-grid");
+  if (!sessionsGrid) return;
+
+  if (sessions.length === 0) {
+    sessionsGrid.innerHTML = `
+      <div class="no-sessions">
+        <i data-lucide="users"></i>
+        <p>No hay sesiones activas en este momento</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  sessions.forEach(session => {
+    const isCurrentUser = session.uid === currentUserUid;
+    const initial = session.email ? session.email.charAt(0).toUpperCase() : '?';
+    const loginTime = session.loginTime ? session.loginTime.toDate().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+    html += `
+      <div class="session-card ${isCurrentUser ? 'current-user' : ''}">
+        <div class="session-header">
+          <div class="session-avatar">${initial}</div>
+          <div class="session-user-info">
+            <div class="session-email">${session.email || 'Sin email'}</div>
+            <div class="session-role">${session.role || 'user'}</div>
+          </div>
+          <div class="session-status">Activo</div>
+        </div>
+        <div class="session-meta">
+          <div class="session-time">
+            <i data-lucide="clock"></i>
+            Desde ${loginTime}
+          </div>
+          ${!isCurrentUser ? `
+            <button class="btn-terminate" onclick="terminateSession('${session.uid}', '${session.email}')" title="Cerrar sesión remota">
+              <i data-lucide="power"></i> Terminar
+            </button>
+          ` : `
+            <span style="font-size:0.75rem; color:var(--color-acento-primario);">Tu sesión</span>
+          `}
+        </div>
+      </div>
+    `;
+  });
+
+  sessionsGrid.innerHTML = html;
+}
+
+async function terminateSession(uid, email) {
+  const result = await Swal.fire({
+    title: '¿Cerrar esta sesión?',
+    html: `Se cerrará la sesión de <strong>${email}</strong> de forma remota.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#ef4444'
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    // Mark session as terminated (will be picked up by their onSnapshot)
+    await db.collection("activeSessions").doc(uid).update({
+      terminated: true,
+      terminatedBy: currentUserUid,
+      terminatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Also delete it
+    await db.collection("activeSessions").doc(uid).delete();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Sesión cerrada',
+      text: `La sesión de ${email} ha sido terminada.`,
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+  } catch (error) {
+    console.error("Error terminating session:", error);
+    Swal.fire('Error', 'No se pudo cerrar la sesión remota.', 'error');
+  }
+}
+
+// Make terminateSession globally accessible
+window.terminateSession = terminateSession;
+
+// =============================================================================
+// DASHBOARD & STATISTICS
+// =============================================================================
+
+function initDashboard() {
+  calculateStats();
+}
+
+function calculateStats() {
+  if (allLogsCache.length === 0) {
+    // Wait for logs to load
+    setTimeout(calculateStats, 500);
+    return;
+  }
+
+  const now = new Date();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+  // Filter logs from last 7 days
+  const recentLogs = allLogsCache.filter(log => {
+    if (!log.timestamp) return false;
+    return log.timestamp.toDate() >= sevenDaysAgo;
+  });
+
+  // 1. Total Logins (7 days)
+  document.getElementById("stat-total-logins").textContent = recentLogs.length;
+
+  // 2. Unique Users
+  const uniqueEmails = new Set(recentLogs.map(log => log.email).filter(Boolean));
+  document.getElementById("stat-unique-users").textContent = uniqueEmails.size;
+
+  // 3. Peak Hour
+  const hourCounts = {};
+  recentLogs.forEach(log => {
+    if (log.timestamp) {
+      const hour = log.timestamp.toDate().getHours();
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    }
+  });
+
+  let peakHour = '--';
+  let maxCount = 0;
+  Object.entries(hourCounts).forEach(([hour, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      peakHour = `${hour}:00`;
+    }
+  });
+  document.getElementById("stat-peak-hour").textContent = peakHour;
+
+  // 4. Charts
+  renderCharts(recentLogs);
+
+  // 5. Top Users
+  renderTopUsers(recentLogs);
+}
+
+function renderCharts(logs) {
+  // Logins per Day Chart
+  const dailyCounts = {};
+  const labels = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = date.toISOString().split('T')[0];
+    const label = date.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric' });
+    labels.push(label);
+    dailyCounts[key] = 0;
+  }
+
+  logs.forEach(log => {
+    if (log.timestamp) {
+      const key = log.timestamp.toDate().toISOString().split('T')[0];
+      if (dailyCounts.hasOwnProperty(key)) {
+        dailyCounts[key]++;
+      }
+    }
+  });
+
+  const ctx1 = document.getElementById('chartLoginsPerDay');
+  if (ctx1) {
+    if (chartLogins) chartLogins.destroy();
+    chartLogins = new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Logins',
+          data: Object.values(dailyCounts),
+          backgroundColor: 'rgba(119, 150, 203, 0.7)',
+          borderColor: 'rgba(119, 150, 203, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#9ca3af' },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            ticks: { color: '#9ca3af' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  // Auth Methods Pie Chart
+  const methodCounts = { email: 0, google: 0 };
+  logs.forEach(log => {
+    const method = log.authProvider || 'email';
+    if (method === 'google') {
+      methodCounts.google++;
+    } else {
+      methodCounts.email++;
+    }
+  });
+
+  const ctx2 = document.getElementById('chartAuthMethods');
+  if (ctx2) {
+    if (chartMethods) chartMethods.destroy();
+    chartMethods = new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: ['Email/Contraseña', 'Google'],
+        datasets: [{
+          data: [methodCounts.email, methodCounts.google],
+          backgroundColor: ['rgba(119, 150, 203, 0.8)', 'rgba(234, 67, 53, 0.8)'],
+          borderColor: ['rgba(119, 150, 203, 1)', 'rgba(234, 67, 53, 1)'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#9ca3af', padding: 15 }
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderTopUsers(logs) {
+  const container = document.getElementById('top-users-list');
+  if (!container) return;
+
+  // Count logins per user
+  const userCounts = {};
+  logs.forEach(log => {
+    if (log.email) {
+      userCounts[log.email] = (userCounts[log.email] || 0) + 1;
+    }
+  });
+
+  // Sort and take top 5
+  const sorted = Object.entries(userCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  if (sorted.length === 0) {
+    container.innerHTML = '<p style="color:var(--color-texto-secundario);">No hay datos suficientes</p>';
+    return;
+  }
+
+  let html = '';
+  sorted.forEach(([email, count], index) => {
+    const rankClass = index === 0 ? 'gold' : (index === 1 ? 'silver' : (index === 2 ? 'bronze' : ''));
+    html += `
+      <div class="top-user-item">
+        <span class="top-user-rank ${rankClass}">#${index + 1}</span>
+        <div class="top-user-info">
+          <span class="top-user-email" title="${email}">${email}</span>
+          <span class="top-user-count">${count} logins</span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
 }

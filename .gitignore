@@ -7,3 +7,13 @@ backend/firebase-service-account.json
 *.key
 .DS_Store
 *.log
+
+# Archivos temporales de testing
+*.ps1
+ngrok.exe
+ngrok.zip
+*.zip
+
+# Tunneling tools
+localtunnel/
+.lt/

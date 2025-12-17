@@ -39,6 +39,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script type="module" src="./js/firebase.js"></script>
+    <script defer src="./js/active-session.js"></script>
     <script type="module" src="./js/script.js"></script>
     <script type="module" src="./js/suralis.js"></script>
     <script defer src="./js/user-profile-header.js"></script>
@@ -67,6 +68,9 @@
                             Noc</span></a></li>
                 <li data-tooltip="Turnos Noc"><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos
                             Noc</span></a></li>
+                <li class="admin-only" data-tooltip="Bitácora Uptime"><a
+                        href="uptime.html"><i data-lucide="activity"></i><span>Bitácora
+                            Uptime</span></a></li>
                 <li data-tooltip="Notificaciones"><a href="suralis.html" class="active"><i
                             data-lucide="send"></i><span>Notificaciones</span></a></li>
                 <li id="li-empleados" class="admin-only" data-tooltip="Gestionar Empleados"><a
@@ -89,8 +93,7 @@
     <!-- Main Content -->
     <div id="main-content" class="main-content">
         <header>
-            <!-- Logger: Suprime console.log en producción -->
-            <script src="./js/logger.js"></script>
+
             <h1>Notificaciones Suralis</h1>
             <!-- Premium User Profile Header -->
             <div class="user-profile-header">
@@ -220,7 +223,7 @@
                     <span data-email="cristian.oyarzo@patagoniaip.cl"
                         data-url="https://i.ibb.co/s9x6H3nV/Whats-App-Image-2025-12-01-at-9-10-14-PM.png"
                         data-name="Cristian"></span>
-                    <span data-email="claudio.bustamente@patagoniaip.cl"
+                    <span data-email="claudio.bustamante@patagoniaip.cl"
                         data-url="https://i.ibb.co/Z162xtMT/CLAUDIO.png" data-name="Claudio"></span>
                     <span data-email="carolina.gonzalez@patagoniaip.cl"
                         data-url="https://i.ibb.co/JRcQK4zg/CAROLINA.png" data-name="Carolina"></span>
@@ -228,6 +231,12 @@
                         data-name="Gabriel"></span>
                     <span data-email="joliva@patagoniaip.cl" data-url="https://i.ibb.co/nqJBBGvG/JULIO.png"
                         data-name="Julio"></span>
+                    <span data-email="julio.oliva@patagoniaip.cl" data-url="https://i.ibb.co/nqJBBGvG/JULIO.png"
+                        data-name="Julio"></span>
+                    <span data-email="cbustamante@patagoniaip.cl" data-url="https://i.ibb.co/Z162xtMT/CLAUDIO.png"
+                        data-name="Claudio"></span>
+                    <span data-email="claudio.bustamante@patagoniaip.cl"
+                        data-url="https://i.ibb.co/Z162xtMT/CLAUDIO.png" data-name="Claudio"></span>
                 </div>
 
                 <!-- Current Report Type Indicator -->

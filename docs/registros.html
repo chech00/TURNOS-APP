@@ -19,6 +19,8 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <!-- Chart.js for Statistics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Security: XSS Protection -->
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
   <script defer src="./js/auto-logout.js"></script>
@@ -48,6 +50,9 @@
               Noc</span></a></li>
         <li data-tooltip="Turnos Noc"><a href="noc.html"><i data-lucide="calendar-check"></i> <span>Turnos
               Noc</span></a></li>
+        <li class="admin-only" data-tooltip="Bitácora Uptime"><a href="uptime.html"><i
+              data-lucide="activity"></i>
+            <span>Bitácora Uptime</span></a></li>
         <li data-tooltip="Notificaciones"><a href="suralis.html"><i
               data-lucide="send"></i><span>Notificaciones</span></a></li>
         <li id="li-empleados" class="admin-only" data-tooltip="Gestionar Empleados">
@@ -101,6 +106,92 @@
     </header>
 
     <main>
+      <!-- ============================================ -->
+      <!-- DASHBOARD DE ESTADÍSTICAS -->
+      <!-- ============================================ -->
+      <section class="stats-dashboard glass-container">
+        <div class="dashboard-title">
+          <h2><i data-lucide="bar-chart-3"></i> Dashboard de Actividad</h2>
+        </div>
+
+        <!-- Stats Cards Row -->
+        <div class="stats-cards-row">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i data-lucide="log-in"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-total-logins">0</span>
+              <span class="stat-label">Logins (7 días)</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i data-lucide="users"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-unique-users">0</span>
+              <span class="stat-label">Usuarios Únicos</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i data-lucide="activity"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-active-now">0</span>
+              <span class="stat-label">Conectados Ahora</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><i data-lucide="clock"></i></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-peak-hour">--</span>
+              <span class="stat-label">Hora Pico</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-container">
+            <h4><i data-lucide="trending-up"></i> Logins por Día (Últimos 7 días)</h4>
+            <canvas id="chartLoginsPerDay"></canvas>
+          </div>
+          <div class="chart-container">
+            <h4><i data-lucide="pie-chart"></i> Métodos de Autenticación</h4>
+            <canvas id="chartAuthMethods"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Users -->
+        <div class="top-users-section">
+          <h4><i data-lucide="trophy"></i> Usuarios Más Activos</h4>
+          <div class="top-users-list" id="top-users-list">
+            <!-- Se llena dinámicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SESIONES ACTIVAS EN TIEMPO REAL -->
+      <!-- ============================================ -->
+      <section class="active-sessions-container glass-container">
+        <div class="table-header">
+          <h2><i data-lucide="wifi"></i> Sesiones Activas <span class="live-badge">EN VIVO</span></h2>
+          <div class="header-actions">
+            <button id="btnRefreshSessions" class="btn-action btn-refresh" title="Actualizar">
+              <i data-lucide="refresh-cw"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="sessions-grid" id="sessions-grid">
+          <!-- Se llena dinámicamente -->
+          <div class="no-sessions">
+            <i data-lucide="wifi-off"></i>
+            <p>Cargando sesiones activas...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- HISTORIAL DE ACCESOS (EXISTENTE) -->
+      <!-- ============================================ -->
       <section class="registros-container glass-container">
         <div class="table-header">
           <h2><i data-lucide="shield-alert"></i> Historial de Accesos</h2>
@@ -169,6 +260,9 @@
 
   <!-- Tu configuración de Firebase -->
   <script type="module" src="./js/firebase.js"></script>
+
+  <!-- Active Session Tracker -->
+  <script defer src="./js/active-session.js"></script>
 
   <!-- Script principal de la vista de registros -->
   <script type="module" src="./js/registros.js"></script>

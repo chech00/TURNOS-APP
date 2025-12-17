@@ -1,0 +1,1155 @@
+﻿<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document ><name >radales</name><Folder ><name >Postes</name><visibility >0</visibility></Folder><Folder ><name >Cajas</name><Folder ><name >CE</name><Style id="mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff"><IconStyle >
+	<color >ff00e0ff</color>
+	<colorMode >normal</colorMode>
+	<scale >1</scale>
+	<heading >0</heading>
+	<Icon ><href >http://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href></Icon>
+</IconStyle></Style><Placemark ><name >CTO - 430</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 430</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.74691842987261,-40.80157021972199</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 431</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 431</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.73568799654419,-40.80423345420186</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 432</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 432</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.7578915656255,-40.78968694561846</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 435</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 435</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.78183346726615,-40.77181564556825</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 437</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 437</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.75530130002848,-40.78305664583202</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 443</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 443</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.81815299309626,-40.72978373518104</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 446</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 446</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86721446803514,-40.71758723164737</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 447</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 447</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87885074687614,-40.71467352669482</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >CTO - 448</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >CTO - 448</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.762487199614,-40.78151587377135</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >MF1</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >MF1</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.76891797780992,-40.74203850130967</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >MUFA PON A4</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >MUFA PON A4</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80067261757729,-40.73392146010559</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >MF2</name><description >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >MF2</value></Data><Data name="description"><value >Tipo: MUFA
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.8887657721651,-40.711796698685056</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff00e0ff</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >CTO</name><Style id="mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03"><IconStyle >
+	<color >ff0cfa03</color>
+	<colorMode >normal</colorMode>
+	<scale >1</scale>
+	<heading >0</heading>
+	<Icon ><href >http://maps.google.com/mapfiles/kml/paddle/wht-blank.png</href></Icon>
+</IconStyle></Style><Placemark ><name >RA_PONA0_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 14656 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 14656 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86781654047715,-40.68730520195255</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA0_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 14.978 MTS A R.E. RTADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 14.978 MTS A R.E. RTADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86887227674062,-40.68908122051852</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA0_C3_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 14878 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C3_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 14878 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86530134203886,-40.6830610765704</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA0_C5_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15083 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C5_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15083 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87225743239308,-40.68571171914284</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA0_C4_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15192 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C4_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15192 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86684656542693,-40.6858100001693</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA0_C6_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15341 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C6_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15341 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87506824174804,-40.68439432515419</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA0_C7_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15593 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA0_C7_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 15593 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87730130545678,-40.68338150912229</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA1_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.807 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA1_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.807 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87941770166607,-40.70432748216292</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA1_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.508 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA1_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.508 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87865993135271,-40.70209764259958</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA1_C5_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.136 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA1_C5_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.136 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87476399421224,-40.69694557242034</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA1_C6_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.543 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA1_C6_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.543 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87212883077795,-40.69384337519309</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA1_C7_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.866 MTS A R.E. RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA1_C7_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 13.866 MTS A R.E. RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87007895156584,-40.69095009306473</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA2_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 6136 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA2_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 6136 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.7654631886223,-40.78090357213021</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA2_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5583 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA2_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5583 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77723423519559,-40.77829362892162</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA2_C3_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5526 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA2_C3_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5526 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77208859312641,-40.77944640539761</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA2_C4_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5816 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA2_C4_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5816 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.76985637088022,-40.7799347134691</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA2_C5_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5759 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA2_C5_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 5759 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.78014613185275,-40.77767413848704</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA2_C7_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA2_C7_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.75520405395504,-40.7829292275369</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA3_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 4893 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA3_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 4893 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77774979862612,-40.76211692441645</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA3_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 4678 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA3_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 4678 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77527838838056,-40.76766300275214</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA3_C3_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 4111 MTS A RE RADALES
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA3_C3_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 4111 MTS A RE RADALES
+
+</value></Data></ExtendedData><Point ><coordinates >-72.78117457666691,-40.76956007472106</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA4_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 11834 MTS A RE RA
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA4_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: 11834 MTS A RE RA
+
+</value></Data></ExtendedData><Point ><coordinates >-72.74892560154146,-40.8074154347759</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA5_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA5_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.76742995164443,-40.74173043177375</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA5_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA5_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.76855459712564,-40.74106788662982</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA5_C3_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA5_C3_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77043258957275,-40.74518814902675</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RA_PONA5_C4_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >RA_PONA5_C4_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77294517008146,-40.75061162963121</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA4_C2_F1-4</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA4_C2_F1-4</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80678240433768,-40.732046164994024</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA4_C3_F1-4</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA4_C3_F1-4</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.8098675429671,-40.73160103907295</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA4_C4_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA4_C4_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80881105357385,-40.731449386116346</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA4_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA4_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80008968323409,-40.732983825360826</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA4_C5_F1-4</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA4_C5_F1-4</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.81386641711073,-40.73068572442635</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA6_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA6_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.82664357684816,-40.72797075837404</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA6_C4_F1-4</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA6_C4_F1-4</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.83783253309481,-40.72511860779105</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA6_C5_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA6_C5_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86315469339492,-40.72846006061371</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA6_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA6_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.84495858866589,-40.72861250521116</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA6_C3_F1-4</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA6_C3_F1-4</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.8395342720764,-40.732712015101576</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA7_C1_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA7_C1_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.88864038299855,-40.71181397798824</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA7_C4_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA7_C4_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAPS ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.89300767771041,-40.71076184133987</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA7_C3_F1-4</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA7_C3_F1-4</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.88268520616043,-40.713388608651194</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA7_C2_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA7_C2_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.88503213819678,-40.71308364813038</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA7_C5_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA7_C5_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.89914338730044,-40.70934742776468</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >RD_PONA4_C6_F1-8</name><description >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</description><ExtendedData ><Data name="name"><value >RD_PONA4_C6_F1-8</value></Data><Data name="description"><value >Tipo: CAJA NAP 1*8 APC
+Estado de implementación: Implementado
+Comentarios: NAP ENTREGADA POR CLAUDIO LINAY
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80093014240266,-40.72748947195089</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/paddle/wht-blank.pngms1mcff0cfa03</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><visibility >0</visibility></Folder><Folder ><name >Cables</name><Folder ><name >PRIMÁRIO</name><Style id="sff1385fbsw4"><LineStyle ><color >ff1385fb</color><width >4</width></LineStyle></Style><Placemark ><name >FO 12 ADSS</name><description >Tipo: FO 12 ADSS - 6MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 12 ADSS</value></Data><Data name="description"><value >Tipo: FO 12 ADSS - 6MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.74691842987261,-40.80157021972199,0 -72.73568799654419,-40.80423345420186,0</coordinates></LineString><styleUrl >#sff1385fbsw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 12 ADSS | 1</name><description >Tipo: FO 12 ADSS - 6MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 12 ADSS | 1</value></Data><Data name="description"><value >Tipo: FO 12 ADSS - 6MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.74691842987261,-40.80157021972199,0 -72.76140819276563,-40.79851528570838,0 -72.7578915656255,-40.78968694561846,0</coordinates></LineString><styleUrl >#sff1385fbsw4</styleUrl><visibility >0</visibility></Placemark><Style id="sff369b03sw5"><LineStyle ><color >ff369b03</color><width >5</width></LineStyle></Style><Placemark ><name >FO 24 ADSS ( soterrado)</name><description >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 24 ADSS ( soterrado)</value></Data><Data name="description"><value >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.75530130002848,-40.78305664583202,0 -72.7578915656255,-40.78968694561846,0</coordinates></LineString><styleUrl >#sff369b03sw5</styleUrl><visibility >0</visibility></Placemark><Style id="sfffd0082sw5"><LineStyle ><color >fffd0082</color><width >5</width></LineStyle></Style><Placemark ><name >FO 48 ADSS | 5</name><description >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 48 ADSS | 5</value></Data><Data name="description"><value >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86721446803514,-40.71758723164737,0 -72.87885074687614,-40.71467352669482,0</coordinates></LineString><styleUrl >#sfffd0082sw5</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 48 ADSS | 2-A</name><description >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 48 ADSS | 2-A</value></Data><Data name="description"><value >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.91436469272318,-40.70583905284483,0 -72.90065960450012,-40.70914208129211,0 -72.900455146871,-40.70896134185863,0 -72.89468915146415,-40.71032431455687,0 -72.88874040130531,-40.71179983872248,0 -72.88882261080681,-40.71193608747476,0 -72.88757690219713,-40.71228512329954,0 -72.87885074687614,-40.71467352669482,0</coordinates></LineString><styleUrl >#sfffd0082sw5</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 48 ADSS | 3-A</name><description >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 48 ADSS | 3-A</value></Data><Data name="description"><value >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.81815299309626,-40.72978373518104,0 -72.80987407246599,-40.73162372754015,0 -72.76753355687856,-40.7420759039823,0 -72.76753355687856,-40.7420759039823,0</coordinates></LineString><styleUrl >#sfffd0082sw5</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 24 ADSS-B-A</name><description >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 24 ADSS-B-A</value></Data><Data name="description"><value >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.76753355687856,-40.7420759039823,0 -72.76898235082628,-40.74218481889336,0 -72.78183346726615,-40.77181564556825,0</coordinates></LineString><styleUrl >#sff369b03sw5</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 24 ADSS | 1-A</name><description >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 24 ADSS | 1-A</value></Data><Data name="description"><value >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.78183346726615,-40.77181564556825,0 -72.78387839947278,-40.77683424025756,0 -72.762487199614,-40.78151587377135,0</coordinates></LineString><styleUrl >#sff369b03sw5</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 24 ADSS | 2-A</name><description >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 24 ADSS | 2-A</value></Data><Data name="description"><value >Tipo: FO 24F 4B ADSS SPAN 80
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.762487199614,-40.78151587377135,0 -72.75530130002848,-40.78305664583202,0</coordinates></LineString><styleUrl >#sff369b03sw5</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >FO 48 ADSS | 4-B</name><description >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >FO 48 ADSS | 4-B</value></Data><Data name="description"><value >Tipo: FO 48F 4B ADSS SPAN 100
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86721446803514,-40.71758723164737,0 -72.85413807947025,-40.72087546816636,0 -72.81815299309626,-40.72978373518104,0</coordinates></LineString><styleUrl >#sfffd0082sw5</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >DROP</name><Style id="sFF000000sw1"><LineStyle ><color >FF000000</color><width >1</width></LineStyle></Style><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87506824174804,-40.68439432515419,0 -72.87535473704338,-40.68426669964388,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86887227674062,-40.68908122051852,0 -72.86877930164339,-40.6889232768509,0 -72.869970202446,-40.68870260779116,0 -72.870027,-40.688898,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86781654047715,-40.68730520195255,0 -72.867611,-40.687369,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87225743239308,-40.68571171914284,0 -72.872812,-40.686051,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87506824174804,-40.68439432515419,0 -72.87520520389081,-40.6848107803759,0 -72.8753460198641,-40.68498468187879,0 -72.87549823522569,-40.68507722576843,0 -72.875316,-40.685193,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87506824174804,-40.68439432515419,0 -72.87513077259065,-40.684680608193744,0 -72.8753037750721,-40.68464196327823,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87730130545678,-40.68338150912229,0 -72.87696540355684,-40.6836280347253,0 -72.87662208080293,-40.683851771539715,0 -72.87647724151613,-40.68343277289173,0 -72.87645041942598,-40.683001567649406,0 -72.8765630722046,-40.6827208759455,0 -72.87660598754884,-40.68231204026209,0 -72.87654161453248,-40.682049651860524,0 -72.87657380104066,-40.68193778052253,0 -72.876932,-40.681918,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87476399421224,-40.69694557242034,0 -72.875076,-40.696859,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87212883077795,-40.69384337519309,0 -72.87103772163393,-40.69253014632446,0 -72.87006944417955,-40.692832658924075,0 -72.87001,-40.692753,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87007895156584,-40.69095009306473,0 -72.87025451660158,-40.691291609829406,0 -72.87011235952379,-40.69135262201851,0 -72.86996617913248,-40.691389229305166,0 -72.86981463432313,-40.691345503932666,0 -72.86954507231714,-40.69126415432608,0 -72.86946058273317,-40.69133838584606,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87007895156584,-40.69095009306473,0 -72.87038862705232,-40.69153057391765,0 -72.87023,-40.691741,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.77723423519559,-40.77829362892162,0 -72.77758151292802,-40.778211817882585,0 -72.7777022123337,-40.77843523688883,0 -72.77818500995637,-40.778323527479635,0 -72.778117954731,-40.778224004393216,0 -72.77812868356706,-40.7781549474701,0 -72.77816623449327,-40.7780818282968,0 -72.778056,-40.77787,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.78014613185275,-40.77767413848704,0 -72.7802935615182,-40.777633971604175,0 -72.780264,-40.777564,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.77774979862612,-40.76211692441645,0 -72.777938246727,-40.762074916876315,0 -72.77750372886659,-40.761009345358595,0 -72.7785,-40.76069,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.78117457666691,-40.76956007472106,0 -72.78207153081895,-40.77189484230792,0 -72.782828,-40.771812,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.74892560154146,-40.8074154347759,0 -72.74893820285799,-40.80754588826797,0 -72.74885170161726,-40.807648412689076,0 -72.74894692003727,-40.80781691782917,0 -72.74901,-40.807902,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.77043258957275,-40.74518814902675,0 -72.77046024799348,-40.745279766812125,0 -72.7658173441887,-40.74642788880482,0 -72.76555582880975,-40.74665649479995,0 -72.765451,-40.746513,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Style id="sA6000000sw4"><LineStyle ><color >A6000000</color><width >4</width></LineStyle></Style><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.77527838838056,-40.76766300275214,0 -72.77568326022077,-40.76794319085248,0 -72.77590856729768,-40.767998039249555,0 -72.7760051274735,-40.76800413351311,0 -72.776195565598,-40.76803054198202,0 -72.77638600372251,-40.76803257340227,0 -72.77637259258698,-40.767884279560704,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86887227674062,-40.68908122051852,0 -72.86834907541562,-40.68814574562455,0 -72.86844027052213,-40.688131508766965,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87476399421224,-40.69694557242034,0 -72.8745460510254,-40.69691669878582,0 -72.87415981292726,-40.69630662533092,0 -72.873752117157,-40.696078863142226,0 -72.87350535392763,-40.69533049618272,0 -72.87394523620607,-40.69518407557695,0 -72.87376284599306,-40.69531422724241,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87007895156584,-40.69095009306473,0 -72.86988973617555,-40.690783172747636,0 -72.86906093358995,-40.69093977178226,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87506824174804,-40.68439432515419,0 -72.87524610757829,-40.684874849403435,0 -72.8757691383362,-40.684730439762255,0 -72.87599444389345,-40.68503349625418,0 -72.87625461816789,-40.685023326595584,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80678240433768,-40.732046164994024,0 -72.80634284019472,-40.73213489788703,0 -72.80603170394899,-40.73118571667502,0 -72.80569374561311,-40.73114303368998,0 -72.80573666095735,-40.730994659290836,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86315469339492,-40.72846006061371,0 -72.86297500133516,-40.728427526552444,0 -72.86222130060197,-40.727831970125635,0 -72.86148101091386,-40.727549434666635,0 -72.8614166378975,-40.727699849376855,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86887227674062,-40.68908122051852,0 -72.8690284450242,-40.6894104942516,0 -72.8695045382336,-40.68923558519849,0 -72.8698264040653,-40.68934439495409,0 -72.86988809501638,-40.68917558721987,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86530134203886,-40.6830610765704,0 -72.86507776531711,-40.682842938200004,0 -72.8655766595588,-40.68279412165004,0 -72.86583951781515,-40.6828022577442,0 -72.8662686741521,-40.68285921037542,0 -72.86723427591019,-40.68270055649599,0 -72.86747567634971,-40.682236796836996,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80093014240266,-40.72748947195089,0 -72.80088180239287,-40.7274498495549,0 -72.80079597141487,-40.727132755395594,0 -72.80103200660432,-40.72709210218898,0 -72.80114465976291,-40.726441647505716,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.84495858866589,-40.72861250521116,0 -72.8450444340706,-40.728734449455686,0 -72.84525901079179,-40.72867347150813,0 -72.84541457891466,-40.72849460253959,0 -72.84566472454433,-40.72838156823855,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.84495858866589,-40.72861250521116,0 -72.84495858866589,-40.72861250521116,0 -72.84495858866589,-40.72861250521116,0 -72.84495858866589,-40.72861250521116,0 -72.84487561076736,-40.72868440691875,0 -72.84509555190658,-40.728745384856296,0 -72.84537986606216,-40.728745384856296,0 -72.8457661041603,-40.72866408092715,0 -72.84616307109451,-40.72844862503452,0 -72.84658149570083,-40.728294146795314,0 -72.846611,-40.728472,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.82664357684816,-40.72797075837404,0 -72.82657740741868,-40.72781164806423,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.84495858866589,-40.72861250521116,0 -72.8449102904473,-40.72867754026143,0 -72.84518655890766,-40.728787301247294,0 -72.84555134056406,-40.729073898523474,0 -72.84581688015219,-40.72890315986926,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80678240433768,-40.732046164994024,0 -72.8067460935563,-40.732011550826364,0 -72.8065909445286,-40.73165649802105,0 -72.80666738748552,-40.73159831745226,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80881105357385,-40.731449386116346,0 -72.80886746733098,-40.73158408279243,0 -72.808411488723,-40.73169587206952,0 -72.80833906859114,-40.731482456013914,0 -72.80823376220054,-40.73145401816611,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80008968323409,-40.732983825360826,0 -72.79910207389507,-40.733574574804095,0 -72.79919326900158,-40.733905863243464,0 -72.80037327276135,-40.73363110098819,0 -72.80025257335568,-40.73326119447004,0 -72.80017478929425,-40.733120954648044,0 -72.79862,-40.733365,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.84495858866589,-40.72861250521116,0 -72.84482153638179,-40.72858885218907,0 -72.84430386829587,-40.72807663117867,0 -72.84456136122981,-40.727903857329615,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.89914338730044,-40.70934742776468,0 -72.89868324995042,-40.709421973410976,0 -72.89878249168397,-40.70966188905655,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87007895156584,-40.69095009306473,0 -72.86962687969209,-40.690297103270225,0 -72.86902606487276,-40.690349981293195,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86315469339492,-40.72846006061371,0 -72.86315469339492,-40.72846006061371,0 -72.86207157584269,-40.72775000385277,0 -72.86059099646647,-40.72737599936201,0 -72.860611,-40.727372,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.77774979862612,-40.76211692441645,0 -72.77768343687059,-40.76188801138219,0 -72.77831375598909,-40.761579209849096,0 -72.7786409854889,-40.761613746933925,0</coordinates></LineString><styleUrl >#sFF000000sw1</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.87212883077795,-40.69384337519309,0 -72.87265241146089,-40.694647197269354,0 -72.87290990352632,-40.69454144800179,0 -72.87282407283784,-40.69438282378574,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.81386641711073,-40.73068572442635,0 -72.81375049447364,-40.7307132764405,0 -72.81369148587531,-40.73053034787013,0 -72.81627713536567,-40.729888061351495,0 -72.8157246003086,-40.72922950797764,0 -72.81546174382514,-40.72927015960921,0 -72.81537591313666,-40.72917259565172,0 -72.815419,-40.729149,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.7654631886223,-40.78090357213021,0 -72.76541648694331,-40.78074806251759,0 -72.7659904796725,-40.78057745764816,0 -72.76618359872157,-40.7811420768509,0 -72.766749,-40.781006,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><Placemark ><description >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value ></value></Data><Data name="description"><value >Tipo: Drop padrão
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.77723423519559,-40.77829362892162,0 -72.77729838172448,-40.77830488340413,0 -72.77755855687649,-40.778245981596875,0 -72.77765779894476,-40.778469401968415,0 -72.7782022892113,-40.77834550530974,0 -72.77870118177078,-40.77844096669011,0</coordinates></LineString><styleUrl >#sA6000000sw4</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >SECUNDÁRIO</name><Style id="sff1385fbsw6"><LineStyle ><color >ff1385fb</color><width >6</width></LineStyle></Style><Placemark ><name >C-MUFA PON A4-RD_PONA4_C1_F1-8</name><description >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-MUFA PON A4-RD_PONA4_C1_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80067261757729,-40.73392146010559,0 -72.80045895144129,-40.733735147138255,0 -72.80026046650852,-40.7334302769452,0 -72.80008968323409,-40.732983825360826,0</coordinates></LineString><styleUrl >#sff1385fbsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-MUFA PON A4-RD_PONA4_C2_F1-4</name><description >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-MUFA PON A4-RD_PONA4_C2_F1-4</value></Data><Data name="description"><value >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80067261757729,-40.73392146010559,0 -72.80220120820081,-40.73360010114102,0 -72.80340552894164,-40.733287100421705,0 -72.80561568565416,-40.73274849177885,0 -72.80706110903621,-40.73239257863591,0 -72.80678240433768,-40.732046164994024,0</coordinates></LineString><styleUrl >#sff1385fbsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA4_C2_F1-4-RD_PONA4_C3_F1-4</name><description >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA4_C2_F1-4-RD_PONA4_C3_F1-4</value></Data><Data name="description"><value >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80678240433768,-40.732046164994024,0 -72.80712011807027,-40.732402741156676,0 -72.8086168017526,-40.73198404401553,0 -72.80917202311862,-40.731839735167014,0 -72.8098675429671,-40.73160103907295,0</coordinates></LineString><styleUrl >#sff1385fbsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA4_C3_F1-4-RD_PONA4_C4_F1-8</name><description >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA4_C3_F1-4-RD_PONA4_C4_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ADSS - 2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.8098675429671,-40.73160103907295,0 -72.80917947389976,-40.73176249931667,0 -72.80862693476254,-40.731908840851816,0 -72.80850355223677,-40.73158973459009,0 -72.80881105357385,-40.731449386116346,0</coordinates></LineString><styleUrl >#sff1385fbsw6</styleUrl><visibility >0</visibility></Placemark><Style id="sff6686ffsw6"><LineStyle ><color >ff6686ff</color><width >6</width></LineStyle></Style><Placemark ><name >C-CTO - 443-RD_PONA4_C5_F1-4</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-CTO - 443-RD_PONA4_C5_F1-4</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.81815299309626,-40.72978373518104,0 -72.81767366166224,-40.729837017213285,0 -72.81648811652317,-40.73010938269386,0 -72.81386641711073,-40.73068572442635,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA6_C4_F1-4-RD_PONA6_C2_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA6_C4_F1-4-RD_PONA6_C2_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.83783253309481,-40.72511860779105,0 -72.84076070260143,-40.72577457691393,0 -72.84376658725222,-40.72688397391487,0 -72.84495858866589,-40.72861250521116,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA6_C4_F1-4-RD_PONA6_C1_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA6_C4_F1-4-RD_PONA6_C1_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.83783253309481,-40.72511860779105,0 -72.83156817049046,-40.72665914703256,0 -72.82664357684816,-40.72797075837404,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA6_C5_F1-8-CTO - 446</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA6_C5_F1-8-CTO - 446</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.86315469339492,-40.72846006061371,0 -72.86329786940867,-40.72700643176847,0 -72.8632120380864,-40.72611611686439,0 -72.86317985134053,-40.72423110315011,0 -72.86308329110297,-40.72218521786338,0 -72.86298613496007,-40.72120177924015,0 -72.86291103255307,-40.720197545681984,0 -72.86289493918015,-40.719286810650566,0 -72.86288421026485,-40.71880704343566,0 -72.86448997114346,-40.71838690545381,0 -72.86721446803514,-40.71758723164737,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA6_C1_F1-8-CTO - 443</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA6_C1_F1-8-CTO - 443</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.82664357684816,-40.72797075837404,0 -72.8225411161144,-40.72897390299504,0 -72.81815299309626,-40.72978373518104,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA7_C4_F1-8-MF2</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA7_C4_F1-8-MF2</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.89300767771041,-40.71076184133987,0 -72.89164537731689,-40.71113166314224,0 -72.88989656412535,-40.71155455775488,0 -72.8887657721651,-40.711796698685056,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA7_C5_F1-8-RD_PONA7_C4_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA7_C5_F1-8-RD_PONA7_C4_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.89914338730044,-40.70934742776468,0 -72.89770598204326,-40.70965467604496,0 -72.89592766433469,-40.71008977915173,0 -72.89300767771041,-40.71076184133987,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Style id="sA600A5FFsw6"><LineStyle ><color >A600A5FF</color><width >6</width></LineStyle></Style><Placemark ><name >C-MF2-RD_PONA7_C1_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: No implementado
+
+</description><ExtendedData ><Data name="name"><value >C-MF2-RD_PONA7_C1_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: No implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.8887657721651,-40.711796698685056,0 -72.88864038299855,-40.71181397798824,0</coordinates></LineString><styleUrl >#sA600A5FFsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-MF2-RD_PONA7_C2_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-MF2-RD_PONA7_C2_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.8887657721651,-40.711796698685056,0 -72.8888636827469,-40.71193901146775,0 -72.88503213819678,-40.71308364813038,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-RD_PONA7_C1_F1-8-RD_PONA7_C3_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-RD_PONA7_C1_F1-8-RD_PONA7_C3_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.88864038299855,-40.71181397798824,0 -72.88268520616043,-40.713388608651194,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >C-MUFA PON A4-RD_PONA4_C6_F1-8</name><description >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >C-MUFA PON A4-RD_PONA4_C6_F1-8</value></Data><Data name="description"><value >Tipo: FO 12 ASU-2MT
+Estado de implementación: Implementado
+
+</value></Data></ExtendedData><LineString ><coordinates >-72.80067261757729,-40.73392146010559,0 -72.80228195898987,-40.73364706858585,0 -72.8022122210405,-40.73333000313629,0 -72.80260382644843,-40.733250736537805,0 -72.80250994843969,-40.73297635142922,0 -72.8022712300746,-40.73241335029321,0 -72.80202595511376,-40.73177604429462,0 -72.80171481657048,-40.73099961592407,0 -72.80139116106852,-40.730255925369704,0 -72.80151990805193,-40.72987176861076,0 -72.80161110383187,-40.72950183778381,0 -72.8013422850444,-40.72873441669167,0 -72.80111697782341,-40.72812462908214,0 -72.80093014240266,-40.72748947195089,0</coordinates></LineString><styleUrl >#sff6686ffsw6</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><visibility >0</visibility></Folder><Folder ><name >Pops</name><Style id="mshttp://maps.google.com/mapfiles/kml/shapes/homegardenbusiness.pngms1"><IconStyle >
+	<color >ff7e7e7e</color>
+	<colorMode >normal</colorMode>
+	<scale >1</scale>
+	<heading >0</heading>
+	<Icon ><href >http://maps.google.com/mapfiles/kml/shapes/homegardenbusiness.png</href></Icon>
+</IconStyle></Style><Placemark ><name >RE RADALES</name><description >Estado de implementación: Implementado
+
+</description><ExtendedData ><Data name="name"><value >RE RADALES</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+</value></Data></ExtendedData><Point ><coordinates >-72.76753355687856,-40.7420759039823</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/homegardenbusiness.pngms1</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >Reserva técnica</name><Placemark ><name >20m</name><description >C-MUFA PON A4-RD_PONA4_C1_F1-8</description><ExtendedData ><Data name="name"><value >20m</value></Data><Data name="description"><value >C-MUFA PON A4-RD_PONA4_C1_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.80067261757729,-40.73392146010559</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-MUFA PON A4-RD_PONA4_C1_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-MUFA PON A4-RD_PONA4_C1_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.80008968323409,-40.732983825360826</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >20m</name><description >C-MUFA PON A4-RD_PONA4_C2_F1-4</description><ExtendedData ><Data name="name"><value >20m</value></Data><Data name="description"><value >C-MUFA PON A4-RD_PONA4_C2_F1-4</value></Data></ExtendedData><Point ><coordinates >-72.80067261757729,-40.73392146010559</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-MUFA PON A4-RD_PONA4_C2_F1-4</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-MUFA PON A4-RD_PONA4_C2_F1-4</value></Data></ExtendedData><Point ><coordinates >-72.80678240433768,-40.732046164994024</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA4_C2_F1-4-RD_PONA4_C3_F1-4</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA4_C2_F1-4-RD_PONA4_C3_F1-4</value></Data></ExtendedData><Point ><coordinates >-72.80678240433768,-40.732046164994024</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA4_C2_F1-4-RD_PONA4_C3_F1-4</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA4_C2_F1-4-RD_PONA4_C3_F1-4</value></Data></ExtendedData><Point ><coordinates >-72.8098675429671,-40.73160103907295</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA4_C3_F1-4-RD_PONA4_C4_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA4_C3_F1-4-RD_PONA4_C4_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.8098675429671,-40.73160103907295</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA4_C3_F1-4-RD_PONA4_C4_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA4_C3_F1-4-RD_PONA4_C4_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.80881105357385,-40.731449386116346</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-CTO - 443-RD_PONA4_C5_F1-4</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-CTO - 443-RD_PONA4_C5_F1-4</value></Data></ExtendedData><Point ><coordinates >-72.81386641711073,-40.73068572442635</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA6_C4_F1-4-RD_PONA6_C2_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA6_C4_F1-4-RD_PONA6_C2_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.83783253309481,-40.72511860779105</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA6_C4_F1-4-RD_PONA6_C2_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA6_C4_F1-4-RD_PONA6_C2_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.84495858866589,-40.72861250521116</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA6_C4_F1-4-RD_PONA6_C1_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA6_C4_F1-4-RD_PONA6_C1_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.83783253309481,-40.72511860779105</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA6_C4_F1-4-RD_PONA6_C1_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA6_C4_F1-4-RD_PONA6_C1_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.82664357684816,-40.72797075837404</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA6_C5_F1-8-CTO - 446</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA6_C5_F1-8-CTO - 446</value></Data></ExtendedData><Point ><coordinates >-72.86315469339492,-40.72846006061371</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA6_C1_F1-8-CTO - 443</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA6_C1_F1-8-CTO - 443</value></Data></ExtendedData><Point ><coordinates >-72.82664357684816,-40.72797075837404</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA7_C4_F1-8-MF2</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA7_C4_F1-8-MF2</value></Data></ExtendedData><Point ><coordinates >-72.89300767771041,-40.71076184133987</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >20m</name><description >C-RD_PONA7_C4_F1-8-MF2</description><ExtendedData ><Data name="name"><value >20m</value></Data><Data name="description"><value >C-RD_PONA7_C4_F1-8-MF2</value></Data></ExtendedData><Point ><coordinates >-72.8887657721651,-40.711796698685056</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA7_C5_F1-8-RD_PONA7_C4_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA7_C5_F1-8-RD_PONA7_C4_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.89914338730044,-40.70934742776468</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA7_C5_F1-8-RD_PONA7_C4_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA7_C5_F1-8-RD_PONA7_C4_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.89300767771041,-40.71076184133987</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >20m</name><description >C-MF2-RD_PONA7_C1_F1-8</description><ExtendedData ><Data name="name"><value >20m</value></Data><Data name="description"><value >C-MF2-RD_PONA7_C1_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.8887657721651,-40.711796698685056</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-MF2-RD_PONA7_C1_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-MF2-RD_PONA7_C1_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.88864038299855,-40.71181397798824</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >20m</name><description >C-MF2-RD_PONA7_C2_F1-8</description><ExtendedData ><Data name="name"><value >20m</value></Data><Data name="description"><value >C-MF2-RD_PONA7_C2_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.8887657721651,-40.711796698685056</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-MF2-RD_PONA7_C2_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-MF2-RD_PONA7_C2_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.88503213819678,-40.71308364813038</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA7_C1_F1-8-RD_PONA7_C3_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA7_C1_F1-8-RD_PONA7_C3_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.88864038299855,-40.71181397798824</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-RD_PONA7_C1_F1-8-RD_PONA7_C3_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-RD_PONA7_C1_F1-8-RD_PONA7_C3_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.88268520616043,-40.713388608651194</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >20m</name><description >C-MUFA PON A4-RD_PONA4_C6_F1-8</description><ExtendedData ><Data name="name"><value >20m</value></Data><Data name="description"><value >C-MUFA PON A4-RD_PONA4_C6_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.80067261757729,-40.73392146010559</coordinates></Point><visibility >0</visibility></Placemark><Placemark ><name >10m</name><description >C-MUFA PON A4-RD_PONA4_C6_F1-8</description><ExtendedData ><Data name="name"><value >10m</value></Data><Data name="description"><value >C-MUFA PON A4-RD_PONA4_C6_F1-8</value></Data></ExtendedData><Point ><coordinates >-72.80093014240266,-40.72748947195089</coordinates></Point><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >Prospects</name><Style id="mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mcff00cc00"><IconStyle >
+	<color >ff00cc00</color>
+	<colorMode >normal</colorMode>
+	<scale >1</scale>
+	<heading >0</heading>
+	<Icon ><href >http://maps.google.com/mapfiles/kml/shapes/man.png</href></Icon>
+</IconStyle></Style><Placemark ><name >SERGIO ESTEBAN FRITTE SALDIAS (17134)</name><description >Nombre: SERGIO ESTEBAN FRITTE SALDIAS
+
+
+</description><ExtendedData ><Data name="name"><value >SERGIO ESTEBAN FRITTE SALDIAS (17134)</value></Data><Data name="description"><value >Nombre: SERGIO ESTEBAN FRITTE SALDIAS
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.768804,-40.741055</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mcff00cc00</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >GERARDO BORQUEZ TORRES (20231)</name><description >Nombre: GERARDO BORQUEZ TORRES
+
+
+</description><ExtendedData ><Data name="name"><value >GERARDO BORQUEZ TORRES (20231)</value></Data><Data name="description"><value >Nombre: GERARDO BORQUEZ TORRES
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.770097,-40.742217</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mcff00cc00</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >Cliente</name><Style id="mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1"><IconStyle >
+	<color >ff7e7e7e</color>
+	<colorMode >normal</colorMode>
+	<scale >1</scale>
+	<heading >0</heading>
+	<Icon ><href >http://maps.google.com/mapfiles/kml/shapes/man.png</href></Icon>
+</IconStyle></Style><Placemark ><name >19479</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >19479</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.87535473704338,-40.68426669964388</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >25536</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >25536</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.870027,-40.688898</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17227</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17227</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.867611,-40.687369</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17196</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17196</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.872812,-40.686051</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >19477</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >19477</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.875316,-40.685193</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >19659</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >19659</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.8753037750721,-40.68464196327823</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >19342</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >19342</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.876932,-40.681918</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17195</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17195</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.875076,-40.696859</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >20213</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >20213</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.87001,-40.692753</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17224</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17224</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.86946058273317,-40.69133838584606</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17191</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17191</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.87023,-40.691741</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >19829</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >19829</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.778056,-40.77787</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17168</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17168</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.780264,-40.777564</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >17167</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >17167</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.7785,-40.76069</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >18321</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >18321</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.782828,-40.771812</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >19880</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >19880</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.74901,-40.807902</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >23957</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >23957</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.765451,-40.746513</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Style id="mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff"><IconStyle >
+	<color >7dffffff</color>
+	<colorMode >normal</colorMode>
+	<scale >1</scale>
+	<heading >0</heading>
+	<Icon ><href >http://maps.google.com/mapfiles/kml/shapes/man.png</href></Icon>
+</IconStyle></Style><Placemark ><name >25511</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPAS 1
+
+</description><ExtendedData ><Data name="name"><value >25511</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPAS 1
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77637259258698,-40.767884279560704</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >28248</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 3
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >28248</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 3
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.86844027052213,-40.688131508766965</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >21898</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 2
+
+</description><ExtendedData ><Data name="name"><value >21898</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 2
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87376284599306,-40.69531422724241</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >26080</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: INSTALADO EN FILAMENTO 3
+
+</description><ExtendedData ><Data name="name"><value >26080</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: INSTALADO EN FILAMENTO 3
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86906093358995,-40.69093977178226</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >20787</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 4
+
+</description><ExtendedData ><Data name="name"><value >20787</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 4
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87625461816789,-40.685023326595584</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >24145</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 1
+
+</description><ExtendedData ><Data name="name"><value >24145</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 1
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80573666095735,-40.730994659290836</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >31955</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 1
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >31955</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 1
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.8614166378975,-40.727699849376855</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32006</name><description >Estado de implementación: No implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >32006</value></Data><Data name="description"><value >Estado de implementación: No implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.86988809501638,-40.68917558721987</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32081</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPAS 2
+
+</description><ExtendedData ><Data name="name"><value >32081</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPAS 2
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86747567634971,-40.682236796836996</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >29474</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: INSTALADO EN FILAMENTO 1
+
+</description><ExtendedData ><Data name="name"><value >29474</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: INSTALADO EN FILAMENTO 1
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80114465976291,-40.726441647505716</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32201</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: F2
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >32201</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: F2
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.84566472454433,-40.72838156823855</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >24196</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 1
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >24196</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 1
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.846611,-40.728472</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >31694</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: FILA 1
+
+</description><ExtendedData ><Data name="name"><value >31694</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: FILA 1
+
+</value></Data></ExtendedData><Point ><coordinates >-72.82657740741868,-40.72781164806423</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32267</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: RESERVADO HOMEPASS 3
+
+</description><ExtendedData ><Data name="name"><value >32267</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: RESERVADO HOMEPASS 3
+
+</value></Data></ExtendedData><Point ><coordinates >-72.84581688015219,-40.72890315986926</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >31809</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 1
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >31809</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: FILAMENTO 1
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.80666738748552,-40.73159831745226</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >31652</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: FILA 1
+
+</description><ExtendedData ><Data name="name"><value >31652</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: FILA 1
+
+</value></Data></ExtendedData><Point ><coordinates >-72.80823376220054,-40.73145401816611</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >24388</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 2
+
+</description><ExtendedData ><Data name="name"><value >24388</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 2
+
+</value></Data></ExtendedData><Point ><coordinates >-72.79862,-40.733365</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32856</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: RESERVADO HOMEPASS 4
+
+</description><ExtendedData ><Data name="name"><value >32856</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: RESERVADO HOMEPASS 4
+
+</value></Data></ExtendedData><Point ><coordinates >-72.84456136122981,-40.727903857329615</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32874</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 1
+
+</description><ExtendedData ><Data name="name"><value >32874</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 1
+
+</value></Data></ExtendedData><Point ><coordinates >-72.89878249168397,-40.70966188905655</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32872</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 4
+
+</description><ExtendedData ><Data name="name"><value >32872</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 4
+
+</value></Data></ExtendedData><Point ><coordinates >-72.86902606487276,-40.690349981293195</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >32938</name><description >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >32938</value></Data><Data name="description"><value >Estado de implementación: Implementado
+
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.860611,-40.727372</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >33067</name><description >Estado de implementación: Implementado
+Comentarios del cliente.: f3
+
+Etíquetas: IMPORTACION MASIVA</description><ExtendedData ><Data name="name"><value >33067</value></Data><Data name="description"><value >Estado de implementación: Implementado
+Comentarios del cliente.: f3
+
+Etíquetas: IMPORTACION MASIVA</value></Data></ExtendedData><Point ><coordinates >-72.7786409854889,-40.761613746933925</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >33102</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 2
+
+</description><ExtendedData ><Data name="name"><value >33102</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: HOMEPASS RESERVADO 2
+
+</value></Data></ExtendedData><Point ><coordinates >-72.87282407283784,-40.69438282378574</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >33266</name><description >Estado de implementación: No implementado
+
+
+</description><ExtendedData ><Data name="name"><value >33266</value></Data><Data name="description"><value >Estado de implementación: No implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.815419,-40.729149</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >33676</name><description >Estado de implementación: No implementado
+
+
+</description><ExtendedData ><Data name="name"><value >33676</value></Data><Data name="description"><value >Estado de implementación: No implementado
+
+
+</value></Data></ExtendedData><Point ><coordinates >-72.766749,-40.781006</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><Placemark ><name >34740</name><description >Estado de implementación: No implementado
+Comentarios del cliente.: RESERVADO HOMEPASS 3
+
+</description><ExtendedData ><Data name="name"><value >34740</value></Data><Data name="description"><value >Estado de implementación: No implementado
+Comentarios del cliente.: RESERVADO HOMEPASS 3
+
+</value></Data></ExtendedData><Point ><coordinates >-72.77870118177078,-40.77844096669011</coordinates></Point><styleUrl >#mshttp://maps.google.com/mapfiles/kml/shapes/man.pngms1mc7dffffff</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >Condominios</name><visibility >0</visibility></Folder><Folder ><name >Condominio Horizontal</name><visibility >0</visibility></Folder><Folder ><name >Regiones</name><Style id="s55ff33f8sw3f55ffbafd"><LineStyle ><color >55ff33f8</color><width >3</width></LineStyle><PolyStyle ><color >55ffbafd</color></PolyStyle></Style><Placemark ><name >Zona 9</name><description >Tipo: Ultima Milla
+
+Etíquetas: Zona_UltimaMilla</description><ExtendedData ><Data name="name"><value >Zona 9</value></Data><Data name="description"><value >Tipo: Ultima Milla
+
+Etíquetas: Zona_UltimaMilla</value></Data></ExtendedData><Polygon ><outerBoundaryIs ><LinearRing ><coordinates >-73.131866,-40.599356,30 -73.203278,-40.783661,30 -72.673187,-40.895868,30 -72.612076,-40.705107,30 -73.131866,-40.599356,30</coordinates></LinearRing></outerBoundaryIs></Polygon><styleUrl >#s55ff33f8sw3f55ffbafd</styleUrl><visibility >0</visibility></Placemark><visibility >0</visibility></Folder><Folder ><name >Torres</name><visibility >0</visibility></Folder><Folder ><name >JUNCTION_BOX</name><visibility >0</visibility></Folder><Folder ><name >Ductos</name><visibility >0</visibility></Folder></Document></kml>

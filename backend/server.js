@@ -24,7 +24,12 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5000',
   'http://127.0.0.1:5500', // Live Server Default
   'http://localhost:5500', // Live Server Alternative
-  'https://chech00.github.io' // GitHub Pages Production
+  'http://127.0.0.1:8080', // http-server
+  'http://localhost:8080', // http-server
+  'https://chech00.github.io', // GitHub Pages Production
+  'https://turnos-patagoniaip.loca.lt', // Localtunnel Frontend
+  'https://turnos-backend.loca.lt', // Localtunnel Backend (planned)
+  'https://mighty-horse-96.loca.lt' // Localtunnel Backend (actual)
 ];
 
 const corsOptions = {
@@ -52,7 +57,7 @@ app.use(cors(corsOptions));
 // =============================================================================
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por ventana
+  max: 500, // máximo 500 requests por ventana (aumentado para desarrollo)
   message: { error: "Demasiadas solicitudes, intenta de nuevo más tarde" },
   standardHeaders: true,
   legacyHeaders: false

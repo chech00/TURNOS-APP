@@ -109,6 +109,9 @@
         <li data-tooltip="Turnos Noc"><a href="noc.html" id="calendar-check" class="active"><i
               data-lucide="calendar-check"></i> <span>Turnos
               Noc</span></a></li>
+        <li class="admin-only" data-tooltip="Bitácora Uptime"><a href="uptime.html"><i
+              data-lucide="activity"></i><span>Bitácora
+              Uptime</span></a></li>
         <li data-tooltip="Notificaciones"><a href="suralis.html"><i
               data-lucide="send"></i><span>Notificaciones</span></a></li>
         <li id="li-empleados" class="admin-only" data-tooltip="Gestionar Empleados">
@@ -224,7 +227,7 @@
           </table>
 
           <!-- Reporte de Horas Extras -->
-          <div id="overtime-report-container" class="admin-only" style="margin-top: 2rem;"></div>
+          <div id="overtime-report-container" class="superadmin-only" style="margin-top: 2rem;"></div>
         </section>
 
         <!-- Sección Turnos y Backup -->
@@ -528,6 +531,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
   <script type="module" src="./js/firebase.js"></script>
+  <script defer src="./js/active-session.js"></script>
   <script type="module" src="./js/noc.js"></script>
   <!-- Employee cards moved to directorio.html -->
   <script>
