@@ -579,9 +579,35 @@ ${currentSignature}`;
                 return;
             }
 
+            // IMPORTANT: Force regeneration of content to prevent empty emails
+            updatePreviews();
+
             // Get content from the preview
             const contentDiv = type === 'caida' ? emailContentDiv : onlineContentDiv;
-            const htmlContent = contentDiv?.innerHTML || '';
+            let htmlContent = contentDiv?.innerHTML || '';
+
+            // Fallback: If still empty, generate inline
+            if (!htmlContent || htmlContent.trim() === '') {
+                const servicesList = Array.from(selectedServices).map(s => `• ${s}`).join('<br>');
+                if (type === 'caida') {
+                    htmlContent = `Estimados,<br><br>
+Informamos que nuestro sistema de monitoreo ha detectado una <strong>interrupción de servicio</strong> afectando a los siguientes enlaces de Suralis:<br><br>
+<strong>Enlaces afectados:</strong><br>
+${servicesList}<br><br>
+Personal técnico ya ha tomado conocimiento y se encuentra gestionando la incidencia para su pronta solución.<br>
+Se mantendrá informado ante novedades relevantes.<br><br>
+Saludos cordiales,<br>
+${currentSignature}`;
+                } else {
+                    htmlContent = `Estimados,<br><br>
+Confirmamos el <strong>restablecimiento total</strong> de los servicios afectados. Los siguientes enlaces operan nuevamente dentro de sus parámetros normales:<br><br>
+<strong>Enlaces restaurados:</strong><br>
+${servicesList}<br><br>
+Hemos verificado la estabilidad de la conexión. Damos por cerrado este incidente.<br><br>
+Saludos cordiales,<br>
+${currentSignature}`;
+                }
+            }
 
             // Build subject
             const subject = type === 'caida'
@@ -660,6 +686,10 @@ ${currentSignature}`;
 
                 // Get auth token
                 const token = await user.getIdToken();
+
+                // DEBUG: Log the content being sent
+                console.log("📧 DEBUG - htmlContent length:", htmlContent?.length);
+                console.log("📧 DEBUG - htmlContent preview:", htmlContent?.substring(0, 100));
 
                 const response = await fetch(`${API_BASE}/send-email`, {
                     method: 'POST',

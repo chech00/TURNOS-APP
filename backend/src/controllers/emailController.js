@@ -43,17 +43,20 @@ const sendEmail = async (req, res) => {
         console.log(`📧 Enviando correo desde: ${userEmail} a: ${allRecipients.length} destinatarios`);
 
         // Build the email in RFC 2822 format
-        const emailLines = [
+        // Note: The blank line between headers and body is CRITICAL and must be preserved
+        const emailHeaders = [
             `From: ${userEmail}`,
-            to && to.length > 0 ? `To: ${to.join(", ")}` : '',
-            bcc && bcc.length > 0 ? `Bcc: ${bcc.join(", ")}` : '', // Add BCC Header
+            to && to.length > 0 ? `To: ${to.join(", ")}` : null,
+            bcc && bcc.length > 0 ? `Bcc: ${bcc.join(", ")}` : null,
             `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
             'MIME-Version: 1.0',
-            'Content-Type: text/html; charset=UTF-8',
-            '',
-            html
-        ];
-        const email = emailLines.filter(line => line !== '').join('\r\n');
+            'Content-Type: text/html; charset=UTF-8'
+        ].filter(Boolean).join('\r\n');
+
+        // RFC 2822 requires a blank line (CRLF) between headers and body
+        const email = emailHeaders + '\r\n\r\n' + html;
+
+        console.log("📧 DEBUG - Email length:", email.length, "| HTML length:", html?.length);
 
         // Encode to base64url format for Gmail API
         const encodedEmail = Buffer.from(email)
