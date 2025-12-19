@@ -129,58 +129,83 @@ function initToastContainer() {
 }
 
 /**
- * Muestra una notificación toast
+ * Muestra una notificación toast elegante con glassmorphism
  * @param {string} message - Mensaje a mostrar
  * @param {string} type - 'success' | 'error' | 'warning' | 'info'
- * @param {number} duration - Duración en ms (default 4000)
+ * @param {number} duration - Duración en ms (default 5000)
  */
-export function showToast(message, type = 'info', duration = 4000) {
+export function showToast(message, type = 'info', duration = 5000) {
     initToastContainer();
 
-    const colors = {
-        success: { bg: '#10b981', icon: '✓' },
-        error: { bg: '#ef4444', icon: '✕' },
-        warning: { bg: '#f59e0b', icon: '⚠' },
-        info: { bg: '#3b82f6', icon: 'ℹ' }
+    const themes = {
+        success: {
+            gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95))',
+            borderColor: 'rgba(16, 185, 129, 0.5)',
+            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+        },
+        error: {
+            gradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.95))',
+            borderColor: 'rgba(239, 68, 68, 0.5)',
+            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.07 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`
+        },
+        warning: {
+            gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95))',
+            borderColor: 'rgba(245, 158, 11, 0.5)',
+            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+        },
+        info: {
+            gradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95))',
+            borderColor: 'rgba(59, 130, 246, 0.5)',
+            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+        }
     };
 
-    const { bg, icon } = colors[type] || colors.info;
+    const theme = themes[type] || themes.info;
 
     const toast = document.createElement('div');
-    toast.className = 'toast-notification';
+    toast.className = 'toast-notification toast-elegant';
     toast.style.cssText = `
-        background: ${bg};
+        background: ${theme.gradient};
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid ${theme.borderColor};
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.1) inset;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         font-size: 14px;
         font-weight: 500;
-        animation: slideIn 0.3s ease-out;
+        animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         cursor: pointer;
+        transform-origin: right center;
+        max-width: 400px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     `;
 
     toast.innerHTML = `
-        <span style="font-size: 18px;">${icon}</span>
-        <span>${message}</span>
+        <span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:8px;flex-shrink:0;">${theme.icon}</span>
+        <span style="flex:1;line-height:1.4;">${message}</span>
+        <span class="toast-close" style="opacity:0.6;cursor:pointer;padding:4px;margin:-4px;display:flex;font-size:16px;transition:opacity 0.2s;">✕</span>
     `;
 
-    // Add animation styles if not present
-    if (!document.getElementById('toast-styles')) {
+    // Add elegant animation styles
+    if (!document.getElementById('toast-styles-elegant')) {
         const styles = document.createElement('style');
-        styles.id = 'toast-styles';
+        styles.id = 'toast-styles-elegant';
         styles.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
+            @keyframes toastSlideIn {
+                from { transform: translateX(100%) scale(0.95); opacity: 0; }
+                to { transform: translateX(0) scale(1); opacity: 1; }
             }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
+            @keyframes toastSlideOut {
+                from { transform: translateX(0) scale(1); opacity: 1; }
+                to { transform: translateX(100%) scale(0.95); opacity: 0; }
             }
+            .toast-elegant:hover { transform: scale(1.02); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.15) inset; }
+            .toast-close:hover { opacity: 1 !important; }
         `;
         document.head.appendChild(styles);
     }
@@ -188,14 +213,26 @@ export function showToast(message, type = 'info', duration = 4000) {
     const container = document.getElementById(TOAST_CONTAINER_ID);
     container.appendChild(toast);
 
-    // Auto-remove after duration
-    const removeToast = () => {
-        toast.style.animation = 'slideOut 0.3s ease-out forwards';
-        setTimeout(() => toast.remove(), 300);
-    };
+    // Close button functionality
+    const closeBtn = toast.querySelector('.toast-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeToast();
+        });
+    }
 
+    // Click to dismiss
     toast.addEventListener('click', removeToast);
-    setTimeout(removeToast, duration);
+
+    // Auto-remove after duration
+    const timeoutId = setTimeout(removeToast, duration);
+
+    function removeToast() {
+        clearTimeout(timeoutId);
+        toast.style.animation = 'toastSlideOut 0.3s ease-out forwards';
+        setTimeout(() => toast.remove(), 300);
+    }
 
     return toast;
 }

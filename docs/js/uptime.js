@@ -79,6 +79,7 @@ let filteredIncidents = []; // Filtered incidents for display/export
 let lastUpdateTime = null; // Track last data refresh
 let dataLoaded = false; // Flag to prevent auto-incidents before data loads
 const pendingAutoIncidents = new Set(); // Prevent duplicate auto-creations
+let monitoringPaused = false; // Track monitoring toggle state (synced with backend)
 
 const COLLECTION_NAME = 'uptime_logs';
 
@@ -154,15 +155,20 @@ export function loadUptimeLogs() {
                         // Sonido de alerta (opcional)
                         // playAlertSound(); 
 
-                        // Toast Notification
-                        showToast(`🚨 NUEVO INCIDENTE: ${data.node}`, 'error');
+                        // Only show notifications if monitoring is ACTIVE (not paused)
+                        if (!monitoringPaused) {
+                            // Toast Notification
+                            showToast(`🚨 NUEVO INCIDENTE: ${data.node}`, 'error');
 
-                        // Push Notification
-                        if (Notification.permission === "granted") {
-                            new Notification(`🚨 Caida Detectada: ${data.node}`, {
-                                body: `Ticket: ${data.ticket_id} - ${data.failure_type}`,
-                                icon: "img/icon.png"
-                            });
+                            // Push Notification
+                            if (Notification.permission === "granted") {
+                                new Notification(`🚨 Caida Detectada: ${data.node}`, {
+                                    body: `Ticket: ${data.ticket_id} - ${data.failure_type}`,
+                                    icon: "img/icon.png"
+                                });
+                            }
+                        } else {
+                            console.log(`⏸️ Monitoring paused - notification suppressed for ${data.node}`);
                         }
                     } else {
                         // Mark as notified so we don't alert on future updates (e.g. comments)
@@ -1377,19 +1383,50 @@ function initAutoMonitoringToggle() {
         return; // Exit early, don't initialize toggle
     }
 
-    // Restore state from localStorage
-    const savedState = localStorage.getItem('autoMonitoringEnabled');
-    autoMonitoringEnabled = savedState === null ? true : savedState === 'true';
-
+    // Fetch state from backend (Firestore) first for consistency across environments
     if (toggle) {
-        toggle.checked = autoMonitoringEnabled;
-        updateMonitoringUI();
+        // Set initial state while loading
+        toggle.disabled = true;
+
+        callApi('/uptime/monitoring-status', 'GET').then(data => {
+            autoMonitoringEnabled = data.monitoringEnabled;
+            monitoringPaused = !autoMonitoringEnabled;
+            toggle.checked = autoMonitoringEnabled;
+            toggle.disabled = false;
+            updateMonitoringUI();
+            console.log(`📡 Monitoring state loaded from backend: ${autoMonitoringEnabled ? 'ACTIVE' : 'PAUSED'}`);
+
+            // Start/stop polling based on state
+            if (autoMonitoringEnabled) {
+                startLivePolling();
+            } else {
+                stopLivePolling();
+            }
+        }).catch(err => {
+            console.warn('⚠️ Could not fetch monitoring state from backend, using localStorage fallback');
+            // Fallback to localStorage if backend unavailable
+            const savedState = localStorage.getItem('autoMonitoringEnabled');
+            autoMonitoringEnabled = savedState === null ? true : savedState === 'true';
+            monitoringPaused = !autoMonitoringEnabled;
+            toggle.checked = autoMonitoringEnabled;
+            toggle.disabled = false;
+            updateMonitoringUI();
+        });
 
         // Add event listener
-        toggle.addEventListener('change', (e) => {
+        toggle.addEventListener('change', async (e) => {
             autoMonitoringEnabled = e.target.checked;
+            monitoringPaused = !autoMonitoringEnabled; // Sync with notification suppression variable
             localStorage.setItem('autoMonitoringEnabled', autoMonitoringEnabled);
             updateMonitoringUI();
+
+            // Sync with backend (persists across server restarts)
+            try {
+                await callApi('/uptime/toggle-monitoring', 'POST', { enabled: autoMonitoringEnabled });
+                console.log(`📡 Backend sync: monitoring ${autoMonitoringEnabled ? 'ENABLED' : 'DISABLED'}`);
+            } catch (err) {
+                console.error('⚠️ Failed to sync monitoring state with backend:', err);
+            }
 
             if (autoMonitoringEnabled) {
                 console.log('✅ Auto-monitoring ENABLED');

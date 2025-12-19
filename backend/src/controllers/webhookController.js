@@ -37,8 +37,19 @@ async function handleDudeWebhook(req, res) {
 
         console.log(`📨 Webhook received: ${nodeName} is ${isDown ? 'DOWN' : 'UP'}`);
 
-        // --- NEW: UPDATE MEMORY CACHE ---
-        uptimeController.updateDeviceCache(nodeName, isDown ? 'down' : 'up', message || "Webhook Event");
+        // --- NEW: UPDATE MEMORY CACHE (always, for UI display) ---
+        await uptimeController.updateDeviceCache(nodeName, isDown ? 'down' : 'up', message || "Webhook Event");
+
+        // --- CHECK IF MONITORING IS PAUSED ---
+        const monitoringControl = require('./monitoringControl');
+        if (!monitoringControl.isMonitoringEnabled()) {
+            console.log(`⏸️ Monitoreo PAUSADO - Webhook recibido pero no se creará incidente para ${nodeName}`);
+            return res.json({
+                success: true,
+                message: "Webhook received but monitoring is paused - no incident created",
+                cached: true
+            });
+        }
 
         // --- TRANSLATION LAYER (Device Map) ---
         // MOVED UP to ensure UP events also map correctly (e.g. PONA-0 -> NODO ALERCE 3)
