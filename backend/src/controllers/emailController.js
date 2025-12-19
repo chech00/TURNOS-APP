@@ -7,12 +7,12 @@ const { admin, db } = require("../config/firebase");
  */
 const sendEmail = async (req, res) => {
     try {
-        const { to, subject, html } = req.body;
+        const { to, bcc, subject, html } = req.body;
         const userUid = req.user?.uid;
 
         // Validate required fields
-        if (!to || !Array.isArray(to) || to.length === 0) {
-            return res.status(400).json({ error: "Se requiere al menos un destinatario" });
+        if ((!to || to.length === 0) && (!bcc || bcc.length === 0)) {
+            return res.status(400).json({ error: "Se requiere al menos un destinatario (To o Bcc)" });
         }
         if (!subject || !html) {
             return res.status(400).json({ error: "Se requiere asunto y contenido del correo" });
@@ -39,19 +39,21 @@ const sendEmail = async (req, res) => {
             });
         }
 
-        console.log(`📧 Enviando correo desde: ${userEmail} a: ${to.join(", ")}`);
+        const allRecipients = [...(to || []), ...(bcc || [])];
+        console.log(`📧 Enviando correo desde: ${userEmail} a: ${allRecipients.length} destinatarios`);
 
         // Build the email in RFC 2822 format
         const emailLines = [
             `From: ${userEmail}`,
-            `To: ${to.join(", ")}`,
+            to && to.length > 0 ? `To: ${to.join(", ")}` : '',
+            bcc && bcc.length > 0 ? `Bcc: ${bcc.join(", ")}` : '', // Add BCC Header
             `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
             'MIME-Version: 1.0',
             'Content-Type: text/html; charset=UTF-8',
             '',
             html
         ];
-        const email = emailLines.join('\r\n');
+        const email = emailLines.filter(line => line !== '').join('\r\n');
 
         // Encode to base64url format for Gmail API
         const encodedEmail = Buffer.from(email)

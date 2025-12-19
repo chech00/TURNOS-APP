@@ -1,5 +1,9 @@
+# ========================================
+# ARCHIVOS SENSIBLES / CREDENCIALES
+# ========================================
 node_modules/
 .env
+*.env
 serviceAccountKey.json
 backend/serviceAccountKey.json
 backend/firebase-service-account.json
@@ -8,7 +12,40 @@ backend/firebase-service-account.json
 .DS_Store
 *.log
 
-# Archivos temporales de testing
+# ========================================
+# SCRIPTS DE TESTING/DEBUG (NO PRODUCCION)
+# ========================================
+# Backend debug scripts
+backend/debug_*.js
+backend/test_*.js
+
+# Backend utility/setup scripts (one-time use)
+backend/analyze-*.js
+backend/check_*.js
+backend/configure_*.js
+backend/create_*.js
+backend/cycle_*.js
+backend/deep_scan_*.js
+backend/fix_*.js
+backend/force_*.js
+backend/import-*.js
+backend/inspect_*.js
+backend/list_*.js
+backend/nuke_*.js
+backend/parse_*.js
+backend/read_*.js
+backend/restore_*.js
+backend/setup_*.js
+backend/simulate_*.js
+backend/mock_*.js
+
+# Backend dump/log files
+backend/*.txt
+backend/lab_state.json
+
+# ========================================
+# ARCHIVOS TEMPORALES / HERRAMIENTAS
+# ========================================
 *.ps1
 ngrok.exe
 ngrok.zip
@@ -20,3 +57,6 @@ localtunnel/
 
 # Old uptime data (not needed in repo)
 Uptime PatagoniaIP*/
+
+# Firebase cache
+.firebase/

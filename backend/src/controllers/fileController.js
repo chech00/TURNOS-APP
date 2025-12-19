@@ -95,4 +95,47 @@ async function deleteFile(req, res) {
     }
 }
 
-module.exports = { uploadFile, listFiles, deleteFile };
+async function uploadNodePhoto(req, res) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No se ha seleccionado ninguna imagen." });
+        }
+
+        // Validate image type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({ error: "Solo se permiten imágenes (JPG, PNG, WEBP)." });
+        }
+
+        // Safe name
+        const safeName = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileName = `${Date.now()}-node-${safeName}`;
+        const bucketName = "node-photos";
+
+        // Upload to Supabase
+        const { error } = await supabase.storage
+            .from(bucketName)
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        // Get Public URL
+        const { data } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+
+        const publicUrl = data.publicUrl;
+
+        console.log(`✅ Foto de nodo subida: ${fileName} por ${req.user.email || req.user.uid}`);
+        res.json({ success: true, url: publicUrl, fileName });
+
+    } catch (error) {
+        console.error("❌ Error al subir foto de nodo:", error);
+        res.status(500).json({ error: "Error interno al subir la imagen." });
+    }
+}
+
+module.exports = { uploadFile, listFiles, deleteFile, uploadNodePhoto };

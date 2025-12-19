@@ -3,9 +3,9 @@
 // Cache-first strategy para archivos estáticos, Network-first para API
 // =============================================================================
 
-const CACHE_NAME = 'turnos-noc-v1';
-const STATIC_CACHE = 'static-v1';
-const DYNAMIC_CACHE = 'dynamic-v1';
+const CACHE_NAME = 'turnos-noc-v5';
+const STATIC_CACHE = 'static-v5';
+const DYNAMIC_CACHE = 'dynamic-v5';
 
 // Archivos a cachear inmediatamente
 const STATIC_ASSETS = [
@@ -68,6 +68,7 @@ self.addEventListener('fetch', event => {
 
     // API calls: Network first, fallback to cache
     if (url.pathname.startsWith('/api/') ||
+        url.pathname.startsWith('/uptime/') || // New: Avoid caching uptime status
         url.hostname.includes('onrender.com')) {
         event.respondWith(networkFirst(request));
         return;

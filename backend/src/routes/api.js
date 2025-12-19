@@ -42,6 +42,7 @@ router.get("/webhook-status", telegramController.webhookStatus);
 
 // --- File Routes ---
 router.post("/upload", uploadLimiter, checkAuth, requireAdmin, upload.single("file"), fileController.uploadFile);
+router.post("/upload-node-photo", uploadLimiter, checkAuth, upload.single("file"), fileController.uploadNodePhoto); // Allow all auth users to upload node photos? Or restrict? Keeping checkAuth as per plan.
 router.get("/files", checkAuth, fileController.listFiles);
 router.delete("/delete/:fileName", checkAuth, requireAdmin, fileController.deleteFile);
 
@@ -66,11 +67,36 @@ router.post("/uptime/:id/close", checkAuth, uptimeController.closeIncident);
 router.get("/uptime/list", checkAuth, uptimeController.getIncidents);
 router.get("/uptime/nodes", checkAuth, uptimeController.getNodes);
 router.get("/uptime/search-data", checkAuth, uptimeController.getNodesWithPons);
+router.delete("/uptime/purge", checkAuth, uptimeController.purgeIncidents);
 
 // New optimized endpoints
 router.get("/uptime/summary", checkAuth, uptimeController.getMonthlySummary);
 router.get("/uptime/paginated", checkAuth, uptimeController.getListPaginated);
 router.get("/uptime/live", checkAuth, uptimeController.getLiveStatus); // New Live Lab Endpoint
+
+// Monitoring control routes
+const monitoringControl = require("../controllers/monitoringControl");
+router.post("/uptime/toggle-monitoring", checkAuth, monitoringControl.toggleMonitoring);
+router.get("/uptime/monitoring-status", checkAuth, monitoringControl.getMonitoringStatus);
+
+// Ping Devices Management (Dynamic device configuration)
+const pingDevicesController = require("../controllers/pingDevicesController");
+router.get("/ping-devices", checkAuth, pingDevicesController.getPingDevices);
+router.post("/ping-devices", checkAuth, requireAdmin, pingDevicesController.addPingDevice);
+router.put("/ping-devices/:id", checkAuth, requireAdmin, pingDevicesController.updatePingDevice);
+router.delete("/ping-devices/:id", checkAuth, requireAdmin, pingDevicesController.deletePingDevice);
+router.post("/ping-devices/test", checkAuth, pingDevicesController.testPingDevice);
+router.get("/ping-devices/status", checkAuth, pingDevicesController.getAllDevicesStatus);
+
+// Dude Configuration (Dynamic settings for The Dude connection)
+const dudeConfigController = require("../controllers/dudeConfigController");
+router.get("/dude-config", checkAuth, dudeConfigController.getDudeConfig);
+router.put("/dude-config", checkAuth, requireAdmin, dudeConfigController.updateDudeConfig);
+router.post("/dude-config/test", checkAuth, requireAdmin, dudeConfigController.testDudeConnection);
+
+// Webhook for The Dude (Push Notifications) - No auth middleware (handled by token check)
+const webhookController = require("../controllers/webhookController");
+router.post("/webhook/dude", webhookController.handleDudeWebhook);
 
 // --- Other Routes ---
 // "public" route

@@ -338,9 +338,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 openAddServiceModal(categoryName, categoryData.id);
             });
 
-            // Render services
+            // Sort services: DOWN (Red) first, then keeping original order
+            const sortedServices = [...categoryData.services].sort((a, b) => {
+                const stateA = serviceStates[a];
+                const stateB = serviceStates[b];
+                const isDownA = stateA && stateA.status === 'down';
+                const isDownB = stateB && stateB.status === 'down';
+
+                if (isDownA && !isDownB) return -1;
+                if (!isDownA && isDownB) return 1;
+                return 0;
+            });
+
             const servicesList = panel.querySelector('.services-list');
-            categoryData.services.forEach(serviceName => {
+            sortedServices.forEach(serviceName => {
                 const isSelected = selectedServices.has(serviceName);
 
                 // Check Real-time State (Updated variable)
@@ -657,7 +668,8 @@ ${currentSignature}`;
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                        to: recipients,
+                        to: [user.email], // Send to self
+                        bcc: recipients,  // Others in BCC for speed & privacy
                         subject: subject,
                         html: htmlContent
                     })
@@ -703,6 +715,26 @@ ${currentSignature}`;
                         batch.set(stateRef, updates, { merge: true });
 
                         await batch.commit();
+
+                        // FORCE LOCAL UPDATE FOR IMMEDIATE FEEDBACK
+                        // (Optimizistic UI Update)
+                        selectedServices.forEach(service => {
+                            if (type === 'caida') {
+                                serviceStates[service] = {
+                                    status: 'down',
+                                    by: user?.email || 'Sistema',
+                                    at: firebase.firestore.Timestamp.now()
+                                };
+                            } else {
+                                delete serviceStates[service];
+                            }
+                        });
+                        renderCategories(); // Re-render immediately to sort elements
+
+                        // CLEAR SELECTION AFTER SENDING
+                        selectedServices.clear();
+                        updateSummary();
+                        updatePreviews();
 
                     } catch (incidentError) {
                         console.warn('No se pudo guardar el incidente o estado:', incidentError);

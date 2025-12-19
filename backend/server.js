@@ -9,6 +9,7 @@ const path = require("path");
 // Nota: Ajustamos el path relative porque server.js está en la raíz de backend/
 const apiRoutes = require("./src/routes/api");
 const { asignarTurnosAutomaticos } = require("./src/controllers/shiftController");
+const uptimeController = require("./src/controllers/uptimeController"); // Importar para Sync inicial
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -113,4 +114,7 @@ console.log("✅ Cron job de turnos configurado para MARTES 17:15 (Chile) - MODO
 app.listen(PORT, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
   console.log(`🔒 CORS configurado para: ${ALLOWED_ORIGINS.join(', ')}`);
+
+  // Iniciar sincronización de topología (Cache Pasivo)
+  uptimeController.syncDudeDevices().catch(err => console.error("Error en sync inicial:", err));
 });

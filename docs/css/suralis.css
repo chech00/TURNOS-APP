@@ -775,20 +775,56 @@
     gap: 0.5rem;
 }
 
+/* Email Toolbar (New) */
+.email-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.toolbar-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-texto-secundario);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-texto-principal);
+}
+
 /* Email Body */
 .email-body {
     padding: 1.5rem 1.25rem;
-    min-height: 180px;
+    min-height: 220px;
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: var(--color-texto-principal);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #e5e7eb;
+    /* Higher Contrast */
     white-space: pre-wrap;
     outline: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, transparent 100%);
 }
 
 .email-body:focus {
-    background: rgba(119, 150, 203, 0.03);
+    background: rgba(119, 150, 203, 0.02);
+}
+
+/* Placeholder Text Color Improvement */
+.summary-placeholder {
+    color: #94a3b8;
+    /* Lighter grey for better visibility */
+    font-size: 0.95rem;
+    font-style: normal;
+    font-weight: 500;
 }
 
 /* Send Buttons */
@@ -1511,4 +1547,36 @@
 
 .service-item.is-down .service-name {
     color: #ef4444;
+}
+
+/* Recipient Chips & Field Wrapping */
+.email-field.recipients-field {
+    align-items: flex-start;
+    /* Allow height to grow */
+}
+
+.email-field.recipients-field .field-value {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex: 1;
+    /* Take remaining width */
+}
+
+.recipient-chip {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(119, 150, 203, 0.15);
+    border: 1px solid rgba(119, 150, 203, 0.3);
+    color: var(--color-texto-principal);
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.recipient-chip:hover {
+    background: rgba(119, 150, 203, 0.25);
+    border-color: rgba(119, 150, 203, 0.5);
 }

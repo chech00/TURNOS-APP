@@ -1306,10 +1306,13 @@
             <ul>
                 <li data-tooltip="Directorio"><a href="directorio.html"><i
                             data-lucide="users"></i><span>Directorio</span></a></li>
+                <li data-tooltip="Contactos Nodos"><a href="contactos.html"><i data-lucide="radio-tower"></i>
+                        <span>Contactos Nodos</span></a></li>
                 <li id="li-turnos" class="superadmin-only" style="display:none;" data-tooltip="Turnos"><a
                         href="index.html"><i data-lucide="calendar"></i><span>Turnos</span></a></li>
                 <li id="li-senales" class="admin-only" style="display:none;" data-tooltip="Señal de Fibra"><a
                         href="senales.html"><i data-lucide="waypoints"></i><span>Señal de Fibra</span></a></li>
+
                 <li data-tooltip="Documentos Noc"><a href="documentos.html"><i data-lucide="dock"></i><span>Documentos
                             Noc</span></a></li>
                 <li data-tooltip="Turnos Noc"><a href="noc.html"><i data-lucide="calendar-check"></i><span>Turnos
@@ -1358,6 +1361,77 @@
                 </span>
                 <span id="live-text" class="text-gray-400">Lab Disconnected</span>
             </div>
+
+            <!-- AUTO-MONITORING TOGGLE -->
+            <div id="monitoring-toggle-container"
+                class="flex items-center gap-3 px-4 py-2 rounded-full bg-gray-800 border border-gray-700 text-xs ml-4"
+                style="display: inline-flex;">
+                <span class="text-gray-400 font-medium">Monitoreo:</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-monitoring-toggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span id="monitoring-status-text" class="text-green-400 font-bold">ACTIVO</span>
+            </div>
+
+            <!-- PURGE BUTTON (TEST MODE) -->
+            <button id="purge-incidents-btn"
+                class="flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 border border-red-500 text-xs font-bold text-white ml-4 hover:bg-red-700 transition"
+                title="ELIMINAR TODOS LOS INCIDENTES y Reiniciar">
+                <i data-lucide="trash-2" style="width:14px; height:14px;"></i> RESET
+            </button>
+
+            <style>
+                .toggle-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 50px;
+                    height: 26px;
+                }
+
+                .toggle-switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .toggle-slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #ef4444;
+                    transition: 0.4s;
+                    border-radius: 26px;
+                    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+                }
+
+                .toggle-slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 20px;
+                    width: 20px;
+                    left: 3px;
+                    bottom: 3px;
+                    background-color: white;
+                    transition: 0.4s;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                }
+
+                .toggle-switch input:checked+.toggle-slider {
+                    background-color: #22c55e;
+                    box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+                }
+
+                .toggle-switch input:checked+.toggle-slider:before {
+                    transform: translateX(24px);
+                }
+            </style>
+
+
             <div class="user-profile-header">
                 <div class="user-avatar">
                     <i data-lucide="user"></i>
@@ -1435,6 +1509,384 @@
                     <canvas id="top-nodes-chart" style="height: 250px; max-height: 250px;"></canvas>
                 </div>
             </div>
+
+            <!-- Superadmin Only: Ping Devices Management -->
+            <div id="ping-devices-container" class="superadmin-only" style="display: none; margin-bottom: 2rem;">
+                <div class="ping-devices-panel">
+                    <div class="ping-devices-header">
+                        <div class="ping-devices-title">
+                            <i data-lucide="router" style="width:20px;height:20px;color:#818cf8;"></i>
+                            <span>Dispositivos Monitoreados</span>
+                            <span class="device-count" id="device-count">0</span>
+                        </div>
+                        <button class="add-device-btn" onclick="window.openAddDeviceModal()">
+                            <i data-lucide="plus" style="width:16px;height:16px;"></i>
+                            Agregar
+                        </button>
+                    </div>
+                    <div id="ping-devices-list" class="ping-devices-list">
+                        <!-- Loaded by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .ping-devices-panel {
+                    background: linear-gradient(145deg, rgba(30, 35, 45, 0.95) 0%, rgba(20, 25, 35, 0.95) 100%);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 12px;
+                    overflow: hidden;
+                }
+
+                .ping-devices-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1rem 1.25rem;
+                    background: rgba(129, 140, 248, 0.1);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                .ping-devices-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-weight: 600;
+                    color: #fff;
+                }
+
+                .device-count {
+                    background: rgba(129, 140, 248, 0.2);
+                    color: #a5b4fc;
+                    padding: 0.15rem 0.5rem;
+                    border-radius: 10px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+
+                .add-device-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                    padding: 0.5rem 1rem;
+                    background: linear-gradient(135deg, #818cf8, #6366f1);
+                    border: none;
+                    border-radius: 8px;
+                    color: white;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .add-device-btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+                }
+
+                .ping-devices-list {
+                    padding: 0.5rem;
+                    max-height: 300px;
+                    overflow-y: auto;
+                }
+
+                .ping-device-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    padding: 0.75rem 1rem;
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 8px;
+                    margin-bottom: 0.5rem;
+                    transition: all 0.2s;
+                }
+
+                .ping-device-item:hover {
+                    background: rgba(255, 255, 255, 0.05);
+                }
+
+                .device-status-dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    flex-shrink: 0;
+                }
+
+                .device-info {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.15rem;
+                }
+
+                .device-name {
+                    font-weight: 600;
+                    color: #fff;
+                    font-size: 0.9rem;
+                }
+
+                .device-ip {
+                    font-family: monospace;
+                    color: #9ca3af;
+                    font-size: 0.8rem;
+                }
+
+                .device-actions {
+                    display: flex;
+                    gap: 0.25rem;
+                }
+
+                .device-action-btn {
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    color: #9ca3af;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .device-action-btn:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: #fff;
+                }
+
+                .device-action-btn.test-btn:hover {
+                    color: #22c55e;
+                    border-color: #22c55e;
+                }
+
+                .device-action-btn.edit-btn:hover {
+                    color: #3b82f6;
+                    border-color: #3b82f6;
+                }
+
+                .device-action-btn.delete-btn:hover {
+                    color: #ef4444;
+                    border-color: #ef4444;
+                }
+
+                .bg-yellow-500 {
+                    background-color: #eab308 !important;
+                }
+            </style>
+
+            <!-- Superadmin Only: The Dude Configuration -->
+            <div id="dude-config-container" class="superadmin-only" style="display: none; margin-bottom: 2rem;">
+                <div class="dude-config-panel">
+                    <div class="dude-config-header">
+                        <div class="dude-config-title">
+                            <i data-lucide="settings" style="width:20px;height:20px;color:#f59e0b;"></i>
+                            <span>Configuración The Dude</span>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;">
+                            <button id="btn-test-dude-config" class="test-connection-btn"
+                                onclick="window.testDudeConnection()">
+                                <i data-lucide="wifi" style="width:14px;height:14px;"></i>
+                                Probar
+                            </button>
+                            <button id="btn-save-dude-config" class="save-config-btn" onclick="window.saveDudeConfig()">
+                                <i data-lucide="save" style="width:14px;height:14px;"></i>
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="dude-config-body">
+                        <div class="config-mode-toggle">
+                            <label class="mode-option">
+                                <input type="radio" name="monitor-mode" value="ping" checked>
+                                <span class="mode-label"><i data-lucide="activity"></i> Ping Directo</span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="monitor-mode" value="dude">
+                                <span class="mode-label"><i data-lucide="server"></i> The Dude API</span>
+                            </label>
+                        </div>
+                        <div class="config-fields">
+                            <div class="config-field">
+                                <label>Host / IP</label>
+                                <input type="text" id="dude-host" placeholder="192.168.1.32">
+                            </div>
+                            <div class="config-field">
+                                <label>Puerto</label>
+                                <input type="number" id="dude-port" placeholder="8728" value="8728">
+                            </div>
+                            <div class="config-field">
+                                <label>Usuario</label>
+                                <input type="text" id="dude-user" placeholder="admin">
+                            </div>
+                            <div class="config-field">
+                                <label>Contraseña</label>
+                                <input type="password" id="dude-pass" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div id="dude-config-status" class="config-status" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .dude-config-panel {
+                    background: linear-gradient(145deg, rgba(30, 35, 45, 0.95) 0%, rgba(20, 25, 35, 0.95) 100%);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 12px;
+                    overflow: hidden;
+                }
+
+                .dude-config-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 1rem 1.25rem;
+                    background: rgba(245, 158, 11, 0.1);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                .dude-config-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-weight: 600;
+                    color: #fff;
+                }
+
+                .test-connection-btn,
+                .save-config-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.3rem;
+                    padding: 0.4rem 0.75rem;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .test-connection-btn {
+                    background: transparent;
+                    color: #9ca3af;
+                }
+
+                .test-connection-btn:hover {
+                    background: rgba(59, 130, 246, 0.2);
+                    border-color: #3b82f6;
+                    color: #3b82f6;
+                }
+
+                .save-config-btn {
+                    background: linear-gradient(135deg, #f59e0b, #d97706);
+                    border-color: #f59e0b;
+                    color: white;
+                }
+
+                .save-config-btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+                }
+
+                .dude-config-body {
+                    padding: 1rem;
+                }
+
+                .config-mode-toggle {
+                    display: flex;
+                    gap: 1rem;
+                    margin-bottom: 1rem;
+                    padding: 0.5rem;
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 8px;
+                }
+
+                .mode-option {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                    padding: 0.6rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .mode-option:has(input:checked) {
+                    background: rgba(245, 158, 11, 0.2);
+                    border: 1px solid rgba(245, 158, 11, 0.5);
+                }
+
+                .mode-option input {
+                    display: none;
+                }
+
+                .mode-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                    color: #9ca3af;
+                    font-size: 0.85rem;
+                }
+
+                .mode-option:has(input:checked) .mode-label {
+                    color: #f59e0b;
+                    font-weight: 600;
+                }
+
+                .config-fields {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
+                }
+
+                .config-field label {
+                    display: block;
+                    font-size: 0.75rem;
+                    color: #6b7280;
+                    margin-bottom: 0.25rem;
+                }
+
+                .config-field input {
+                    width: 100%;
+                    padding: 0.5rem;
+                    background: rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    color: #fff;
+                    font-size: 0.85rem;
+                }
+
+                .config-field input:focus {
+                    outline: none;
+                    border-color: #f59e0b;
+                }
+
+                .config-status {
+                    margin-top: 0.75rem;
+                    padding: 0.5rem;
+                    border-radius: 6px;
+                    font-size: 0.8rem;
+                    text-align: center;
+                }
+
+                .config-status.success {
+                    background: rgba(34, 197, 94, 0.2);
+                    color: #4ade80;
+                }
+
+                .config-status.error {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #f87171;
+                }
+
+                .config-status.loading {
+                    background: rgba(59, 130, 246, 0.2);
+                    color: #60a5fa;
+                }
+            </style>
 
             <!-- 2. ACTIVE INCIDENTS PANEL (Hidden if empty) -->
             <div id="active-incidents-container" class="table-container"
@@ -1905,7 +2357,8 @@
                     <textarea id="diagnose-obs" rows="3" placeholder="Detalles técnicos de la falla..."></textarea>
                 </div>
 
-                <button class="primary-btn full-width" onclick="window.saveDiagnosis()">Guardar Diagnóstico</button>
+                <button id="btn-save-diagnose" class="primary-btn full-width" onclick="window.saveDiagnosis()">Guardar
+                    Diagnóstico</button>
             </div>
         </div>
     </div>
@@ -1925,7 +2378,7 @@
 
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
                     <button class="secondary-btn" onclick="window.closeModal('modal-close-incident')">Cancelar</button>
-                    <button class="primary-btn" onclick="window.confirmCloseIncident()"
+                    <button id="btn-confirm-close" class="primary-btn" onclick="window.confirmCloseIncident()"
                         style="background: #22c55e; border-color: #22c55e;">
                         <i data-lucide="check"></i> Confirmar Restauración
                     </button>
@@ -2001,7 +2454,7 @@
                     </select>
                 </div>
 
-                <button class="primary-btn" onclick="window.submitBatteryIncident()">
+                <button id="btn-submit-battery" class="primary-btn" onclick="window.submitBatteryIncident()">
                     ⚡ Registrar en Batería
                 </button>
             </div>
@@ -2073,6 +2526,82 @@
             }
         };
     </script>
+
+    <!-- Ping Device Modal -->
+    <div id="ping-device-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"
+                style="background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);">
+                <h2 id="device-modal-title" style="display:flex;align-items:center;gap:0.5rem;">
+                    <i data-lucide="router" style="width:20px;height:20px;color:#818cf8;"></i>
+                    Agregar Dispositivo
+                </h2>
+                <span class="close-modal" onclick="window.closePingDeviceModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <input type="hidden" id="device-id">
+                <div class="form-group">
+                    <label>Nombre del Nodo</label>
+                    <input type="text" id="device-name" placeholder="Ej: NUEVA BRAUNAU"
+                        style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Dirección IP</label>
+                    <input type="text" id="device-ip" placeholder="Ej: 192.168.1.10" style="font-family: monospace;">
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="device-type">
+                        <option value="node">Nodo</option>
+                        <option value="router">Router</option>
+                        <option value="switch">Switch</option>
+                        <option value="olt">OLT</option>
+                    </select>
+                </div>
+                <button class="primary-btn full-width" onclick="window.savePingDevice()"
+                    style="margin-top: 1rem; background: linear-gradient(135deg, #818cf8, #6366f1);">
+                    <i data-lucide="save" style="width:16px;height:16px;"></i>
+                    Guardar Dispositivo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Incident Modal -->
+    <div id="close-incident-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="check-circle-2"></i> Restaurar Servicio</h2>
+                <span class="close-modal" onclick="closeModal('close-incident-modal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label>Nodo:</label>
+                <div id="close-modal-node" style="font-weight:bold; color:#fff; margin-bottom:1rem;"></div>
+            </div>
+            <div class="form-group">
+                <label for="close-time-input">Hora de Restauración:</label>
+                <input type="datetime-local" id="close-time-input" class="form-input">
+                <small style="color:var(--color-texto-secundario); display:block; margin-top:0.25rem;">
+                    Por defecto: Ahora mismo.
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="close-notes">Notas de Resolución (Opcional):</label>
+                <textarea id="close-notes" class="form-input" rows="3"
+                    placeholder="Ej: Cambio de fuente de poder..."></textarea>
+            </div>
+            <input type="hidden" id="close-ticket-id">
+            <button id="btn-confirm-close" class="primary-btn" onclick="window.confirmCloseIncident()"
+                style="width:100%; margin-top:1rem; background: #22c55e;">
+                Confirmar Restauración
+            </button>
+        </div>
+    </div>
+
+    <!-- Ping Devices JS Module -->
+    <script type="module" src="./js/ping-devices.js"></script>
+    <!-- Dude Config JS Module -->
+    <script type="module" src="./js/dude-config.js"></script>
 </body>
 
 </html>

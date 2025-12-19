@@ -42,11 +42,25 @@ async function callApi(endpoint, method, body) {
         ? `${API_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}_t=${Date.now()}`
         : `${API_URL}${endpoint}`;
 
-    const response = await fetch(urlWithCache, options);
+    let response;
+    try {
+        response = await fetch(urlWithCache, options);
+    } catch (networkError) {
+        // Handle offline/network failure
+        console.error("Network Error:", networkError);
+        throw new Error("No hay conexión con el servidor. Verifica tu internet.");
+    }
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error en API");
+        let errorMsg = "Error en API";
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorData.message || errorMsg;
+        } catch (jsonError) {
+            // response was not JSON
+            errorMsg = response.statusText || ("Error " + response.status);
+        }
+        throw new Error(errorMsg);
     }
 
     return await response.json();
@@ -72,171 +86,206 @@ const COLLECTION_NAME = 'uptime_logs';
 // 1. DATA LOADING & RENDERING
 // ==========================================
 
-export async function loadUptimeLogs() {
-    console.log("📅 [Uptime] Cargando registros...");
+// Global listener variable
+let uptimeListener = null;
+const notifiedIncidents = new Set(); // Track notified IDs to prevent repetitive alerts
+
+export function loadUptimeLogs() {
+    console.log("📅 [Uptime] Iniciando monitor en tiempo real...");
     const activeTableBody = document.getElementById('active-incidents-body');
     const activeContainer = document.getElementById('active-incidents-container');
     const historyTableBody = document.getElementById('uptime-table-body');
     const loadingSpinner = document.getElementById('loading-spinner');
 
-    // Clean up old timers to prevent memory leaks
+    // Clean up old timers
     TimerManager.stopAll();
 
     if (loadingSpinner) loadingSpinner.style.display = 'flex';
-
-    // Show skeleton loaders while loading
     if (historyTableBody) showSkeleton(historyTableBody, 5);
     if (activeTableBody) activeTableBody.innerHTML = '';
 
-    try {
-        // Obtener incidentes via API del backend
-        const allIncidents = await callApi('/uptime/list', 'GET');
+    // Unsubscribe previous listener if exists
+    if (uptimeListener) {
+        uptimeListener();
+        uptimeListener = null;
+    }
 
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
+    // LISTENER EN TIEMPO REAL (Socket)
+    // Esto reemplaza al fetch() y permite actualización instantánea
+    uptimeListener = db.collection(COLLECTION_NAME)
+        .orderBy('start_date', 'desc')
+        .onSnapshot(async (snapshot) => {
+            console.log("⚡ [Realtime] Recibida actualización de Firestore");
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
 
-        // Cache data for filtering
-        allIncidentsCache = allIncidents;
-        filteredIncidents = [...allIncidents];
+            const allIncidents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Update last update indicator
-        updateLastUpdateIndicator();
-
-        // Populate node filter dropdown
-        populateNodeFilter(allIncidents);
-
-        const activeIncidents = [];
-        const historyIncidents = [];
-
-        allIncidents.forEach(data => {
-            if (!data.end_date) {
-                activeIncidents.push(data);
-            } else {
-                historyIncidents.push(data);
-            }
-        });
-
-        // RENDER ACTIVE
-        if (activeIncidents.length > 0) {
-            if (activeContainer) activeContainer.style.display = 'block';
-            let activeHtml = '';
-            activeIncidents.forEach(data => {
-                // Format PONs display
-                const ponsDisplay = data.affected_pons && data.affected_pons.length > 0
-                    ? data.affected_pons.map(pon => `<span class="badge badge-info" style="margin:2px;">${pon}</span>`).join('')
-                    : '<span style="color:#999;">-</span>';
-
-                // Format dependent nodes if any
-                const dependentsDisplay = data.dependent_nodes && data.dependent_nodes.length > 0
-                    ? `<div style="margin-top: 4px;">
-                             <strong style="color: #f59e0b; font-size: 0.75rem;">⚠️ Afecta a:</strong>
-                             ${data.dependent_nodes.map(node => `<span class="badge badge-warning" style="margin:2px; font-size:0.7rem;">${node}</span>`).join('')}
-                           </div>`
-                    : '';
-
-                // Show parent node if this incident is caused by dependency
-                const causedByDisplay = data.caused_by_node
-                    ? `<div style="margin-top: 4px;">
-                             <strong style="color: #8b5cf6; font-size: 0.75rem;">🔗 Causado por:</strong>
-                             <span class="badge" style="background:#8b5cf6; color:white; margin:2px; font-size:0.7rem;">${data.caused_by_node}</span>
-                           </div>`
-                    : '';
-
-                activeHtml += `
-                        <tr>
-                            <td><span class="badge badge-primary">${data.ticket_id}</span></td>
-                            <td>${formatTime(data.start_date)}</td>
-                            <td class="font-bold" style="color: #3b82f6;">${data.node || 'N/A'}</td>
-                            <td>${getFailureBadge(data.failure_type)}</td>
-                            <td>${ponsDisplay}${dependentsDisplay}${causedByDisplay}</td>
-                            <td>${data.affected_customers || 0}</td>
-                            <td class="font-bold" style="color: #ef4444;" id="timer-${data.id}">Calculando...</td>
-                            <td style="display: flex; gap: 4px;">
-                                <button class="icon-btn" onclick="window.viewDetails('${data.id}')" title="Diagnosticar / Editar">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
-                                </button>
-                                <button class="icon-btn" onclick="window.requestCloseIncident('${data.id}')" title="Restaurar Servicio">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-            });
-            if (activeTableBody) activeTableBody.innerHTML = activeHtml;
-
-            // Start timers AFTER HTML is in the DOM
-            activeIncidents.forEach(data => {
-                startLiveTimer(data.id, data.start_date);
+            // 1. Process timestamps
+            allIncidents.forEach(data => {
+                if (data.start_date && data.start_date.toDate) data.start_date = data.start_date.toDate();
+                if (data.end_date && data.end_date.toDate) data.end_date = data.end_date.toDate();
+                if (data.created_at && data.created_at.toDate) data.created_at = data.created_at.toDate();
             });
 
-            // Re-init Lucide icons for action buttons
-            if (window.lucide) window.lucide.createIcons();
-        } else {
-            if (activeContainer) activeContainer.style.display = 'none';
-        }
+            // Cache data
+            allIncidentsCache = allIncidents;
+            filteredIncidents = [...allIncidents];
 
-        // RENDER HISTORY
-        if (historyIncidents.length === 0) {
-            historyTableBody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding: 2rem;">No hay registros recientes.</td></tr>`;
-        } else {
-            let historyHtml = '';
-            historyIncidents.forEach(data => {
-                try {
-                    // Skip if data is null or undefined
-                    if (!data) return;
+            // Update UI elements
+            updateLastUpdateIndicator();
+            populateNodeFilter(allIncidents);
 
-                    // Format PONs
-                    const ponsDisplay = data.affected_pons && data.affected_pons.length > 0
-                        ? data.affected_pons.map(pon => `<span class="badge badge-secondary" style="margin:2px; font-size:0.75rem;">${pon}</span>`).join('')
-                        : '<span style="color:#999;">-</span>';
+            const activeIncidents = [];
+            const historyIncidents = [];
 
-                    // Format % Uptime
-                    const uptimePercent = data.pct_uptime_customer_failure
-                        ? (data.pct_uptime_customer_failure * 100).toFixed(4) + '%'
-                        : '-';
+            allIncidents.forEach(data => {
+                if (!data.end_date) {
+                    activeIncidents.push(data);
 
-                    historyHtml += `
-                        <tr class="fade-in-row">
-                            <td class="font-mono text-sm">${data.ticket_id || '-'}</td>
-                            <td>${data.node || 'N/A'}</td>
-                            <td>${getFailureBadge(data.failure_type)}</td>
-                            <td>${formatDate(data.start_date)}</td>
-                            <td>${formatDate(data.end_date)}</td>
-                            <td class="font-bold">${formatDuration(data.restore_time)}</td>
-                            <td class="text-center">${data.affected_customers || 0}</td>
-                            <td>${ponsDisplay}</td>
-                            <td class="font-bold" style="color: #10b981;">${uptimePercent}</td>
-                            <td class="text-sm truncate-cell" title="${data.notes || ''}">${data.failure_reason || '-'}</td>
-                            <td>
-                                 <button class="icon-btn" onclick="window.viewDetails('${data.id}')" title="Ver Detalles">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                } catch (rowError) {
-                    console.error("Error rendering history row:", rowError, data);
+                    // --- SMART ALERT LOGIC ---
+                    // Only alert if we haven't notified this ID before
+                    // AND the incident is relatively new (created in last 5 mins) to avoid spam on page load
+                    const isNew = !notifiedIncidents.has(data.ticket_id);
+                    const isRecent = (new Date() - new Date(data.start_date)) < 5 * 60 * 1000;
+
+                    if (isNew && isRecent) {
+                        notifiedIncidents.add(data.ticket_id);
+
+                        // Sonido de alerta (opcional)
+                        // playAlertSound(); 
+
+                        // Toast Notification
+                        showToast(`🚨 NUEVO INCIDENTE: ${data.node}`, 'error');
+
+                        // Push Notification
+                        if (Notification.permission === "granted") {
+                            new Notification(`🚨 Caida Detectada: ${data.node}`, {
+                                body: `Ticket: ${data.ticket_id} - ${data.failure_type}`,
+                                icon: "img/icon.png"
+                            });
+                        }
+                    } else {
+                        // Mark as notified so we don't alert on future updates (e.g. comments)
+                        notifiedIncidents.add(data.ticket_id);
+                    }
+
+                } else {
+                    historyIncidents.push(data);
                 }
             });
-            if (historyTableBody) historyTableBody.innerHTML = historyHtml;
-        }
 
-        // Update KPI Cards
-        updateStats(activeIncidents, historyIncidents);
+            // RENDER ACTIVE
+            renderActiveIncidents(activeIncidents, activeContainer, activeTableBody);
 
-        // Mark data as loaded to allow auto-incident creation
-        dataLoaded = true;
+            // RENDER HISTORY
+            renderHistoryTable(historyIncidents);
 
-        // Render Analytics Charts
-        initCharts();
-        renderUptimeLineChart(historyIncidents);
-        renderTopNodesChart([...activeIncidents, ...historyIncidents]);
+            // UPDATE KPI & CHARTS
+            updateStats(activeIncidents, historyIncidents);
 
-        // Re-init icons
+            // Mark loaded
+            dataLoaded = true;
+
+            // Render Analytics
+            initCharts();
+            renderUptimeLineChart(historyIncidents);
+            renderTopNodesChart([...activeIncidents, ...historyIncidents]);
+
+            // Re-init icons
+            if (window.lucide) window.lucide.createIcons();
+
+        }, (error) => {
+            console.error("❌ Error en listener Realtime:", error);
+            if (historyTableBody) historyTableBody.innerHTML = `<tr><td colspan="11">Error de conexión: ${error.message}</td></tr>`;
+        });
+}
+
+function renderActiveIncidents(activeIncidents, container, tableBody) {
+    if (activeIncidents.length > 0) {
+        if (container) container.style.display = 'block';
+        let activeHtml = '';
+        activeIncidents.forEach(data => {
+            // Logic for PONs display
+            let ponsDisplay = '<span style="color: #4b5563;">-</span>';
+            if (data.affected_pons && data.affected_pons.length > 0) {
+                if (data.affected_pons.includes("NODO_COMPLETO")) {
+                    ponsDisplay = `<span class="glass-badge danger">🚨 NODO COMPLETO</span>`;
+                } else if (data.affected_pons.length > 3) {
+                    ponsDisplay = `<span class="glass-badge secondary" title="${data.affected_pons.join(', ')}">${data.affected_pons.length} PONs</span>`;
+                } else {
+                    ponsDisplay = data.affected_pons.map(p => {
+                        const pName = p.replace('PON ', ''); // Shorten
+                        return `<span class="glass-badge secondary" style="font-size: 0.7rem;">${pName}</span>`;
+                    }).join(' ');
+                }
+            }
+
+            // Dependency Logic
+            const dependentsDisplay = data.dependent_nodes && data.dependent_nodes.length > 0
+                ? `<div style="margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                         <span style="color: #f59e0b; font-size: 0.75rem;">⚠️ Afecta:</span>
+                         <span class="glass-badge warning" title="${data.dependent_nodes.join(', ')}">${data.dependent_nodes.length} Nodos</span>
+                       </div>`
+                : '';
+
+            const causedByDisplay = data.caused_by_node
+                ? `<div style="margin-top: 4px;">
+                         <span class="glass-badge info" style="font-size: 0.7rem;">🔗 Causa: ${data.caused_by_node}</span>
+                       </div>`
+                : '';
+
+            // Safe strings
+            const safeNode = escapeHTML(data.node || 'N/A');
+
+            activeHtml += `
+                    <tr class="modern-row" style="background: rgba(239, 68, 68, 0.05); border-left: 2px solid #ef4444;">
+                        <td style="vertical-align: middle;">
+                            <span class="ticket-pill" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">${data.ticket_id}</span>
+                        </td>
+                        <td style="color: #e5e7eb; font-size: 0.9rem;">${formatTime(data.start_date)}</td>
+                        <td style="font-weight: 600; color: #fff; font-size: 0.95rem;">${safeNode}</td>
+                        <td>${getFailureBadge(data.failure_type)}</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div>${ponsDisplay}</div>
+                                ${dependentsDisplay}
+                                ${causedByDisplay}
+                            </div>
+                        </td>
+                        <td class="text-center" style="font-weight: 500;">
+                             ${data.affected_customers > 0 ? `<span style="color:#f87171;">${data.affected_customers}</span>` : '<span style="color:#4b5563;">0</span>'}
+                        </td>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #ef4444;" id="timer-${data.id}">00:00:00</td>
+                        <td>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button class="icon-btn" onclick="window.viewDetails('${data.id}')" 
+                                        style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 6px; border-radius: 6px; color: #3b82f6;"
+                                        title="Diagnosticar / Editar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+                                </button>
+                                <button class="icon-btn" onclick="window.requestCloseIncident('${data.id}')" 
+                                        style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); padding: 6px; border-radius: 6px; color: #22c55e;"
+                                        title="Restaurar Servicio">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+        });
+        if (tableBody) tableBody.innerHTML = activeHtml;
+
+        activeIncidents.forEach(data => {
+            startLiveTimer(data.id, data.start_date);
+        });
+
+        // Ensure icons render
         if (window.lucide) window.lucide.createIcons();
 
-    } catch (error) {
-        console.error("❌ Error loading logs:", error);
-        if (historyTableBody) historyTableBody.innerHTML = `<tr><td colspan="11">Error: ${error.message}</td></tr>`;
+    } else {
+        if (container) container.style.display = 'none';
+        // Clear table body just in case
+        if (tableBody) tableBody.innerHTML = '';
     }
 }
 
@@ -294,6 +343,15 @@ window.applyFilters = function () {
 
     // Re-render the history table with filtered data
     renderHistoryTable(filteredIncidents.filter(i => i.end_date));
+
+    // --- NEW: Update Charts with filtered data ---
+    if (typeof renderUptimeLineChart === 'function') {
+        renderUptimeLineChart(filteredIncidents.filter(i => i.end_date));
+    }
+    if (typeof renderTopNodesChart === 'function') {
+        renderTopNodesChart(filteredIncidents);
+    }
+
     showToast(`Mostrando ${filteredIncidents.filter(i => i.end_date).length} incidentes`, 'info');
 };
 
@@ -353,42 +411,257 @@ function populateNodeFilter(incidents) {
 }
 
 function renderHistoryTable(historyIncidents) {
+    // Inject modern styles if not present
+    if (!document.getElementById('modern-table-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'modern-table-styles';
+        styles.textContent = `
+            .glass-badge {
+                padding: 4px 10px;
+                border-radius: 9999px; /* Pill shape */
+                font-size: 0.7rem;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                white-space: nowrap;
+                backdrop-filter: blur(4px);
+                border: 1px solid transparent;
+            }
+            .glass-badge.danger { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.2); }
+            .glass-badge.warning { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.2); }
+            .glass-badge.info { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-color: rgba(59, 130, 246, 0.2); }
+            .glass-badge.secondary { background: rgba(107, 114, 128, 0.1); color: #9ca3af; border-color: rgba(107, 114, 128, 0.2); }
+            
+            .modern-row td {
+                padding: 1rem 0.75rem;
+                vertical-align: middle;
+                border-bottom: 1px solid rgba(255,255,255,0.03);
+                transition: background 0.2s;
+            }
+            .modern-row:hover td {
+                background: rgba(255,255,255,0.02);
+            }
+            .ticket-pill {
+                font-family: 'JetBrains Mono', monospace;
+                background: rgba(0,0,0,0.3);
+                padding: 2px 6px;
+                border-radius: 4px;
+                color: #9ca3af;
+                font-size: 0.75rem;
+            }
+
+            /* Modal Diagnose Modernization */
+            #modal-diagnose .modal-header .close-modal {
+                background: transparent;
+                color: #94a3b8;
+                font-size: 2rem;
+                line-height: 2rem;
+                height: auto;
+                width: auto;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+            #modal-diagnose .modal-header .close-modal:hover { opacity: 1; color: white; }
+
+            #modal-diagnose .modal-content {
+                background: #1e293b;
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                border-radius: 16px;
+            }
+            #modal-diagnose h2 {
+                background: linear-gradient(to right, #a78bfa, #3b82f6);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            #modal-diagnose .form-group label {
+                color: #94a3b8;
+                font-weight: 500;
+            }
+            #modal-diagnose input[type="text"],
+            #modal-diagnose input[type="number"],
+            #modal-diagnose textarea,
+            #modal-diagnose select {
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                padding: 0.75rem;
+                color: white;
+                font-size: 0.95rem;
+                width: 100%;
+                transition: all 0.2s;
+            }
+            #modal-diagnose input:focus,
+            #modal-diagnose select:focus,
+            #modal-diagnose textarea:focus {
+                outline: none;
+                border-color: #8b5cf6;
+                box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+            }
+            
+            /* Area Buttons */
+            .area-btn {
+                background: transparent;
+                color: #94a3b8;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 8px;
+                padding: 6px 12px; /* Compressed padding */
+                font-size: 0.85rem;
+                transition: all 0.2s;
+                white-space: nowrap; /* Prevent internal wrapping */
+            }
+            .area-btn:hover { background: rgba(255,255,255,0.05); }
+            .area-btn.active {
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                color: white;
+                border-color: transparent;
+                box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            }
+
+            /* Toggle Switch */
+            .checkbox-container {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                cursor: pointer;
+                user-select: none;
+            }
+            .checkbox-container input { display: none; }
+            .checkmark {
+                position: relative;
+                display: block; /* Fix for 0-width span issue */
+                height: 24px;
+                width: 44px;
+                background-color: #334155;
+                border-radius: 9999px;
+                transition: 0.3s;
+                flex-shrink: 0; /* Vital for alignment */
+            }
+            .checkmark:after {
+                content: "";
+                position: absolute;
+                left: 2px;
+                top: 2px;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: white;
+                transition: 0.3s;
+            }
+            .checkbox-container input:checked ~ .checkmark { background-color: #ef4444; }
+            .checkbox-container input:checked ~ .checkmark:after { transform: translateX(20px); }
+
+            #btn-save-diagnose {
+                background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+                border: none;
+                font-weight: 600;
+                box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+                padding: 1rem;
+                border-radius: 8px;
+            }
+            #btn-save-diagnose:hover { filter: brightness(1.1); }
+        `;
+        document.head.appendChild(styles);
+    }
+
     const historyTableBody = document.getElementById('uptime-table-body');
     if (!historyTableBody) return;
 
     if (historyIncidents.length === 0) {
-        historyTableBody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding: 2rem;">No hay registros que coincidan con los filtros.</td></tr>`;
+        historyTableBody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding: 3rem; color: #6b7280;">
+            <i data-lucide="inbox" style="width: 32px; height: 32px; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+            <br>No hay registros que coincidan con los filtros.
+        </td></tr>`;
+        if (window.lucide) window.lucide.createIcons();
         return;
     }
 
     let historyHtml = '';
+    let reviewCount = 0;
+
     historyIncidents.forEach(data => {
         try {
             if (!data) return;
 
-            const ponsDisplay = data.affected_pons && data.affected_pons.length > 0
-                ? data.affected_pons.map(pon => `<span class="badge badge-secondary" style="margin:2px; font-size:0.75rem;">${pon}</span>`).join('')
-                : '<span style="color:#999;">-</span>';
+            // Review Logic
+            const needsReview = data.needs_review === true;
+            if (needsReview) reviewCount++;
 
-            const uptimePercent = data.pct_uptime_customer_failure
+            // Format PONs nicely
+            let ponsDisplay = '<span style="color: #4b5563;">-</span>';
+            if (data.affected_pons && data.affected_pons.length > 0) {
+                if (data.affected_pons.includes("NODO_COMPLETO")) {
+                    ponsDisplay = `<span class="glass-badge danger">🚨 NODO COMPLETO</span>`;
+                } else if (data.affected_pons.length > 2) {
+                    ponsDisplay = `<span class="glass-badge secondary" title="${data.affected_pons.join(', ')}">${data.affected_pons.length} PONs Afectados</span>`;
+                } else {
+                    ponsDisplay = data.affected_pons.map(p => {
+                        const isDep = p === 'POR_DEPENDENCIA';
+                        const pName = p.replace('PON ', '');
+                        return `<span class="glass-badge ${isDep ? 'warning' : 'secondary'}">${isDep ? '🔗 Dep' : pName}</span>`
+                    }).join(' ');
+                }
+            }
+
+            const uptimePercent = (data.pct_uptime_customer_failure !== undefined && data.pct_uptime_customer_failure !== null)
                 ? (data.pct_uptime_customer_failure * 100).toFixed(4) + '%'
                 : '-';
 
+            const safeNode = escapeHTML(data.node || 'N/A');
+            const safeReason = escapeHTML(data.failure_reason || '-');
+            const safeNotes = escapeHTML(data.notes || '');
+
+            // Row Styling
+            const rowClass = needsReview ? "modern-row needs-review-row" : "modern-row";
+            const rowStyle = needsReview ? "background: rgba(250, 204, 21, 0.03); border-left: 2px solid #facc15;" : "";
+
+            // Icon logic for Ticket
+            const statusIndicator = needsReview
+                ? `<i data-lucide="alert-circle" style="width:14px; color:#facc15; margin-right:4px;"></i>`
+                : ``;
+
+            // Merge details into reason for cleaner look? No, keep separate for now.
+            // Clean up Reason if it's "Caída por dependencia..." to just "🔗 Dependencia"
+            let displayReason = safeReason;
+            if (safeReason.includes("Caída por dependencia")) {
+                displayReason = `<span style="color:#fbbf24; font-size:0.8rem;">🔗 Dependencia</span>`;
+            } else if (safeReason.includes("Reportado automáticamente")) {
+                displayReason = `<span style="color:#60a5fa; font-size:0.8rem;">🤖 Auto-Reporte</span>`;
+            }
+
             historyHtml += `
-                <tr class="fade-in-row">
-                    <td class="font-mono text-sm">${data.ticket_id || '-'}</td>
-                    <td>${data.node || 'N/A'}</td>
-                    <td>${getFailureBadge(data.failure_type)}</td>
-                    <td>${formatDate(data.start_date)}</td>
-                    <td>${formatDate(data.end_date)}</td>
-                    <td class="font-bold">${formatDuration(data.restore_time)}</td>
-                    <td class="text-center">${data.affected_customers || 0}</td>
-                    <td>${ponsDisplay}</td>
-                    <td class="font-bold" style="color: #10b981;">${uptimePercent}</td>
-                    <td class="text-sm truncate-cell" title="${data.notes || ''}">${data.failure_reason || '-'}</td>
+                <tr class="${rowClass}" style="${rowStyle}">
                     <td>
-                         <button class="icon-btn" onclick="window.viewDetails('${data.id}')" title="Ver Detalles">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <div style="display:flex; align-items:center;">
+                            ${statusIndicator}
+                            <span class="ticket-pill">${data.ticket_id || '?'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: #e5e7eb; font-size: 0.9rem;">${safeNode}</div>
+                        <div style="font-size: 0.7rem; color: #6b7280;">ID: ${data.node_id || '-'}</div>
+                    </td>
+                    <td>${getFailureBadge(data.failure_type)}</td>
+                    <td style="color: #9ca3af; font-size: 0.85rem;">${formatDate(data.start_date)}</td>
+                    <td style="color: #9ca3af; font-size: 0.85rem;">${formatDate(data.end_date)}</td>
+                    <td style="font-family: monospace; font-weight: 600; color: #d1d5db;">${formatDuration(data.restore_time)}</td>
+                    <td class="text-center" style="font-weight: 500;">
+                        ${data.affected_customers > 0 ? `<span style="color:#f87171;">${data.affected_customers}</span>` : '<span style="color:#4b5563;">0</span>'}
+                    </td>
+                    <td>${ponsDisplay}</td>
+                    <td style="font-family: monospace; color: #10b981;">${uptimePercent}</td>
+                    <td style="max-width: 200px;">
+                        <div class="truncate-cell" title="${safeReason}" style="font-size: 0.85rem;">${displayReason}</div>
+                        ${safeNotes ? `<div style="font-size: 0.7rem; color: #6b7280; margin-top: 2px;" class="truncate-cell">${safeNotes}</div>` : ''}
+                    </td>
+                    <td>
+                         <button class="icon-btn" onclick="window.viewDetails('${data.id}')" 
+                                 style="background: transparent; border: 1px solid rgba(255,255,255,0.1); padding: 4px; border-radius: 6px; transition: all 0.2s;"
+                                 onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6'"
+                                 onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='inherit'"
+                                 title="Ver Detalles">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </td>
                 </tr>
@@ -398,7 +671,41 @@ function renderHistoryTable(historyIncidents) {
         }
     });
     historyTableBody.innerHTML = historyHtml;
+
+    updateReviewCounter(reviewCount);
     if (window.lucide) window.lucide.createIcons();
+}
+
+// NEW: Helper to update counter UI
+function updateReviewCounter(count) {
+    const counterEl = document.getElementById('review-pending-count');
+    if (!counterEl) {
+        // Inject counter if not exists (Lazy Injection)
+        const header = document.querySelector('h2'); // "Historial de Incidentes"
+        if (header) {
+            const badge = document.createElement('span');
+            badge.id = 'review-pending-count';
+            badge.className = 'badge badge-warning';
+            badge.style.display = 'none';
+            badge.style.marginLeft = '10px';
+            badge.style.fontSize = '0.9rem';
+            header.appendChild(badge);
+        }
+    }
+
+    // Update existing element
+    const badge = document.getElementById('review-pending-count');
+    if (badge) {
+        if (count > 0) {
+            badge.style.display = 'inline-block';
+            badge.innerHTML = `⚠️ ${count} Pendientes de Revisión`;
+            badge.style.backgroundColor = '#fef08a';
+            badge.style.color = '#854d0e';
+            badge.style.border = '1px solid #fde047';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
 }
 
 window.openModal = (modalId) => {
@@ -447,15 +754,55 @@ window.closeModal = (modalId) => {
 };
 
 // --- NEW INCIDENT ---
+// Helper GLOBAL para botones con carga
+window.setBtnLoading = function (btnId, isLoading, originalText = null) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+
+    if (isLoading) {
+        if (!btn.dataset.originalText) {
+            btn.dataset.originalText = originalText || btn.innerHTML;
+        }
+        // Force width to prevent layout jump if possible, or just replace content
+        const width = btn.offsetWidth;
+        if (width > 0) btn.style.minWidth = width + 'px';
+
+        btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin" style="width:18px;height:18px;margin-right:8px;"></i> Procesando...`;
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+    } else {
+        btn.innerHTML = btn.dataset.originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        btn.style.minWidth = '';
+        if (window.lucide) window.lucide.createIcons();
+    }
+};
+
+// --- NEW INCIDENT ---
 window.submitNewIncident = async () => {
     const nodeSelect = document.getElementById('new-incident-node');
     const nodeName = nodeSelect.options[nodeSelect.selectedIndex].text; // Guardamos NOMBRE, no ID
     const nodeId = nodeSelect.value;
     const type = document.getElementById('new-incident-type').value;
 
+    const btnId = 'btn-submit-incident'; // ID added in HTML previously or assumed to exist? 
+    // Wait, I saw id="btn-submit-incident" in HTML line 2219 in Step 1775. Yes it exists.
+
     if (!nodeId) {
         alert("Por favor seleccione un Nodo.");
         return;
+    }
+
+    // --- DUPLICATE CHECK ---
+    const isAlreadyActive = allIncidentsCache.some(inc =>
+        !inc.end_date &&
+        inc.node === nodeName
+    );
+    if (isAlreadyActive) {
+        if (!confirm(`⚠️ El nodo "${nodeName}" ya tiene un incidente activo.\n\n¿Estás seguro de que quieres crear otro?`)) {
+            return;
+        }
     }
 
     // Get ticket from user input, or generate if empty
@@ -469,6 +816,9 @@ window.submitNewIncident = async () => {
         ticketInput.focus();
         return;
     }
+
+    // Set Loading State
+    window.setBtnLoading(btnId, true);
 
     const now = new Date();
 
@@ -544,6 +894,9 @@ window.submitNewIncident = async () => {
         } else {
             alert("Error creando incidente: " + e.message);
         }
+    } finally {
+        // Reset Loading State
+        window.setBtnLoading(btnId, false);
     }
 };
 
@@ -594,7 +947,10 @@ window.selectArea = function (btn) {
 
 window.saveDiagnosis = async () => {
     const id = document.getElementById('diagnose-ticket-id').value;
+    const btnId = 'btn-save-diagnose';
     if (!id) return;
+
+    window.setBtnLoading(btnId, true);
 
     const updates = {
         failure_type: document.getElementById('diagnose-type').value,
@@ -602,7 +958,8 @@ window.saveDiagnosis = async () => {
         owner_area: document.getElementById('diagnose-area').value,
         affected_customers: parseInt(document.getElementById('diagnose-clients').value) || 0,
         has_affected_customers: document.getElementById('diagnose-clients-bool').checked,
-        notes: document.getElementById('diagnose-obs').value
+        notes: document.getElementById('diagnose-obs').value,
+        needs_review: false // <--- NEW: Reviewed!
     };
 
     try {
@@ -624,30 +981,64 @@ window.saveDiagnosis = async () => {
         } else {
             alert("Error actualizando: " + e.message);
         }
+    } finally {
+        window.setBtnLoading(btnId, false);
     }
 };
 
 // --- CLOSE INCIDENT ---
 window.requestCloseIncident = (id) => {
+    const incident = allIncidentsCache.find(i => i.id === id);
+    const nodeName = incident ? incident.node : 'Desconocido';
+
+    // Set Modal Data
     document.getElementById('close-ticket-id').value = id;
-    window.openModal('modal-close-incident');
+    document.getElementById('close-modal-node').textContent = nodeName;
+    document.getElementById('close-notes').value = '';
+
+    // Set default time to NOW (Correct format for datetime-local: YYYY-MM-DDTHH:mm)
+    const now = new Date();
+    // Adjust to local timezone (simple way)
+    const localIso = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+    document.getElementById('close-time-input').value = localIso;
+
+    window.openModal('close-incident-modal');
 };
 
 window.confirmCloseIncident = async () => {
     const id = document.getElementById('close-ticket-id').value;
+    const notes = document.getElementById('close-notes').value;
+    const timeInput = document.getElementById('close-time-input').value;
+    const btnId = 'btn-confirm-close';
+
     if (!id) return;
 
+    window.setBtnLoading(btnId, true);
+
     try {
-        // Llamar al backend que calcula todo server-side
-        const result = await callApi(`/uptime/${id}/close`, 'POST');
+        const payload = {
+            notes: notes
+        };
+
+        // If user selected a custom time, send it
+        if (timeInput) {
+            payload.end_date = new Date(timeInput).toISOString();
+        }
+
+        // Llamar al backend
+        const result = await callApi(`/uptime/${id}/close`, 'POST', payload);
 
         console.log(`✅ Incidente cerrado: ${result.duration} minutos`);
 
-        window.closeModal('modal-close-incident');
+        if (window.showToast) window.showToast('✅ Servicio restaurado exitosamente', 'success');
+
+        window.closeModal('close-incident-modal');
         loadUptimeLogs();
     } catch (e) {
         console.error(e);
         alert("Error cerrando ticket: " + e.message);
+    } finally {
+        window.setBtnLoading(btnId, false);
     }
 };
 
@@ -657,25 +1048,58 @@ window.confirmCloseIncident = async () => {
 async function checkActiveIncidentInFirebase(nodeName, deviceName, affectedPons) {
     // Use already-loaded incident cache instead of API call
     // API doesn't support filtering, so we filter locally
-    const hasActive = allIncidentsCache.some(inc => {
-        // Only check active incidents (no end_date)
-        if (inc.end_date) return false;
+    const now = new Date();
+    const COOLDOWN_MINUTES = 5; // Time to wait before recreating an auto-incident
 
-        // Match by node name
+    // Check for ACTIVE incidents
+    const hasActive = allIncidentsCache.some(inc => {
+        if (inc.end_date) return false;
         if (inc.node !== nodeName) return false;
 
-        // Check if this specific device/PON is already covered
+        // Check availability
         if (inc.affected_pons) {
             return inc.affected_pons.includes(deviceName) ||
                 inc.affected_pons.includes("NODO_COMPLETO") ||
                 (Array.isArray(affectedPons) && affectedPons.some(pon => inc.affected_pons.includes(pon)));
         }
-
         return false;
     });
 
-    console.log(`🔍 Cache check for ${nodeName}/${deviceName}: ${hasActive ? 'HAS ACTIVE' : 'NO ACTIVE'}`);
-    return hasActive;
+    if (hasActive) {
+        console.log(`🔍 Cache check: Active incident found for ${nodeName}/${deviceName}`);
+        return true;
+    }
+
+    // Check for RECENTLY CLOSED incidents (Cooldown)
+    const recentlyClosed = allIncidentsCache.some(inc => {
+        if (!inc.end_date) return false; // Skip active ones (already checked)
+        if (inc.node !== nodeName) return false;
+
+        // Verify time elapsed since closure
+        let endDate = inc.end_date;
+        // Handle Firestore timestamp or string
+        if (endDate.toDate) endDate = endDate.toDate();
+        else if (typeof endDate === 'string') endDate = new Date(endDate);
+
+        const minutesSinceClose = (now - endDate) / (1000 * 60);
+        if (minutesSinceClose > COOLDOWN_MINUTES) return false; // Too old
+
+        // Match device
+        if (inc.affected_pons) {
+            return inc.affected_pons.includes(deviceName) ||
+                inc.affected_pons.includes("NODO_COMPLETO") ||
+                (Array.isArray(affectedPons) && affectedPons.some(pon => inc.affected_pons.includes(pon)));
+        }
+        return false;
+    });
+
+    if (recentlyClosed) {
+        console.log(`❄️ COOLDOWN: Recently closed incident for ${nodeName} (less than ${COOLDOWN_MINUTES}m ago). Skipping auto-creation.`);
+        return true; // Return TRUE to prevent creation (act as if active)
+    }
+
+    console.log(`🔍 Cache check for ${nodeName}/${deviceName}: NO ACTIVE, NO COOLDOWN`);
+    return false;
 }
 
 // ==========================================
@@ -758,11 +1182,34 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function getFailureBadge(type) {
-    if (!type) return '<span class="badge badge-secondary">?</span>';
+    if (!type) return '<span class="glass-badge secondary">? Sin Clasificar</span>';
     const lower = type.toLowerCase();
-    if (lower.includes('corte')) return `<span class="badge badge-danger">${type}</span>`;
-    if (lower.includes('bateria') || lower.includes('energia')) return `<span class="badge badge-warning">${type}</span>`;
-    return `<span class="badge badge-info">${type}</span>`;
+
+    // Icon mapping
+    let icon = '';
+    let styleClass = 'info';
+
+    if (lower.includes('corte')) {
+        styleClass = 'danger';
+        icon = '✂️';
+    } else if (lower.includes('bateria') || lower.includes('energia')) {
+        styleClass = 'warning';
+        icon = '⚡';
+    } else if (lower.includes('dependencia')) {
+        styleClass = 'warning';
+        icon = '🔗';
+    } else if (lower.includes('mantenimiento')) {
+        styleClass = 'info';
+        icon = '🛠️';
+    } else if (lower.includes('equipo')) {
+        styleClass = 'danger';
+        icon = '📟';
+    } else {
+        styleClass = 'secondary';
+        icon = '📝';
+    }
+
+    return `<span class="glass-badge ${styleClass}">${icon} ${type}</span>`;
 }
 
 function updateStats(active, history) {
@@ -828,16 +1275,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // === Apply cached role immediately for sidebar visibility ===
+    // === Apply cached role immediately for sidebar visibility (optimistic UI) ===
     const cachedRole = localStorage.getItem('userRole');
     if (cachedRole) {
         applySidebarVisibility(cachedRole);
-        // Redirect non-admin/superadmin immediately based on cache
-        if (cachedRole !== 'superadmin' && cachedRole !== 'admin') {
-            alert('⚠️ Acceso restringido: Esta vista solo está disponible para Admin y SuperAdmin.');
-            window.location.href = 'directorio.html';
-            return;
-        }
+        // NOTE: We DON'T redirect here based on cache - wait for Firebase to confirm
+        // This prevents false "access denied" when cache is stale or missing
     }
 
     // Wait for Firebase auth before loading data
@@ -868,8 +1311,17 @@ document.addEventListener('DOMContentLoaded', () => {
             loadNodes();
             buildSearchCache();
 
-            // Start Live Polling (Lab Integration)
-            startLivePolling();
+            // Initialize Auto-Monitoring Toggle
+            initAutoMonitoringToggle();
+
+            // Initialize Purge Button (Test Mode)
+            setupPurgeButton();
+
+            // Start Live Polling (Lab Integration) - only if enabled
+            if (autoMonitoringEnabled) {
+                startLivePolling();
+            }
+
         } else {
             console.log("⚠️ Usuario no autenticado, redirigiendo...");
             window.location.href = 'login.html';
@@ -903,7 +1355,72 @@ function applySidebarVisibility(role) {
 // ==========================================
 // 5. LIVE LAB MONITORING
 // ==========================================
+// AUTO-MONITORING TOGGLE CONTROL
+// ==========================================
+let autoMonitoringEnabled = true;
 let livePollInterval = null;
+
+// Initialize toggle state from localStorage
+function initAutoMonitoringToggle() {
+    const toggle = document.getElementById('auto-monitoring-toggle');
+    const toggleContainer = toggle?.closest('div.flex');
+
+    // Get user role from cache or localStorage
+    const userRole = localStorage.getItem('userRole') || currentUserRole;
+
+    // Only show toggle for super_admin
+    if (userRole !== 'superadmin') { // Changed 'super_admin' to 'superadmin' to match existing code
+        if (toggleContainer) {
+            toggleContainer.style.display = 'none';
+        }
+        console.log('🔒 Toggle hidden - only visible for superadmin'); // Changed 'super_admin' to 'superadmin'
+        return; // Exit early, don't initialize toggle
+    }
+
+    // Restore state from localStorage
+    const savedState = localStorage.getItem('autoMonitoringEnabled');
+    autoMonitoringEnabled = savedState === null ? true : savedState === 'true';
+
+    if (toggle) {
+        toggle.checked = autoMonitoringEnabled;
+        updateMonitoringUI();
+
+        // Add event listener
+        toggle.addEventListener('change', (e) => {
+            autoMonitoringEnabled = e.target.checked;
+            localStorage.setItem('autoMonitoringEnabled', autoMonitoringEnabled);
+            updateMonitoringUI();
+
+            if (autoMonitoringEnabled) {
+                console.log('✅ Auto-monitoring ENABLED');
+                startLivePolling();
+            } else {
+                console.log('⏸️ Auto-monitoring PAUSED');
+                stopLivePolling();
+            }
+        });
+    }
+}
+
+
+// Update UI based on monitoring state
+function updateMonitoringUI() {
+    const statusText = document.getElementById('monitoring-status-text');
+    if (statusText) {
+        statusText.textContent = autoMonitoringEnabled ? 'ACTIVO' : 'PAUSADO';
+        statusText.className = autoMonitoringEnabled ? 'text-green-400 font-semibold' : 'text-gray-500 font-semibold';
+    }
+}
+
+// Stop live polling
+function stopLivePolling() {
+    if (livePollInterval) {
+        clearInterval(livePollInterval);
+        livePollInterval = null;
+        console.log('⏹️ Live polling stopped');
+    }
+}
+
 
 function startLivePolling() {
     if (livePollInterval) clearInterval(livePollInterval);
@@ -999,14 +1516,21 @@ function checkLiveFailures(devices) {
                     // Mark as pending to prevent duplicates
                     pendingAutoIncidents.add(device.name);
 
-                    showToast(`🚨 ALERTA: ${device.name} detectado CAÍDO (${nodeName})`, 'error');
+                    // --- TOASTS SILENCED (BACKEND MODE) ---
+                    // showToast(`🚨 ALERTA: ${device.name} detectado CAÍDO (${nodeName})`, 'error');
 
                     // Show dependent nodes toast if any
-                    if (dependentNodes.length > 0) {
-                        showToast(`📡 Detectadas ${dependentNodes.length} dependencias afectadas`, 'warning');
-                    }
+                    // if (dependentNodes.length > 0) {
+                    //    showToast(`📡 Detectadas ${dependentNodes.length} dependencias afectadas`, 'warning');
+                    // }
 
                     // 1. Create PRIMARY incident for the failed node
+                    // --- AUTO-CREATION DISABLED (SERVER-SIDE AUTHORITY) ---
+                    // Since we moved to Webhook/Backend monitoring, the frontend should NOT create tickets.
+                    console.log(`⚠️ Frontend detected DOWN for ${nodeName}, but skipping creation (Backend handles it).`);
+                    pendingAutoIncidents.delete(device.name);
+
+                    /* DISABLED:
                     createAutoIncident(nodeName, affectedPons, failureType, []).then(() => {
                         showToast(`✅ Incidente creado: ${nodeName}`, 'success');
 
@@ -1026,6 +1550,7 @@ function checkLiveFailures(devices) {
                     }).finally(() => {
                         pendingAutoIncidents.delete(device.name);
                     });
+                    */
                 } else {
                     console.log(`ℹ️ Active incident already exists for ${nodeName}, skipping auto-creation`);
                 }
@@ -1755,15 +2280,14 @@ window.submitBatteryIncident = async function () {
     const nodeSelect = document.getElementById('battery-node');
     const nodeName = nodeSelect.options[nodeSelect.selectedIndex]?.text;
     const nodeId = nodeSelect.value;
-    const btn = document.querySelector('#modal-battery .primary-btn');
+    const btnId = 'btn-submit-battery';
 
     if (!nodeId) {
         showToast("Por favor seleccione un Nodo.", 'error');
         return;
     }
 
-    // Disable button to prevent double-click
-    if (btn) { btn.disabled = true; btn.textContent = "Registrando..."; }
+    window.setBtnLoading(btnId, true);
 
     const ticketId = 'T' + Math.floor(100000 + Math.random() * 900000);
     const now = new Date();
@@ -1796,7 +2320,7 @@ window.submitBatteryIncident = async function () {
         console.error("Battery Register Error:", e);
         showToast("Error: " + e.message, 'error');
     } finally {
-        if (btn) { btn.disabled = false; btn.textContent = "⚡ Registrar en Batería"; }
+        window.setBtnLoading(btnId, false);
     }
 };
 
@@ -1900,3 +2424,141 @@ if (document.readyState === 'loading') {
 } else {
     initSmartSearch();
 }
+
+// ==========================================
+// 6. TEST MODE UTILITIES
+// ==========================================
+function setupPurgeButton() {
+    const btn = document.getElementById('purge-incidents-btn');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        if (confirm("⚠️ ¿ESTÁS SEGURO?\n\nEsto eliminará TODOS los incidentes (abiertos y cerrados) de la base de datos y limpiará la vista actual.\n\nEsta acción no se puede deshacer.")) {
+            try {
+                const originalContent = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin" style="width:14px; height:14px;"></i> ...';
+                if (window.lucide) window.lucide.createIcons();
+
+                const res = await callApi('/uptime/purge', 'DELETE');
+                if (res.success) {
+                    showToast("✅ Incidentes eliminados correctamente.", "success");
+                    // Reload logs to clear table
+                    loadUptimeLogs();
+                } else {
+                    showToast("❌ Error al eliminar incidentes: " + (res.message || "Error desconocido"), "error");
+                }
+            } catch (e) {
+                console.error("Purge failed:", e);
+                showToast("❌ Error de conexión al purgar.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="trash-2" style="width:14px; height:14px;"></i> RESET';
+                if (window.lucide) window.lucide.createIcons();
+            }
+        }
+    });
+}
+// SECURITY: Escape HTML to prevent XSS
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+window.submitNewIncident = async function () {
+    const btnId = 'btn-submit-incident';
+    const nodeSelect = document.getElementById('new-incident-node');
+    const typeSelect = document.getElementById('new-incident-type');
+    const ticketInput = document.getElementById('new-incident-ticket');
+
+    // 1. Validation
+    if (!nodeSelect || !nodeSelect.value) {
+        showToast("Por favor seleccione un Nodo.", 'error');
+        return;
+    }
+
+    // Get Text (Name) and Value (ID)
+    const nodeName = nodeSelect.options[nodeSelect.selectedIndex].text;
+    const nodeId = nodeSelect.value;
+    // Handle "Tramo de Fibra" removal of emoji if present
+    const cleanNodeName = nodeName.replace(/^〰️\s*/, '').replace(/^📍\s*/, '').trim();
+
+    if (!typeSelect || !typeSelect.value) {
+        showToast("Seleccione un Tipo de Falla.", 'error');
+        return;
+    }
+
+    // 2. Determine Scope (PONs vs Full Node)
+    let affectedPons = [];
+
+    const fullNodeCheck = document.getElementById('full-node-down-checkbox');
+
+    if (fullNodeCheck && fullNodeCheck.checked) {
+        affectedPons = ["NODO_COMPLETO"];
+    } else {
+        // Collect selected PONs from global array (managed by UI)
+        affectedPons = selectedPons || [];
+        if (affectedPons.length === 0) {
+            // Default to "SISTEMA" if nothing specific selected
+            affectedPons = ["SISTEMA"];
+        }
+    }
+
+    // 3. Prepare Payload
+    const now = new Date();
+    // Use manual ticket ID or generate one
+    const ticketId = (ticketInput && ticketInput.value.trim())
+        ? ticketInput.value.trim().toUpperCase()
+        : 'T' + Math.floor(100000 + Math.random() * 900000);
+
+    const docData = {
+        ticket_id: ticketId,
+        node: cleanNodeName, // Backend expects "node" (name)
+        node_id: nodeId || "MANUAL_" + cleanNodeName.replace(/\s+/g, '_'),
+        failure_type: typeSelect.value,
+        failure_reason: "Reportado Manualmente",
+        owner_area: "NOC", // Default area
+        start_date: now,
+        end_date: null, // Open incident
+        affected_customers: 0, // Pending calculation
+        has_affected_customers: false,
+        affected_pons: affectedPons,
+        notes: "Incidente creado manualmente desde panel.",
+        created_at: now
+    };
+
+    // 4. Submit
+    try {
+        window.setBtnLoading(btnId, true);
+        console.log("🚀 Submitting Incident:", docData);
+
+        // Call Backend API
+        await callApi('/uptime/create', 'POST', docData);
+
+        // Success
+        showToast(`✅ Incidente creado: ${ticketId}`, 'success');
+        window.closeModal('modal-new-incident');
+
+        // Refresh table
+        await loadUptimeLogs();
+
+        // Reset Form
+        nodeSelect.value = "";
+        typeSelect.selectedIndex = 0;
+        if (ticketInput) ticketInput.value = "";
+        if (fullNodeCheck) fullNodeCheck.checked = false;
+        selectedPons = [];
+        updateSelectedPonsUI();
+
+    } catch (e) {
+        console.error("Submit Failed:", e);
+        showToast("Error creando incidente: " + e.message, 'error');
+    } finally {
+        window.setBtnLoading(btnId, false);
+    }
+};
