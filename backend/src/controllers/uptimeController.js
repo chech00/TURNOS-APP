@@ -290,18 +290,58 @@ async function syncDudeDevices() {
 }
 
 /**
+ * Initialize device cache from Firestore on server startup
+ */
+async function initializeDeviceCache() {
+    if (CACHE_INITIALIZED) return;
+
+    try {
+        const snapshot = await db.collection('lab_devices').get();
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            DEVICE_CACHE[doc.id] = {
+                status: data.status || 'up',
+                lastUpdate: data.lastUpdate?.toDate() || new Date(),
+                reason: data.reason || 'loaded_from_firestore'
+            };
+        });
+        CACHE_INITIALIZED = true;
+        console.log(`✅ Device cache initialized with ${snapshot.size} devices from Firestore`);
+    } catch (error) {
+        console.error('⚠️ Error initializing device cache from Firestore:', error.message);
+    }
+}
+
+// Initialize cache on module load
+initializeDeviceCache();
+
+/**
  * Updates the cache based on Webhook events
  * Called by webhookController.js
+ * Now persists to Firestore for multi-environment sync
  */
-function updateDeviceCache(name, status, reason = 'webhook') {
+async function updateDeviceCache(name, status, reason = 'webhook') {
     const safeName = name.toUpperCase();
     console.log(`🧠 CACHE UPDATE: ${safeName} -> ${status} (${reason})`);
 
+    // Update memory cache
     DEVICE_CACHE[safeName] = {
         status: status, // 'up' or 'down'
         lastUpdate: new Date(),
         reason: reason
     };
+
+    // Persist to Firestore (non-blocking)
+    try {
+        await db.collection('lab_devices').doc(safeName).set({
+            status: status,
+            lastUpdate: new Date(),
+            reason: reason,
+            name: safeName
+        }, { merge: true });
+    } catch (error) {
+        console.error('⚠️ Error persisting device to Firestore:', error.message);
+    }
 }
 
 /**
@@ -360,6 +400,78 @@ async function purgeIncidents(req, res) {
     }
 }
 
+/**
+ * Add a device to the Lab
+ */
+async function addLabDevice(req, res) {
+    try {
+        const { name, ip } = req.body;
+        if (!name) return res.status(400).json({ error: "Se requiere nombre del dispositivo" });
+
+        const safeName = name.toUpperCase().trim();
+
+        // Add to Firestore
+        await db.collection('lab_devices').doc(safeName).set({
+            name: safeName,
+            ip: ip || '0.0.0.0',
+            status: 'up',
+            lastUpdate: new Date(),
+            reason: 'manual_add'
+        });
+
+        // Update memory cache
+        DEVICE_CACHE[safeName] = {
+            status: 'up',
+            lastUpdate: new Date(),
+            reason: 'manual_add'
+        };
+
+        console.log(`✅ Lab device added: ${safeName}`);
+        res.json({ success: true, device: safeName });
+    } catch (error) {
+        console.error('❌ Error adding lab device:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+/**
+ * Remove a device from the Lab
+ */
+async function removeLabDevice(req, res) {
+    try {
+        const { name } = req.params;
+        if (!name) return res.status(400).json({ error: "Se requiere nombre del dispositivo" });
+
+        const safeName = name.toUpperCase().trim();
+
+        // Remove from Firestore
+        await db.collection('lab_devices').doc(safeName).delete();
+
+        // Remove from memory cache
+        delete DEVICE_CACHE[safeName];
+
+        console.log(`✅ Lab device removed: ${safeName}`);
+        res.json({ success: true, removed: safeName });
+    } catch (error) {
+        console.error('❌ Error removing lab device:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+/**
+ * Refresh cache from Firestore
+ */
+async function refreshLabCache(req, res) {
+    try {
+        CACHE_INITIALIZED = false;
+        DEVICE_CACHE = {};
+        await initializeDeviceCache();
+        res.json({ success: true, devices: Object.keys(DEVICE_CACHE).length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     createIncident,
     updateIncident,
@@ -372,6 +484,10 @@ module.exports = {
     getListPaginated,
     getLiveStatus,
     purgeIncidents,
-    syncDudeDevices, // Export new functions
-    updateDeviceCache
+    syncDudeDevices,
+    updateDeviceCache,
+    addLabDevice,
+    removeLabDevice,
+    refreshLabCache,
+    initializeDeviceCache
 };

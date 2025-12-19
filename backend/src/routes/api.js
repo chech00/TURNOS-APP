@@ -74,6 +74,11 @@ router.get("/uptime/summary", checkAuth, uptimeController.getMonthlySummary);
 router.get("/uptime/paginated", checkAuth, uptimeController.getListPaginated);
 router.get("/uptime/live", checkAuth, uptimeController.getLiveStatus); // New Live Lab Endpoint
 
+// Lab Device Management
+router.post("/uptime/lab-device", checkAuth, requireAdmin, uptimeController.addLabDevice);
+router.delete("/uptime/lab-device/:name", checkAuth, requireAdmin, uptimeController.removeLabDevice);
+router.post("/uptime/lab-refresh", checkAuth, uptimeController.refreshLabCache);
+
 // Monitoring control routes
 const monitoringControl = require("../controllers/monitoringControl");
 router.post("/uptime/toggle-monitoring", checkAuth, monitoringControl.toggleMonitoring);

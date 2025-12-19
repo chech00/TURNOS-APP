@@ -251,6 +251,14 @@ service cloud.firestore {
     }
     
     // =======================================================================
+    // LAB DEVICES - Dispositivos del laboratorio de monitoreo
+    // =======================================================================
+    match /lab_devices/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // =======================================================================
     // DEFAULT: Lectura autenticada, escritura denegada
     // =======================================================================
     match /{document=**} {
