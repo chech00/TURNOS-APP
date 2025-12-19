@@ -1320,6 +1320,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Initialize Auto-Monitoring Toggle
             initAutoMonitoringToggle();
 
+            // Initialize Sync Dude Button
+            initSyncDudeButton();
+
             // Initialize Purge Button (Test Mode)
             setupPurgeButton();
 
@@ -1462,8 +1465,40 @@ function initAutoMonitoringToggle() {
     }
 }
 
+// Initialize Sync Dude button click handler
+function initSyncDudeButton() {
+    const syncBtn = document.getElementById('sync-dude-btn');
+    if (!syncBtn) return;
 
-// Update UI based on monitoring state
+    syncBtn.addEventListener('click', async () => {
+        const originalContent = syncBtn.innerHTML;
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = `<span class="animate-spin mr-1">↻</span> Sincronizando...`;
+
+        try {
+            const result = await callApi('/uptime/sync-dude', 'POST');
+
+            if (result.success) {
+                const added = result.added?.length || 0;
+                const removed = result.removed?.length || 0;
+                showToast(`✅ Sync completado: +${added} agregados, -${removed} eliminados (${result.total} total)`, 'success');
+
+                // Refresh the live status to update count
+                pollLiveStatus();
+            } else {
+                showToast(`⚠️ Error en sync: ${result.error || 'Unknown'}`, 'error');
+            }
+        } catch (err) {
+            console.error('Sync error:', err);
+            showToast(`❌ Error de sync: ${err.message}. Solo funciona desde local.`, 'error');
+        } finally {
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = originalContent;
+            // Re-render lucide icons
+            if (window.lucide) window.lucide.createIcons();
+        }
+    });
+}// Update UI based on monitoring state
 function updateMonitoringUI() {
     const statusText = document.getElementById('monitoring-status-text');
     if (statusText) {

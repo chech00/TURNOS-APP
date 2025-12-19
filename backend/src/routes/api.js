@@ -78,6 +78,7 @@ router.get("/uptime/live", checkAuth, uptimeController.getLiveStatus); // New Li
 router.post("/uptime/lab-device", checkAuth, requireAdmin, uptimeController.addLabDevice);
 router.delete("/uptime/lab-device/:name", checkAuth, requireAdmin, uptimeController.removeLabDevice);
 router.post("/uptime/lab-refresh", checkAuth, uptimeController.refreshLabCache);
+router.post("/uptime/sync-dude", checkAuth, requireAdmin, uptimeController.syncWithDudeFullSync); // Full sync from The Dude
 
 // Monitoring control routes
 const monitoringControl = require("../controllers/monitoringControl");

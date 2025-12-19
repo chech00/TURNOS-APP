@@ -472,6 +472,83 @@ async function refreshLabCache(req, res) {
     }
 }
 
+/**
+ * Full sync with The Dude - Queries API and updates Firestore
+ * This ONLY works from local backend (can access The Dude network)
+ */
+async function syncWithDudeFullSync(req, res) {
+    console.log("🔄 Full sync with The Dude initiated...");
+    try {
+        const api = new MikroService(DUDE_CONFIG);
+        await api.connect();
+
+        if (!await api.login()) {
+            return res.status(500).json({ error: "Could not login to The Dude" });
+        }
+
+        // Get all devices from The Dude
+        const response = await api.cmd(['/dude/device/print']);
+        const raw = response.full || '';
+        const chunks = raw.split('!re');
+
+        const dudeDevices = new Set();
+        chunks.forEach(chunk => {
+            const nameMatch = chunk.match(/=name=(.*?)(?:\x00|$|\n)/);
+            if (nameMatch) {
+                dudeDevices.add(nameMatch[1].toUpperCase());
+            }
+        });
+
+        api.close();
+        console.log(`📡 Found ${dudeDevices.size} devices in The Dude`);
+
+        // Get current devices from Firestore
+        const firestoreSnapshot = await db.collection('lab_devices').get();
+        const firestoreDevices = new Set();
+        firestoreSnapshot.forEach(doc => firestoreDevices.add(doc.id));
+
+        // Calculate diffs
+        const toAdd = [...dudeDevices].filter(d => !firestoreDevices.has(d));
+        const toRemove = [...firestoreDevices].filter(d => !dudeDevices.has(d));
+
+        // Add new devices to Firestore
+        for (const deviceName of toAdd) {
+            await db.collection('lab_devices').doc(deviceName).set({
+                name: deviceName,
+                status: 'up',
+                lastUpdate: new Date(),
+                reason: 'synced_from_dude'
+            });
+            DEVICE_CACHE[deviceName] = { status: 'up', lastUpdate: new Date(), reason: 'synced_from_dude' };
+            console.log(`➕ Added: ${deviceName}`);
+        }
+
+        // Remove devices that no longer exist in The Dude
+        for (const deviceName of toRemove) {
+            await db.collection('lab_devices').doc(deviceName).delete();
+            delete DEVICE_CACHE[deviceName];
+            console.log(`➖ Removed: ${deviceName}`);
+        }
+
+        console.log(`✅ Sync complete: +${toAdd.length} added, -${toRemove.length} removed`);
+
+        res.json({
+            success: true,
+            dudeDevices: dudeDevices.size,
+            added: toAdd,
+            removed: toRemove,
+            total: dudeDevices.size
+        });
+
+    } catch (error) {
+        console.error('❌ Error syncing with The Dude:', error);
+        res.status(500).json({
+            error: error.message,
+            hint: "This only works from local backend (needs network access to The Dude)"
+        });
+    }
+}
+
 module.exports = {
     createIncident,
     updateIncident,
@@ -489,5 +566,6 @@ module.exports = {
     addLabDevice,
     removeLabDevice,
     refreshLabCache,
-    initializeDeviceCache
+    initializeDeviceCache,
+    syncWithDudeFullSync
 };
