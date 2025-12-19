@@ -1413,7 +1413,30 @@ function initAutoMonitoringToggle() {
             updateMonitoringUI();
         });
 
-        // Add event listener
+        // 🔄 REALTIME LISTENER - Auto-update toggle when changed from another browser
+        db.collection('config').doc('monitoring').onSnapshot((doc) => {
+            if (doc.exists) {
+                const newState = doc.data().enabled ?? true;
+                if (newState !== autoMonitoringEnabled) {
+                    autoMonitoringEnabled = newState;
+                    monitoringPaused = !autoMonitoringEnabled;
+                    toggle.checked = autoMonitoringEnabled;
+                    updateMonitoringUI();
+                    console.log(`🔄 Toggle auto-updated: ${autoMonitoringEnabled ? 'ACTIVE' : 'PAUSED'}`);
+
+                    // Start/stop polling based on new state
+                    if (autoMonitoringEnabled) {
+                        startLivePolling();
+                    } else {
+                        stopLivePolling();
+                    }
+                }
+            }
+        }, (error) => {
+            console.warn('⚠️ Realtime listener error:', error);
+        });
+
+        // Add event listener for manual toggle changes
         toggle.addEventListener('change', async (e) => {
             autoMonitoringEnabled = e.target.checked;
             monitoringPaused = !autoMonitoringEnabled; // Sync with notification suppression variable
