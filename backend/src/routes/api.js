@@ -42,9 +42,13 @@ router.get("/webhook-status", telegramController.webhookStatus);
 
 // --- File Routes ---
 router.post("/upload", uploadLimiter, checkAuth, requireAdmin, upload.single("file"), fileController.uploadFile);
-router.post("/upload-node-photo", uploadLimiter, checkAuth, upload.single("file"), fileController.uploadNodePhoto); // Allow all auth users to upload node photos? Or restrict? Keeping checkAuth as per plan.
+router.post("/upload-node-photo", uploadLimiter, checkAuth, upload.single("file"), fileController.uploadNodePhoto);
 router.get("/files", checkAuth, fileController.listFiles);
 router.delete("/delete/:fileName", checkAuth, requireAdmin, fileController.deleteFile);
+
+// --- KML Import Route ---
+const kmlController = require("../controllers/kmlController");
+router.post("/upload-kml", uploadLimiter, checkAuth, requireAdmin, upload.single("file"), kmlController.uploadKml);
 
 // --- Turn/Shift Routes ---
 // Note: original was /trigger-assignment

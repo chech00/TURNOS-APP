@@ -940,4 +940,81 @@
         });
     }
 
+    // ==========================================
+    // 15. VICTORY CONFETTI 🎉 (Global Trigger)
+    // ==========================================
+    window.triggerVictoryConfetti = function () {
+        // Create container if not exists, but this is a temporary effect
+        // We'll use a fixed overlay for this
+        let canvas = document.getElementById('victory-confetti');
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.id = 'victory-confetti';
+            canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+            document.body.appendChild(canvas);
+        }
+
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 150;
+        const colors = ['#22c55e', '#10b981', '#34d399', '#fbbf24', '#f59e0b', '#ffffff'];
+
+        // Explosion from center
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 25, // Fast explosion
+                vy: (Math.random() - 0.5) * 25,
+                gravity: 0.5,
+                drag: 0.96,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 8 + 4,
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 10,
+                opacity: 1
+            });
+        }
+
+        let animationId;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let activeParticles = false;
+
+            particles.forEach(p => {
+                if (p.opacity <= 0) return;
+                activeParticles = true;
+
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity; // Gravity
+                p.vx *= p.drag;    // Air resistance
+                p.vy *= p.drag;
+                p.rotation += p.rotationSpeed;
+                p.opacity -= 0.015; // Fade out
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+                ctx.globalAlpha = p.opacity;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            });
+
+            if (activeParticles) {
+                animationId = requestAnimationFrame(animate);
+            } else {
+                // Cleanup
+                cancelAnimationFrame(animationId);
+                if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+            }
+        }
+
+        animate();
+    };
+
 })();

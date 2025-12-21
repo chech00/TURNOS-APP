@@ -14,7 +14,7 @@ import { getDependentNodes, topology, aliases } from './dependencies.js';
 const isProduction = window.location.hostname.includes('github.io');
 const API_URL = isProduction
     ? 'https://turnos-app-8viu.onrender.com'
-    : 'http://localhost:3000';
+    : 'http://localhost:3001';
 
 
 
@@ -397,6 +397,9 @@ window.exportToCSV = function () {
     exportToCSV(dataToExport, filename);
 };
 
+// --- CONSTANT FOR METRICS ---
+const TOTAL_CLIENTS = 10700;
+
 function updateLastUpdateIndicator() {
     const indicator = document.getElementById('last-update-indicator');
     if (indicator) {
@@ -575,7 +578,8 @@ function renderHistoryTable(historyIncidents) {
     if (!historyTableBody) return;
 
     if (historyIncidents.length === 0) {
-        historyTableBody.innerHTML = `<tr><td colspan="11" class="text-center" style="padding: 3rem; color: #6b7280;">
+        // Adjust colspan to account for new columns (11 -> 14)
+        historyTableBody.innerHTML = `<tr><td colspan="14" class="text-center" style="padding: 3rem; color: #6b7280;">
             <i data-lucide="inbox" style="width: 32px; height: 32px; margin-bottom: 0.5rem; opacity: 0.5;"></i>
             <br>No hay registros que coincidan con los filtros.
         </td></tr>`;
@@ -655,6 +659,18 @@ function renderHistoryTable(historyIncidents) {
                     <td class="text-center" style="font-weight: 500;">
                         ${data.affected_customers > 0 ? `<span style="color:#f87171;">${data.affected_customers}</span>` : '<span style="color:#4b5563;">0</span>'}
                     </td>
+                    
+                    <!-- NEW METRICS -->
+                     <td class="text-center" style="font-size: 0.8rem; color: #d1d5db;">
+                        ${((data.affected_customers || 0) / TOTAL_CLIENTS * 100).toFixed(2)}%
+                    </td>
+                    <td class="text-center" style="font-family: monospace; font-size: 0.8rem;">
+                        ${Math.round((typeof data.restore_time === 'number' ? data.restore_time : 0) * (data.affected_customers || 0)).toLocaleString()} min
+                    </td>
+                     <td class="text-center" style="font-size: 0.8rem; color: ${(Math.round((typeof data.restore_time === 'number' ? data.restore_time : 0) * (data.affected_customers || 0)) / (TOTAL_CLIENTS * 1440 * 30) * 100) > 0.001 ? '#f87171' : '#10b981'};">
+                        -${(Math.round((typeof data.restore_time === 'number' ? data.restore_time : 0) * (data.affected_customers || 0)) / (TOTAL_CLIENTS * 1440 * 30) * 100).toFixed(4)}%
+                    </td>
+                    
                     <td>${ponsDisplay}</td>
                     <td style="font-family: monospace; color: #10b981;">${uptimePercent}</td>
                     <td style="max-width: 200px;">
@@ -879,8 +895,14 @@ window.submitNewIncident = async () => {
         const fullNodeCheckbox = document.getElementById('full-node-down-checkbox');
         if (fullNodeCheckbox) fullNodeCheckbox.checked = false;
         updateSelectedPonsUI();
+        updateSelectedPonsUI();
         document.getElementById('new-incident-node').value = "";
-        document.getElementById('pon-selection-container').style.display = 'none';
+        const ponContainer = document.getElementById('pon-selection-container');
+        if (ponContainer) ponContainer.style.display = 'none';
+
+        // Explicitly clear the PON list HTML to force fresh render next time
+        const ponListContainer = document.getElementById('pon-multi-select-container');
+        if (ponListContainer) ponListContainer.innerHTML = '';
         // Reset ticket input
         const ticketInputReset = document.getElementById('new-incident-ticket');
         if (ticketInputReset) ticketInputReset.value = "";
@@ -1037,6 +1059,9 @@ window.confirmCloseIncident = async () => {
         console.log(`✅ Incidente cerrado: ${result.duration} minutos`);
 
         if (window.showToast) window.showToast('✅ Servicio restaurado exitosamente', 'success');
+
+        // 🎉 VICTORY!
+        if (window.triggerVictoryConfetti) window.triggerVictoryConfetti();
 
         window.closeModal('close-incident-modal');
         loadUptimeLogs();
@@ -1761,8 +1786,8 @@ async function loadNodes() {
                             </div>
                         </div>
                     `;
-                    // Insert after node selector
-                    nodeSelect.parentNode.insertAdjacentHTML('beforeend', alertHtml);
+                    // Insert after node selector (OUTSIDE the flex container)
+                    nodeSelect.parentNode.insertAdjacentHTML('afterend', alertHtml);
                     if (window.lucide) window.lucide.createIcons();
                 }
 
@@ -1865,7 +1890,8 @@ async function loadPonCheckboxes(nodeId) {
 
     try {
         // Load all letters (cards) for this node
-        const lettersSnapshot = await db.collection('Nodos').doc(nodeId).collection('PONLetters').orderBy('name').get();
+        // REMOVED .orderBy('name') to prevent issues if field is missing. Default ID sort (A, B, C...) is fine.
+        const lettersSnapshot = await db.collection('Nodos').doc(nodeId).collection('PONLetters').get();
 
         if (lettersSnapshot.empty) {
             // ===============================================
@@ -1930,10 +1956,13 @@ async function loadPonCheckboxes(nodeId) {
         let html = '';
         currentNodePonsData = []; // Reset cache
 
-        for (const letterDoc of lettersSnapshot.docs) {
+        // Manually sort letters by ID just in case
+        const sortedLetters = lettersSnapshot.docs.sort((a, b) => a.id.localeCompare(b.id));
+
+        for (const letterDoc of sortedLetters) {
             const letterData = letterDoc.data();
             const letterId = letterDoc.id;
-            const letterName = letterData.name;
+            const letterName = letterData.name || letterId; // Fallback to ID if name missing
 
             // Load PONs for this letter
             const ponsSnapshot = await db.collection('Nodos').doc(nodeId)
@@ -1945,12 +1974,16 @@ async function loadPonCheckboxes(nodeId) {
             const pons = [];
             ponsSnapshot.forEach(ponDoc => {
                 const ponData = ponDoc.data();
-                pons.push({ id: ponDoc.id, name: ponData.name });
+                pons.push({ id: ponDoc.id, ...ponData });
                 currentNodePonsData.push(ponData.name);
             });
 
-            // Sort alphanumerically
-            pons.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+            // SORT PONs ALPHANUMERICALLY (A1, A2, A10...)
+            pons.sort((a, b) => {
+                const nameA = a.name || a.id;
+                const nameB = b.name || b.id;
+                return nameA.localeCompare(nameB, undefined, { numeric: true });
+            });
 
             // Generate accordion HTML for this card
             html += `
@@ -1971,7 +2004,10 @@ async function loadPonCheckboxes(nodeId) {
                     <div class="pon-accordion-content">
                         <div class="pon-accordion-grid">
                             ${pons.map(pon => `
-                                <div class="pon-chip" data-pon="${pon.name}" data-card="${letterName}" onclick="window.togglePonChip(this)">
+                                <div class="pon-chip ${selectedPons.includes(pon.name) ? 'selected' : ''}" 
+                                     data-pon="${pon.name}" 
+                                     data-card="${letterName}" 
+                                     onclick="window.togglePonChip(this)">
                                     ${pon.name.replace('PON ', '')}
                                 </div>
                             `).join('')}
@@ -2060,7 +2096,8 @@ function updatePonBadge(cardName) {
 // NEW: Setup "Full Node Down" checkbox logic
 function setupFullNodeDownLogic() {
     const checkbox = document.getElementById('full-node-down-checkbox');
-    const multiSelectWrapper = document.getElementById('pon-multi-select-wrapper');
+    // Start Fresh from global state check
+    const multiSelectWrapper = document.getElementById('pon-multi-select-container');
 
     if (!checkbox) return;
 
@@ -2617,13 +2654,15 @@ window.submitNewIncident = async function () {
         node_id: nodeId || "MANUAL_" + cleanNodeName.replace(/\s+/g, '_'),
         failure_type: typeSelect.value,
         failure_reason: "Reportado Manualmente",
-        owner_area: "NOC", // Default area
+        owner_area: document.getElementById('new-incident-area').value || "NOC",
+        process: document.getElementById('new-incident-process').value,
+        activity: document.getElementById('new-incident-activity').value,
         start_date: now,
         end_date: null, // Open incident
         affected_customers: 0, // Pending calculation
         has_affected_customers: false,
         affected_pons: affectedPons,
-        notes: "Incidente creado manualmente desde panel.",
+        notes: document.getElementById('new-incident-activity').value || "Incidente creado manualmente desde panel.",
         created_at: now
     };
 
@@ -2657,3 +2696,24 @@ window.submitNewIncident = async function () {
         window.setBtnLoading(btnId, false);
     }
 };
+
+// Area Selection Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const areaContainer = document.getElementById('area-selection-container');
+    const hiddenInput = document.getElementById('new-incident-area');
+
+    if (areaContainer && hiddenInput) {
+        const buttons = areaContainer.querySelectorAll('.area-pill'); // Updated class name
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update hidden input
+                hiddenInput.value = btn.dataset.value;
+
+                // Visual feedback
+                buttons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    }
+});

@@ -20,3 +20,34 @@ localtunnel/
 
 # Old uptime data (not needed in repo)
 Uptime PatagoniaIP*/
+
+# Backend Debug & Test Scripts
+backend/analyze-*.js
+backend/check_*.js
+backend/configure_*.js
+backend/create_*.js
+backend/cycle_*.js
+backend/debug_*.js
+backend/deep_scan_*.js
+backend/dude_*.txt
+backend/dump.txt
+backend/fix_*.js
+backend/force_*.js
+backend/import-*.js
+backend/init_*.js
+backend/inspect_*.js
+backend/lab_state.json
+backend/list_nodes.js
+backend/mock_*.js
+backend/net_debug.txt
+backend/nuke_*.js
+backend/parse_*.js
+backend/pkg_dump.txt
+backend/raw_dude_dump.txt
+backend/read_logs.js
+backend/restore_*.js
+backend/router_logs.txt
+backend/seed_*.js
+backend/setup_*.js
+backend/simulate_*.js
+backend/test_*.js

@@ -139,24 +139,20 @@ export function showToast(message, type = 'info', duration = 5000) {
 
     const themes = {
         success: {
-            gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95))',
-            borderColor: 'rgba(16, 185, 129, 0.5)',
-            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+            color: '#10b981', // Emerald 500
+            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#10b981;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
         },
         error: {
-            gradient: 'linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.95))',
-            borderColor: 'rgba(239, 68, 68, 0.5)',
-            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.07 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`
+            color: '#ef4444', // Red 500
+            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#ef4444;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.07 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>`
         },
         warning: {
-            gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95))',
-            borderColor: 'rgba(245, 158, 11, 0.5)',
-            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+            color: '#f59e0b', // Amber 500
+            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#f59e0b;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
         },
         info: {
-            gradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95))',
-            borderColor: 'rgba(59, 130, 246, 0.5)',
-            icon: `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+            color: '#3b82f6', // Blue 500
+            icon: `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#3b82f6;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
         }
     };
 
@@ -165,30 +161,37 @@ export function showToast(message, type = 'info', duration = 5000) {
     const toast = document.createElement('div');
     toast.className = 'toast-notification toast-elegant';
     toast.style.cssText = `
-        background: ${theme.gradient};
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        color: white;
-        padding: 14px 20px;
-        border-radius: 12px;
-        border: 1px solid ${theme.borderColor};
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.1) inset;
+        background: rgba(15, 23, 42, 0.85); /* Slate 900 with opacity */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: #f1f5f9;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-left: 3px solid ${theme.color};
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
         display: flex;
         align-items: center;
         gap: 12px;
-        font-size: 14px;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 0.85rem;
         font-weight: 500;
-        animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         cursor: pointer;
         transform-origin: right center;
-        max-width: 400px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        min-width: 300px;
+        max-width: 380px;
+        transition: all 0.2s ease;
     `;
 
     toast.innerHTML = `
-        <span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;background:rgba(255,255,255,0.2);border-radius:8px;flex-shrink:0;">${theme.icon}</span>
-        <span style="flex:1;line-height:1.4;">${message}</span>
-        <span class="toast-close" style="opacity:0.6;cursor:pointer;padding:4px;margin:-4px;display:flex;font-size:16px;transition:opacity 0.2s;">✕</span>
+        <span style="display:flex;align-items:center;justify-content:center; width:32px; height:32px; background:rgba(255,255,255,0.05); border-radius:8px; flex-shrink:0;">
+            ${theme.icon}
+        </span>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+             <span style="line-height:1.4;">${message}</span>
+        </div>
+        <span class="toast-close" style="opacity:0.4; cursor:pointer; padding:4px; font-size:14px; transition:opacity 0.2s; color: #94a3b8;">✕</span>
     `;
 
     // Add elegant animation styles
