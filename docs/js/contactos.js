@@ -161,6 +161,17 @@ function renderContactGrid() {
     // Animation delay counter
     let delay = 0;
 
+    // Helper to prevent XSS
+    const escapeHtml = (unsafe) => {
+        if (!unsafe) return "";
+        return String(unsafe)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+
     filtered.forEach(contact => {
         const card = document.createElement('div');
         card.className = 'mini-card';
@@ -176,6 +187,9 @@ function renderContactGrid() {
         // Online status logic (mocked for now, can be linked to Uptime later)
         const isOnline = true;
 
+        const safeNode = escapeHtml(contact.node);
+        const safeTipo = escapeHtml(contact.tipo || 'N/A');
+
         card.innerHTML = `
             <div class="mini-card-header">
                 <div class="mini-card-icon">
@@ -184,10 +198,10 @@ function renderContactGrid() {
                 ${isOnline ? '<div class="status-dot" title="Online"></div>' : ''}
             </div>
             <div>
-                <h3 class="mini-card-title" title="${contact.node}">${contact.node}</h3>
+                <h3 class="mini-card-title" title="${safeNode}">${safeNode}</h3>
                 <div class="mini-card-subtitle">
                     <i data-lucide="tag" style="width:12px;height:12px;"></i>
-                    ${contact.tipo || 'N/A'}
+                    ${safeTipo}
                 </div>
             </div>
         `;

@@ -113,12 +113,35 @@ async function uploadNodePhoto(req, res) {
         const bucketName = "node-photos";
 
         // Upload to Supabase
-        const { error } = await supabase.storage
+        let { error } = await supabase.storage
             .from(bucketName)
             .upload(fileName, req.file.buffer, {
                 contentType: req.file.mimetype,
                 upsert: false
             });
+
+        // Handle Bucket Not Found: Try to create it
+        if (error && error.message && error.message.includes("Bucket not found")) {
+            console.log(`⚠️ Bucket '${bucketName}' no encontrado. Intentando crear...`);
+            const { error: createError } = await supabase.storage.createBucket(bucketName, {
+                public: true
+            });
+            
+            if (createError) {
+                console.error("❌ Error creando bucket:", createError);
+                throw new Error(`Bucket '${bucketName}' no existe y no se pudo crear: ${createError.message}`);
+            }
+
+            // Retry upload
+            const retry = await supabase.storage
+                .from(bucketName)
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+            
+            error = retry.error;
+        }
 
         if (error) throw error;
 
@@ -134,7 +157,11 @@ async function uploadNodePhoto(req, res) {
 
     } catch (error) {
         console.error("❌ Error al subir foto de nodo:", error);
-        res.status(500).json({ error: "Error interno al subir la imagen." });
+        // Include the actual error message for debugging
+        res.status(500).json({ 
+            error: "Error interno al subir la imagen.", 
+            details: error.message || error 
+        });
     }
 }
 

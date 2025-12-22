@@ -7,6 +7,7 @@ import { FERIADOS_DEFAULT } from "./modules/logic/holidayLogic.js";
 // console.log("NOC Module Loaded. Feriados Default Count:", FERIADOS_DEFAULT.length);
 
 // Supabase - Carga dinámica para no bloquear el módulo si falla
+// NOTA DE SEGURIDAD: Esta es la 'ANON' key (pública). La seguridad depende de las políticas Row Level Security (RLS) en Supabase.
 const supabaseUrl = "https://jmrzvajipfdqvzilqjvq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptcnp2YWppcGZkcXZ6aWxxanZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3ODU3MTksImV4cCI6MjA1NDM2MTcxOX0.xQZX2i-6wynnRnEKBb_mwbt63S6vvrr10SilIyug5Mg";
 let supabase = null;
