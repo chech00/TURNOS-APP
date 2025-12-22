@@ -8,6 +8,13 @@
 // ==========================================
 
 /**
+ * Genera un ID de ticket simple
+ */
+export function generateTicketId() {
+    return 'T' + Date.now().toString().slice(-6);
+}
+
+/**
  * Parsea cualquier formato de timestamp a Date
  * Soporta: Firestore Timestamp, serializado, ISO string, Date object
  */

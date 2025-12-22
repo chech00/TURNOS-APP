@@ -4,15 +4,18 @@
 const auth = window.auth;
 const db = window.db;
 
+import * as UI from './modules/senales-ui.js';
+import { API_BASE_URL } from './modules/config.js';
+
 // Optimistic Loading
 document.addEventListener("DOMContentLoaded", () => {
   const cachedRole = localStorage.getItem("userRole");
   if (cachedRole === "superadmin") {
     const liRegistros = document.getElementById("li-registros");
-            const liTurnos = document.getElementById("li-turnos");
+    const liTurnos = document.getElementById("li-turnos");
     const liUsuarios = document.getElementById("li-usuarios");
     if (liRegistros) liRegistros.style.display = "block";
-            if (liTurnos) liTurnos.style.display = "block";
+    if (liTurnos) liTurnos.style.display = "block";
     if (liUsuarios) liUsuarios.style.display = "block";
     document.body.classList.add("is-admin");
   } else if (cachedRole === "admin") {
@@ -55,7 +58,7 @@ function verificarRolUsuario() {
           }
 
           const liRegistros = document.getElementById("li-registros");
-            const liTurnos = document.getElementById("li-turnos");
+          const liTurnos = document.getElementById("li-turnos");
           const liUsuarios = document.getElementById("li-usuarios");
 
           if (role === "superadmin") {
@@ -143,30 +146,7 @@ function cargarNodos() {
 
   // Header with context
   // Header with context and actions
-  let buttonsHtml = "";
-
-  if (usuarioEsAdmin) {
-    buttonsHtml += `
-      <button onclick="window.KMLService.startWizard()" class="fiber-action-btn kml-btn">
-          <i data-lucide="upload-cloud" style="width:14px;"></i> IMP. KML
-      </button>
-      <button onclick="crearNodo()" class="fiber-action-btn new-node-btn">
-         <i data-lucide="plus-circle" style="width:14px;"></i> NUEVO GABINETE
-      </button>
-    `;
-  }
-
-  fiberContainer.innerHTML = `
-    <div class="section-header">
-      <div class="section-title-wrapper">
-        <h2>Sala de Servidores (Nodos)</h2>
-        <p>Seleccione un Gabinete para acceder a los equipos OLT.</p>
-      </div>
-      <div class="header-actions">
-          ${buttonsHtml}
-      </div>
-    </div>
-  `;
+  UI.renderRoomHeader(fiberContainer, usuarioEsAdmin);
 
   // CLEANUP: Force remove old button if cached kml_service still injects it
   const oldBtn = document.getElementById('kml-import-btn');
@@ -190,63 +170,7 @@ function cargarNodos() {
         // Create promise to count PONs and Cajas for this node
         const nodePromise = contarDatosNodo(nodoId).then((stats) => {
           // Build Server Rack HTML
-          const rack = document.createElement("div");
-          rack.classList.add("server-rack");
-          rack.onclick = function () {
-            mostrarVistaPonLetras(nodoId, nodoName);
-          };
-
-          // Determine badge content and class (LCD Style)
-          let badgeHTML = '';
-          if (stats.totalPONs === 0) {
-            badgeHTML = '<div class="node-status-badge empty">OFFLINE</div>';
-          } else {
-            badgeHTML = `<div class="node-status-badge populated">SYS: ONLINE<br>PON: ${stats.totalPONs} | BOX: ${stats.totalCajas}</div>`;
-          }
-
-          // Rack Content simulating hardware
-          rack.innerHTML = `
-            ${badgeHTML}
-            <div class="rack-nameplate">${nodoName}</div>
-            <div class="rack-interior">
-                <!-- Simulated Units -->
-                ${generarLucesRack()}
-                ${generarLucesRack()}
-                ${generarLucesRack()}
-                <div style="height:20px;"></div> <!-- Gap -->
-                ${generarLucesRack()}
-                ${generarLucesRack()}
-            </div>
-            <div class="rack-door"></div>
-        `;
-
-          // Admin Actions
-          if (usuarioEsAdmin) {
-            const actionsDiv = document.createElement("div");
-            actionsDiv.classList.add("rack-actions");
-            // Add Edit and Delete buttons
-            actionsDiv.innerHTML = `
-            <button class="edit-rack-btn" title="Editar Nombre" style="background:none; border:none; color:#fbbf24; cursor:pointer; font-weight:bold; font-size:1.2rem; margin-right:5px;">✎</button>
-            <button class="delete-rack-btn" title="Desmantelar Nodo" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:1.2rem;">×</button>
-          `;
-
-            // Wire Edit
-            const editBtn = actionsDiv.querySelector(".edit-rack-btn");
-            editBtn.onclick = function (e) {
-              e.stopPropagation();
-              editarNodo(nodoId, nodoName);
-            };
-
-            // Wire Delete
-            const deleteBtn = actionsDiv.querySelector(".delete-rack-btn");
-            deleteBtn.onclick = function (e) {
-              e.stopPropagation();
-              confirmarEliminarNodo(nodoId, nodoName);
-            };
-
-            rack.appendChild(actionsDiv);
-          }
-
+          const rack = UI.createRackElement(nodoId, nodoName, stats, usuarioEsAdmin);
           aisleGrid.appendChild(rack);
         });
 
@@ -336,19 +260,7 @@ async function contarDatosNodo(nodoId) {
 }
 window.cargarNodos = cargarNodos;
 
-// Helper to generate random blinking lights line
-function generarLucesRack() {
-  // Random patterns for variety
-  const patterns = [
-    '<div class="rack-light break"></div><div class="rack-light"></div><div class="rack-light"></div>',
-    '<div class="rack-light blue"></div><div class="rack-light blue"></div>',
-    '<div class="rack-light orange"></div>',
-    '<div class="rack-light red"></div><div class="rack-light"></div>',
-    '<div class="rack-light"></div><div class="rack-light blue"></div><div class="rack-light"></div><div class="rack-light"></div>',
-  ];
-  const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
-  return `<div class="rack-activity-lights" style="justify-content:${Math.random() > 0.5 ? 'flex-start' : 'flex-end'}">${randomPattern}</div>`;
-}
+// Helper `generarLucesRack` moved to senales-ui.js
 
 function eliminarNodo(nodoId) {
   if (!usuarioEsAdmin) {
@@ -375,50 +287,7 @@ function mostrarVistaPonLetras(nodoId, nodoName) {
   const fiberContainer = document.getElementById("fiber-structure");
 
   // New "Digital Twin" Professional Header
-  let html = `
-    <div class="olt-management-panel">
-        <div class="olt-header-left">
-            <button class="olt-header-back-btn" onclick="cargarNodos()">
-                ← RACK ROOM
-            </button>
-            <div class="olt-info-group">
-                <span class="olt-device-label">OPTICAL LINE TERMINAL</span>
-                <span class="olt-device-name">${nodoName}</span>
-            </div>
-        </div>
-
-        <div class="olt-lcd-display">
-            <div class="olt-status-light"></div>
-            <span>SYSTEM STATUS: ONLINE / MANAGED</span>
-        </div>
-  `;
-
-  // Admin Controls: "Service Slot" style
-  if (usuarioEsAdmin) {
-    html += `
-        <div class="olt-admin-controls">
-            <span class="olt-device-label" style="font-size:0.7rem;">EXPANSION SLOT</span>
-            <select id="pon-letra-dropdown" class="olt-select-dark">
-               ${[...Array(26)].map((_, i) => {
-      const letter = String.fromCharCode(65 + i);
-      return `<option value="${letter}">CARD SLOT ${letter}</option>`;
-    }).join("")}
-            </select>
-            <button class="olt-btn-install" onclick="crearPonLetra('${nodoId}')">
-                INITIALIZE CARD
-            </button>
-        </div>
-    `;
-  } else {
-    // Filler for non-admins to keep balance or nothing
-    html += `<div></div>`;
-  }
-
-  html += `</div>`; // Close panel
-
-  // Container para listar las cards (chassis visual)
-  html += `<div id="pon-letters-list" style="width: 100%; display: flex; justify-content: center;"></div>`;
-  fiberContainer.innerHTML = html;
+  UI.renderChassisView(fiberContainer, nodoName, usuarioEsAdmin, nodoId);
 
   cargarPonLetters(nodoId);
 }
@@ -472,68 +341,12 @@ function cargarPonLetters(nodoId) {
     .orderBy("name")
     .get()
     .then((querySnapshot) => {
-      // Create Chassis
-      let html = `
-        <div class="olt-chassis">
-          <div class="olt-fan-tray">
-            <!-- Real Animated Fans -->
-            <div class="olt-fan-blade"></div>
-            <div class="olt-fan-blade"></div>
-            <div class="olt-fan-blade"></div>
-            <div class="olt-fan-blade"></div>
-          </div>
-          <div class="olt-shelf">
-      `;
-
       const foundLetters = [];
       querySnapshot.forEach(doc => {
         foundLetters.push({ id: doc.id, ...doc.data() });
       });
-
-      // To make it look "Pro", we render a fixed number of slots (e.g., 16)
-      const maxSlots = 16;
-
-      for (let i = 0; i < maxSlots; i++) {
-        if (foundLetters[i]) {
-          const letter = foundLetters[i].name;
-          // Render Active Card
-          html += `
-                <div class="olt-card" onclick="mostrarVistaPONPorLetra('${nodoId}', '${letter}')" title="PON Board ${letter}">
-                  <div class="olt-handle"></div>
-                  <div class="olt-faceplate">
-                    <div class="olt-led-group">
-                       <div class="olt-led run"></div>
-                       <div class="olt-led"></div>
-                    </div>
-                    <div class="olt-port-grid">
-                       ${[...Array(8)].map(() => `<div class="olt-port"></div>`).join('')}
-                    </div>
-                    <div class="olt-label">BOARD ${letter}</div>
-                  </div>
-                  <div class="olt-handle bottom"></div>
-                  ${usuarioEsAdmin ?
-              `<button style="position:absolute; bottom:30px; border:none; background:transparent; color:red; font-weight:bold; cursor:pointer;"
-                      onclick="confirmarEliminarPonLetra(event, '${nodoId}', '${letter}')">×</button>`
-              : ''}
-                </div>
-              `;
-        } else {
-          // Render Empty Slot (Filler Panel)
-          // Render Empty Slot (Filler Panel)
-          html += `
-            <div class="olt-slot-empty">
-                <!-- Screws for realism -->
-                <div style="position:absolute; top:5px; left:50%; transform:translateX(-50%); width:6px; height:6px; background:#111; border-radius:50%; box-shadow:inset 0 0 2px #fff;"></div>
-                <div style="position:absolute; bottom:5px; left:50%; transform:translateX(-50%); width:6px; height:6px; background:#111; border-radius:50%; box-shadow:inset 0 0 2px #fff;"></div>
-            </div>`;
-        }
-      }
-
-      html += `
-          </div> <!-- End shelf -->
-        </div> <!-- End chassis -->
-      `;
-
+      // Create Chassis
+      const html = UI.renderChassisSlots(foundLetters, usuarioEsAdmin, nodoId);
       container.innerHTML = html;
     })
     .catch((error) => {
@@ -586,47 +399,7 @@ function eliminarPonLetra(nodoId, letter) {
 function mostrarVistaPONPorLetra(nodoId, letter) {
   const fiberContainer = document.getElementById("fiber-structure");
 
-  let html = `
-    <div class="olt-management-panel">
-        <div class="olt-header-left">
-            <button class="olt-header-back-btn" onclick="mostrarVistaPonLetras('${nodoId}', '${currentNodoName}')">
-                ← CARD ${letter} [BACK]
-            </button>
-            <div class="olt-info-group">
-                <span class="olt-breadcrumb">NODE: ${currentNodoName} > SLOT: ${letter}</span>
-                <span class="olt-device-name">SLOT ${letter}</span>
-            </div>
-        </div>
-
-        <div class="olt-lcd-display">
-            <div class="olt-status-light"></div>
-            <span>MODULE STATUS: ACTIVE / SYNCED</span>
-        </div>
-  `;
-
-  // Formulario para crear PON (A0, A1, etc.)
-  if (usuarioEsAdmin) {
-    html += `
-        <div class="olt-admin-controls">
-            <span class="olt-device-label" style="font-size:0.7rem;">SFP PORT MGMT</span>
-            <select id="pon-numero" class="olt-select-dark">
-              ${[...Array(16)].map((_, i) => `<option value="${i}">PORT ${i}</option>`).join("")}
-            </select>
-            <button class="olt-btn-install" onclick="crearPON('${nodoId}', '${letter}')">
-               INSERT SFP MODULE
-            </button>
-            <input type="hidden" id="pon-letra" value="${letter}" />
-        </div>
-    `;
-  } else {
-    html += `<div></div>`;
-  }
-
-  html += `</div>`; // Close panel
-
-  // Contenedor para el Faceplate
-  html += `<div id="pon-list" class="olt-card-detail-container"></div>`;
-  fiberContainer.innerHTML = html;
+  UI.renderFaceplateView(fiberContainer, nodoId, letter, currentNodoName, usuarioEsAdmin);
 
   cargarPONs(nodoId, letter);
 }
@@ -711,47 +484,7 @@ function cargarPONs(nodoId, letter) {
       });
 
       // Render Faceplate
-      let html = `<div class="olt-faceplate-detail">`;
-
-      // Assume 16 ports for a standard PON card
-      for (let i = 0; i < 16; i++) {
-        const pon = foundPons[i];
-        if (pon) {
-          // Active Port (Realistic)
-          html += `
-                <div class="sfp-cage active" onclick="mostrarVistaPON('${nodoId}', '${letter}', '${pon.id}', '${pon.name}')" title="${pon.name} - Conectado">
-                    <div class="sfp-cage-label">${letter}${i}</div>
-                    ${usuarioEsAdmin ? `<button class="sfp-delete-btn" onclick="confirmarEliminarPON(event, '${nodoId}', '${letter}', '${pon.id}')">×</button>` : ''}
-                    <div class="sfp-module inserted">
-                         <!-- Visual Text on Module -->
-                         <div style="font-size:5px; color:#333; position:absolute; top:2px; left:2px; font-family:sans-serif;">10G</div>
-                         <!-- Laser Glow -->
-                         <div class="sfp-glow-laser" style="position:absolute; top:40%; right:-2px; width:4px; height:4px; background:#0f0; border-radius:50%; box-shadow:0 0 5px #0f0; opacity:0.8; animation:blink-random 0.1s infinite;"></div>
-                    </div>
-                    <!-- Fiber Cable -->
-                    <div class="sfp-fiber"></div>
-                </div>
-            `;
-        } else {
-          // Empty Port
-          html += `
-                <div class="sfp-cage empty" title="Puerto ${i} Vacío">
-                    <div class="sfp-cage-label">${letter}${i}</div>
-                </div>
-            `;
-        }
-      }
-
-      html += `</div>`; // End faceplate
-
-      // Legend / Info
-      html += `
-        <div style="margin-top:20px; display:flex; gap:20px; color:#888; font-size:0.8rem;">
-            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#00a8ff; border-radius:2px;"></div> SFP Activo</div>
-            <div style="display:flex; align-items:center; gap:5px;"><div style="width:10px; height:10px; background:#111; border:1px solid #666; border-radius:2px;"></div> Puerto Libre</div>
-        </div>
-      `;
-
+      const html = UI.renderFaceplatePorts(foundPons, letter, nodoId, usuarioEsAdmin);
       container.innerHTML = html;
     })
     .catch((error) => {
@@ -937,57 +670,8 @@ function cargarCajas(nodoId, letter, ponId) {
         return a.name.localeCompare(b.name, undefined, { numeric: true });
       });
 
-      // Start Building Topology HTML
-      let html = `<div class="trunk-line"></div>`;
-
-      if (cajasArray.length === 0) {
-        html += `<div style="z-index:1; background:#222; padding:10px; border-radius:8px; color:#888;">No hay cajas en el troncal.</div>`;
-      } else {
-        cajasArray.forEach((item, index) => {
-          // Alternate Left/Right
-          const side = index % 2 === 0 ? "left" : "right";
-
-          // Generate realistic technical metrics
-          const signalPower = (-15 + Math.random() * 8).toFixed(1); // -15 to -7 dBm
-          const transmissionRate = (950 + Math.random() * 50).toFixed(0); // 950-1000 Mbps
-          const temperature = (25 + Math.random() * 15).toFixed(1); // 25-40°C
-          const uptimeDays = Math.floor(Math.random() * 365); // 0-365 days
-          const healthStatus = signalPower > -10 ? 'optimal' : signalPower > -12 ? 'warning' : 'critical';
-          const healthColor = signalPower > -10 ? '#00ff88' : signalPower > -12 ? '#ffaa00' : '#ff4444';
-
-          html += `
-            <div class="branch ${side}">
-              <div class="branch-cable"></div>
-              <div class="branch-content">
-                <div class="splice-box health-${healthStatus}" 
-                     onclick="mostrarVistaCaja('${nodoId}', '${letter}', '${ponId}', '${item.docId}', '${item.name}', ${item.capacity})"
-                     data-signal="${signalPower}"
-                     data-rate="${transmissionRate}"
-                     data-temp="${temperature}"
-                     data-uptime="${uptimeDays}"
-                     title="📡 Señal: ${signalPower} dBm | ⚡ Tasa: ${transmissionRate} Mbps | 🌡️ Temp: ${temperature}°C | ⏱️ Uptime: ${uptimeDays} días"
-                     style="--health-color: ${healthColor};">
-                  <div class="splice-box-header">
-                    <span>${item.name}</span>
-                    <span style="font-size:0.7em; opacity:0.7;">${item.capacity} FO</span>
-                  </div>
-                  <div class="splice-box-info">
-                    Manga de Empalme
-                  </div>
-                  <div class="capacity-bar">
-                    <div class="capacity-fill" style="width: 0%"></div>
-                  </div>
-                  ${usuarioEsAdmin ?
-              `<span class="delete-icon" onclick="confirmarEliminarCaja(event, '${nodoId}', '${letter}', '${ponId}', '${item.docId}')">🗑</span>`
-              : ''}
-                </div>
-              </div>
-            </div>
-          `;
-        });
-      }
-
-      container.innerHTML = html;
+      // Render Topology Tree
+      UI.renderTopologyTree(container, cajasArray, nodoId, letter, ponId, usuarioEsAdmin);
     })
     .catch((error) => {
       console.error("Error al cargar Topología:", error);
@@ -1069,8 +753,8 @@ function mostrarVistaCaja(nodoId, letter, ponId, cajaId, cajaName, capacity = 12
         
         <div class="olt-admin-controls">
              <span class="olt-device-label" style="font-size:0.7rem;">ACTION</span>
-             <button class="olt-btn-install" style="background:#444; border-color:#666; cursor:default">
-                VIEW ONLY
+             <button id="btn-u2000-sim" class="olt-btn-install" style="background:#444; border-color:#666;" onclick="toggleU2000Simulation()">
+                ⏱️ LIVE MONITOR (SIM)
              </button>
         </div>
     </div>
@@ -1127,6 +811,13 @@ function cargarFilamentosGrid(nodoId, letter, ponId, cajaId, capacity) {
     // 2. Generar Puertos según capacidad (default 12)
     const totalPuertos = parseInt(capacity) || 12;
 
+    // Apply specific layout class for 16 ports (8x2 grid)
+    if (totalPuertos === 16) {
+      gridContainer.classList.add('layout-16');
+    } else {
+      gridContainer.classList.remove('layout-16');
+    }
+
     for (let i = 1; i <= totalPuertos; i++) {
       const portDiv = document.createElement("div");
       const filamento = ocupados[i];
@@ -1141,7 +832,10 @@ function cargarFilamentosGrid(nodoId, letter, ponId, cajaId, capacity) {
       if (filamento) {
         // PUERTO OCUPADO
         classes += ` occupied ${colorClass}`;
-        contenido += `<span class="port-signal">${filamento.signal || "N/A"}</span>`;
+        contenido += `<span class="port-signal" id="sig-${filamento.id}">${filamento.signal || "N/A"}</span>`;
+        // Save base signal for simulation
+        portDiv.dataset.signalBase = filamento.signal || "-14.00"; // Default fallback
+        portDiv.dataset.id = filamento.id;
 
         portDiv.onclick = () => {
           // Editar/Borrar
@@ -1290,15 +984,76 @@ function getNombreColor(n) {
 window.crearFilamento = null;
 window.cargarFilamentos = null;
 
+// =========================================
+// U2000 SIMULATION LOGIC
+// =========================================
+let u2000Interval = null;
+
+function toggleU2000Simulation() {
+  const btn = document.getElementById('btn-u2000-sim');
+  if (!btn) return;
+
+  if (u2000Interval) {
+    // STOP
+    clearInterval(u2000Interval);
+    u2000Interval = null;
+    btn.style.background = '#444';
+    btn.style.borderColor = '#666';
+    btn.innerHTML = '⏱️ LIVE MONITOR (SIM)';
+
+    // Restore base values
+    const ports = document.querySelectorAll('.fiber-port.occupied');
+    ports.forEach(port => {
+      const base = port.dataset.signalBase;
+      const span = port.querySelector('.port-signal');
+      if (span && base) span.innerText = base;
+    });
+
+  } else {
+    // START
+    btn.style.background = '#10b981'; // Green
+    btn.style.borderColor = '#059669';
+    btn.innerHTML = '⚡ MONITORING...';
+
+    u2000Interval = setInterval(() => {
+      const ports = document.querySelectorAll('.fiber-port.occupied');
+
+      ports.forEach(port => {
+        const baseStr = port.dataset.signalBase;
+        if (!baseStr) return;
+
+        // Parse base (e.g. "-14.50dBm" or "-14.50")
+        let baseVal = parseFloat(baseStr.replace(/[^\d.-]/g, ''));
+        if (isNaN(baseVal)) baseVal = -14.5; // Fallback
+
+        // Jitter: +/- 0.05 to 0.3 dB
+        const jitter = (Math.random() - 0.5) * 0.4;
+        const currentVal = (baseVal + jitter).toFixed(2);
+
+        // Update Text
+        const span = port.querySelector('.port-signal');
+        if (span) span.innerText = `${currentVal} dBm`;
+
+        // Visual Feedback (Red/Warning if dropping too low, though simulation keeps it close to base)
+        if (currentVal < -25) port.style.borderColor = 'red';
+        else if (currentVal < -20) port.style.borderColor = 'orange';
+        else port.style.borderColor = 'rgba(255,255,255,0.1)';
+
+      });
+    }, 1500); // Update every 1.5s
+  }
+}
+window.toggleU2000Simulation = toggleU2000Simulation;
+
 
 
 
 // =========================================
 //    Funciones CRUD de Nodos
 // =========================================
-function crearNodo() {
-  Swal.fire({
-    title: 'Nuevo Gabinete',
+async function crearNodo() {
+  const { value: name } = await Swal.fire({
+    title: 'Nuevo Gabinete (Seguro)',
     input: 'text',
     inputLabel: 'Nombre del Nodo / Ubicación',
     inputPlaceholder: 'Ej: Sala Servidores Piso 1',
@@ -1308,42 +1063,56 @@ function crearNodo() {
     background: '#1f2937',
     color: '#fff',
     customClass: { input: 'swal-input-dark' }
-  }).then((result) => {
-    if (result.isConfirmed && result.value) {
-      db.collection("Nodos").add({
-        name: result.value,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      })
-        .then(() => {
-          Swal.fire({
-            title: 'Creado',
-            text: 'Gabinete registrado correctamente',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false,
-            background: '#1f2937',
-            color: '#fff'
-          });
-          cargarNodos();
-        })
-        .catch(err => {
-          console.error(err);
-          Swal.fire({
-            title: 'Error',
-            text: 'No se pudo crear: ' + err.message,
-            icon: 'error',
-            background: '#1f2937',
-            color: '#fff'
-          });
-        });
-    }
   });
+
+  if (!name) return;
+
+  try {
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+
+    const response = await fetch(`${API_BASE_URL}/uptime/nodes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ name })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Error creando nodo');
+    }
+
+    Swal.fire({
+      title: 'Creado',
+      text: 'Gabinete registrado correctamente (Backend)',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false,
+      background: '#1f2937',
+      color: '#fff'
+    });
+
+    cargarNodos();
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      title: 'Error',
+      text: err.message,
+      icon: 'error',
+      background: '#1f2937',
+      color: '#fff'
+    });
+  }
 }
 window.crearNodo = crearNodo;
 
-function editarNodo(nodoId, currentName) {
-  Swal.fire({
-    title: 'Editar Nombre',
+async function editarNodo(nodoId, currentName) {
+  const { value: newName } = await Swal.fire({
+    title: 'Editar Nombre (Seguro)',
     input: 'text',
     inputValue: currentName,
     showCancelButton: true,
@@ -1351,31 +1120,48 @@ function editarNodo(nodoId, currentName) {
     confirmButtonColor: '#fbbf24',
     background: '#1f2937',
     color: '#fff'
-  }).then((result) => {
-    if (result.isConfirmed && result.value) {
-      db.collection("Nodos").doc(nodoId).update({
-        name: result.value
-      })
-        .then(() => {
-          Swal.fire({
-            title: 'Actualizado',
-            icon: 'success',
-            timer: 1000,
-            showConfirmButton: false,
-            background: '#1f2937',
-            color: '#fff'
-          });
-          cargarNodos();
-        })
-        .catch(err => Swal.fire({
-          title: 'Error',
-          text: err.message,
-          icon: 'error',
-          background: '#1f2937',
-          color: '#fff'
-        }));
-    }
   });
+
+  if (!newName || newName === currentName) return;
+
+  try {
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+
+    const response = await fetch(`${API_BASE_URL}/uptime/nodes/${nodoId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ name: newName })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Error actualizando nodo');
+    }
+
+    Swal.fire({
+      title: 'Actualizado',
+      icon: 'success',
+      timer: 1000,
+      showConfirmButton: false,
+      background: '#1f2937',
+      color: '#fff'
+    });
+    cargarNodos();
+
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      title: 'Error',
+      text: err.message,
+      icon: 'error',
+      background: '#1f2937',
+      color: '#fff'
+    });
+  }
 }
 window.editarNodo = editarNodo;
 
@@ -1435,9 +1221,9 @@ document.addEventListener("DOMContentLoaded", function () {
       document.body.classList.add("is-admin");
       if (cachedRole === "superadmin") {
         const liRegistros = document.getElementById("li-registros");
-            const liTurnos = document.getElementById("li-turnos");
+        const liTurnos = document.getElementById("li-turnos");
         if (liRegistros) liRegistros.style.display = "block";
-            if (liTurnos) liTurnos.style.display = "block";
+        if (liTurnos) liTurnos.style.display = "block";
       }
     }
   }

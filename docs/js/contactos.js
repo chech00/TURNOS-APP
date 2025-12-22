@@ -1,33 +1,21 @@
+import { auth, db as firestore } from './firebase.js';
+import { API_BASE_URL } from './modules/config.js';
+
 // ==========================================
 // CONTACTOS DE NODOS - JavaScript
 // ==========================================
 
-let auth, firestore;
 let allContacts = [];
 let currentUserRole = 'user';
 let selectedContactId = null;
 let map = null;
 let markers = [];
 
-const isProduction = window.location.hostname.includes('github.io');
-const API_URL = isProduction ? 'https://turnos-app-8viu.onrender.com' : 'http://localhost:3000';
-
-// ==========================================
-// PHOTO UPLOAD CONFIG
-// ==========================================
 const PHOTO_FOLDER = 'node-photos';
 let pendingPhotoFile = null; // File pending upload
 
 // Initialize when Firebase is ready
 function initContactsPage() {
-    if (typeof firebase === 'undefined' || !firebase.auth) {
-        setTimeout(initContactsPage, 100);
-        return;
-    }
-
-    auth = firebase.auth();
-    firestore = firebase.firestore();
-
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             document.getElementById('user-display-name').textContent = user.displayName || user.email;
@@ -700,7 +688,7 @@ async function uploadNodePhoto(file, nodeSlug) {
 
         const token = await auth.currentUser.getIdToken();
 
-        const response = await fetch(`${API_URL}/upload-node-photo`, {
+        const response = await fetch(`${API_BASE_URL}/upload-node-photo`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`

@@ -103,6 +103,27 @@
             <div class="animation-section">
                 <h3 class="section-title"><i data-lucide="party-popper"></i> Festividades</h3>
                 <div class="animations-grid">
+                    <!-- Christmas Total -->
+                    <div class="animation-card" data-animation="christmas_total"
+                        style="grid-column: span 2; background: linear-gradient(135deg, rgba(212, 36, 38, 0.1), rgba(22, 91, 51, 0.1));">
+                        <div class="card-preview total-christmas-preview"
+                            style="background: linear-gradient(180deg, #1a2a3a 0%, #0d1520 100%);">
+                            <div class="preview-santa"
+                                style="position: absolute; font-size: 2rem; animation: preview-fly 3s linear infinite;">
+                                🎅🛷</div>
+                            <div class="preview-snow">❄</div>
+                            <div class="preview-snow">❅</div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🎅</span>
+                            <h4 style="color: #d42426;">Navidad 100x100</h4>
+                            <p>¡Modo Total! Trineo, Nieve y Música</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-christmas_total"><span
+                                    class="toggle-slider christmas_total"
+                                    style="background: linear-gradient(135deg, #d42426, #165b33);"></span></label>
+                        </div>
+                    </div>
+
                     <!-- Snow -->
                     <div class="animation-card" data-animation="christmas_snow">
                         <div class="card-preview snow-preview">
@@ -130,6 +151,25 @@
                             <p>Fuegos artificiales</p>
                             <label class="toggle"><input type="checkbox" id="toggle-newyear_fireworks"><span
                                     class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                    <!-- New Year Gold -->
+                    <div class="animation-card" data-animation="newyear_gold">
+                        <div class="card-preview" style="background: radial-gradient(circle, #000 0%, #1a1a00 100%);">
+                            <div class="preview-text-gold"
+                                style="color: gold; font-family: 'Cinzel', serif; position: absolute; top:50%; width:100%; text-align:center; transform:translateY(-50%); font-weight:bold;">
+                                2026</div>
+                            <div class="preview-sparkle" style="position:absolute; top:20%; left:20%; color:gold;">✨
+                            </div>
+                            <div class="preview-sparkle" style="position:absolute; bottom:30%; right:20%; color:gold;">✨
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🥂</span>
+                            <h4>Año Nuevo Gold</h4>
+                            <p>Elegancia Dorada 2026</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-newyear_gold"><span
+                                    class="toggle-slider" style="background: gold;"></span></label>
                         </div>
                     </div>
                     <!-- Halloween -->
@@ -215,9 +255,128 @@
                 </div>
             </div>
 
+            <!-- Futurista Section -->
+            <div class="animation-section">
+                <h3 class="section-title"><i data-lucide="cpu"></i> Futurista & Sci-Fi</h3>
+                <div class="animations-grid">
+                    <!-- Cyberpunk -->
+                    <div class="animation-card" data-animation="cyberpunk">
+                        <div class="card-preview" style="background: #000; border: 1px solid cyan; overflow:hidden;">
+                            <div
+                                style="position:absolute; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,255,255,0.1) 3px); pointer-events:none;">
+                            </div>
+                            <div
+                                style="color: #0ff; text-shadow: 2px 0 #f0f; position:absolute; top:40%; left:20%; font-family:monospace;">
+                                SYSTEM_RDY</div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🦾</span>
+                            <h4>Cyberpunk</h4>
+                            <p>Neon, Glitch & Future</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-cyberpunk"><span
+                                    class="toggle-slider"
+                                    style="background: linear-gradient(90deg, #0ff, #f0f);"></span></label>
+                        </div>
+                    </div>
+                    <!-- Warp Speed -->
+                    <div class="animation-card" data-animation="warp_speed">
+                        <div class="card-preview" style="background: #000;">
+                            <div
+                                style="position:absolute; top:50%; left:50%; width:2px; height:2px; background:white; box-shadow: 0 0 10px white, 10px 10px 0 white, -20px -10px 0 white; transform: translate(-50%, -50%);">
+                            </div>
+                            <div
+                                style="width:100%; height:1px; background:linear-gradient(90deg, transparent, white, transparent); position:absolute; top:50%;">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🚀</span>
+                            <h4>Warp Speed</h4>
+                            <p>Viaje interestelar</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-warp_speed"><span
+                                    class="toggle-slider"
+                                    style="background: linear-gradient(135deg, #000033, #6600cc);"></span></label>
+                        </div>
+                    </div>
+                    <!-- Radar -->
+                    <div class="animation-card" data-animation="radar">
+                        <div class="card-preview" style="background: #001100; overflow:hidden;">
+                            <div
+                                style="position:absolute; top:50%; left:50%; width:80px; height:80px; border: 1px solid #0f0; border-radius:50%; transform:translate(-50%,-50%);">
+                            </div>
+                            <div
+                                style="position:absolute; top:50%; left:50%; width:80px; height:80px; background: conic-gradient(from 0deg, transparent 0deg, rgba(0,255,0,0.5) 60deg, transparent 61deg); border-radius:50%; transform:translate(-50%,-50%); animation: radar-spin 2s linear infinite;">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">📡</span>
+                            <h4>Radar NOC</h4>
+                            <p>Monitoreo Táctico</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-radar"><span class="toggle-slider"
+                                    style="background: #0f0;"></span></label>
+                        </div>
+                    </div>
+                    <!-- Circuit -->
+                    <div class="animation-card" data-animation="circuit">
+                        <div class="card-preview" style="background: #000;">
+                            <div
+                                style="position:absolute; top:20%; left:10%; width:60%; height:2px; background:#00f; box-shadow:0 0 5px #00f;">
+                            </div>
+                            <div
+                                style="position:absolute; top:20%; left:70%; width:2px; height:40%; background:#00f; box-shadow:0 0 5px #00f;">
+                            </div>
+                            <div
+                                style="position:absolute; top:60%; left:70%; width:20%; height:2px; background:#00f; box-shadow:0 0 5px #00f;">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🔌</span>
+                            <h4>Circuito</h4>
+                            <p>Flujo Digital</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-circuit"><span class="toggle-slider"
+                                    style="background: blue;"></span></label>
+                        </div>
+                    </div>
+                    <!-- Synthwave -->
+                    <div class="animation-card" data-animation="synthwave">
+                        <div class="card-preview"
+                            style="background: linear-gradient(to bottom, #2b0f42 50%, #2b0f42 50%); overflow:hidden;">
+                            <div
+                                style="position:absolute; bottom:50%; left:50%; width:40px; height:40px; background:linear-gradient(to top, #ff00cc, #ffff00); border-radius:50%; transform:translate(-50%, 50%); box-shadow: 0 0 20px #ff00cc;">
+                            </div>
+                            <div
+                                style="position:absolute; bottom:0; width:100%; height:50%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, #f0f 2px, #f0f 4px); transform: perspective(100px) rotateX(60deg);">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🕶️</span>
+                            <h4>Retro 80s</h4>
+                            <p>Synthwave & Neon</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-synthwave"><span
+                                    class="toggle-slider"
+                                    style="background: linear-gradient(90deg, #f0f, #0ff);"></span></label>
+                        </div>
+                    </div>
+                    <!-- Biotech -->
+                    <div class="animation-card" data-animation="biotech">
+                        <div class="card-preview" style="background: #001;">
+                            <div
+                                style="position:absolute; top:50%; left:50%; color:#00ff88; font-size:2rem; transform:translate(-50%,-50%) rotate(45deg);">
+                                🧬</div>
+                        </div>
+                        <div class="card-body">
+                            <span class="card-emoji">🧬</span>
+                            <h4>Biotech</h4>
+                            <p>ADN & Futuro</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-biotech"><span class="toggle-slider"
+                                    style="background: #00ff88;"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Ambientales Section -->
             <div class="animation-section">
-                <h3 class="section-title"><i data-lucide="cloud-sun"></i> Efectos Ambientales</h3>
+                <h3 class="section-title"><i data-lucide="cloud-sun"></i> Ambientales</h3>
                 <div class="animations-grid">
                     <!-- Rain -->
                     <div class="animation-card" data-animation="rain">
@@ -317,8 +476,9 @@
 
             <!-- Personalization Section -->
             <div class="animation-section">
-                <h3 class="section-title"><i data-lucide="layout"></i> Personalización</h3>
+                <h3 class="section-title"><i data-lucide="layout"></i> Personalización & UI</h3>
                 <div class="animations-grid">
+                    <!-- Opacity Slider (Existing) -->
                     <div class="animation-card settings-card"
                         style="grid-column: span 2; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
                         <h4 style="color: var(--color-texto-principal);">Opacidad del Menú Lateral</h4>
@@ -330,6 +490,32 @@
                         </div>
                         <p style="font-size: 0.8rem; color: var(--color-texto-secundario);">Ajusta qué tan transparente
                             es el menú lateral.</p>
+                    </div>
+
+                    <!-- Performance Mode -->
+                    <div class="animation-card" data-setting="performance">
+                        <div class="card-body">
+                            <span class="card-emoji">🚀</span>
+                            <h4>Modo Rendimiento</h4>
+                            <p>Desactivar efectos pesados</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-performance"><span
+                                    class="toggle-slider performance" style="background: #ff9f43;"></span></label>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #888; padding: 0 1rem 1rem;">Elimina desenfoques y sombras
+                            para equipos lentos.</p>
+                    </div>
+
+                    <!-- Sidebar Position -->
+                    <div class="animation-card" data-setting="sidebar_right">
+                        <div class="card-body">
+                            <span class="card-emoji">➡️</span>
+                            <h4>Menú a la Derecha</h4>
+                            <p>Cambiar posición del sidebar</p>
+                            <label class="toggle"><input type="checkbox" id="toggle-sidebar-right"><span
+                                    class="toggle-slider sidebar-pos" style="background: #54a0ff;"></span></label>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #888; padding: 0 1rem 1rem;">Mueve la barra lateral al lado
+                            derecho de la pantalla.</p>
                     </div>
                 </div>
             </div>

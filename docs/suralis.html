@@ -188,13 +188,18 @@
                         </div>
                         <!-- Fake Toolbar for Pro Look -->
                         <div class="email-toolbar">
-                            <button class="toolbar-btn" title="Negrita"><i class="fas fa-bold"></i></button>
-                            <button class="toolbar-btn" title="Cursiva"><i class="fas fa-italic"></i></button>
-                            <button class="toolbar-btn" title="Subrayado"><i class="fas fa-underline"></i></button>
+                            <button class="toolbar-btn" data-command="bold" title="Negrita"><i
+                                    class="fas fa-bold"></i></button>
+                            <button class="toolbar-btn" data-command="italic" title="Cursiva"><i
+                                    class="fas fa-italic"></i></button>
+                            <button class="toolbar-btn" data-command="underline" title="Subrayado"><i
+                                    class="fas fa-underline"></i></button>
                             <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;">
                             </div>
-                            <button class="toolbar-btn" title="Lista"><i class="fas fa-list-ul"></i></button>
-                            <button class="toolbar-btn" title="Enlace"><i class="fas fa-link"></i></button>
+                            <button class="toolbar-btn" data-command="insertUnorderedList" title="Lista"><i
+                                    class="fas fa-list-ul"></i></button>
+                            <button class="toolbar-btn" id="linkBtnCaida" data-command="createLink" title="Enlace"><i
+                                    class="fas fa-link"></i></button>
                         </div>
                         <div class="email-body" id="emailContentDiv" contenteditable="true"></div>
                     </div>
@@ -215,13 +220,18 @@
                         </div>
                         <!-- Fake Toolbar for Pro Look -->
                         <div class="email-toolbar">
-                            <button class="toolbar-btn" title="Negrita"><i class="fas fa-bold"></i></button>
-                            <button class="toolbar-btn" title="Cursiva"><i class="fas fa-italic"></i></button>
-                            <button class="toolbar-btn" title="Subrayado"><i class="fas fa-underline"></i></button>
+                            <button class="toolbar-btn" data-command="bold" title="Negrita"><i
+                                    class="fas fa-bold"></i></button>
+                            <button class="toolbar-btn" data-command="italic" title="Cursiva"><i
+                                    class="fas fa-italic"></i></button>
+                            <button class="toolbar-btn" data-command="underline" title="Subrayado"><i
+                                    class="fas fa-underline"></i></button>
                             <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1); margin: 0 4px;">
                             </div>
-                            <button class="toolbar-btn" title="Lista"><i class="fas fa-list-ul"></i></button>
-                            <button class="toolbar-btn" title="Enlace"><i class="fas fa-link"></i></button>
+                            <button class="toolbar-btn" data-command="insertUnorderedList" title="Lista"><i
+                                    class="fas fa-list-ul"></i></button>
+                            <button class="toolbar-btn" id="linkBtnCaida" data-command="createLink" title="Enlace"><i
+                                    class="fas fa-link"></i></button>
                         </div>
                         <div class="email-body" id="onlineContentDiv" contenteditable="true"></div>
                     </div>

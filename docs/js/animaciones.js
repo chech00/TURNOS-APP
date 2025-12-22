@@ -12,14 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // All animation types
     const ANIMATION_KEYS = [
-        'christmas_snow', 'newyear_fireworks', 'halloween', 'valentine',
+        'christmas_total', 'christmas_snow', 'newyear_fireworks', 'newyear_gold', 'cyberpunk', 'warp_speed',
+        'radar', 'synthwave', 'circuit', 'biotech',
+        'halloween', 'valentine',
         'easter', 'independence', 'rain', 'autumn', 'bubbles', 'aurora',
         'matrix', 'particles', 'christmas_lights', 'golden_border'
     ];
 
     const ANIMATION_NAMES = {
+        christmas_total: 'Modo Navidad Total',
         christmas_snow: 'Nieve navideña',
         newyear_fireworks: 'Fuegos artificiales',
+        newyear_gold: 'Año Nuevo 2026 Gold',
+        cyberpunk: 'Modo Cyberpunk',
+        warp_speed: 'Velocidad Luz',
+        radar: 'Radar NOC',
+        synthwave: 'Retro 80s',
+        circuit: 'Circuito Digital',
+        biotech: 'Biotech ADN',
         halloween: 'Halloween',
         valentine: 'San Valentín',
         easter: 'Pascua',
@@ -150,6 +160,58 @@ document.addEventListener('DOMContentLoaded', () => {
                             e.target.checked = !isEnabled;
                         });
                 });
+            }
+        });
+    }
+
+    /* =========================================
+       UI SETTINGS HANDLERS (Performance & Sidebar)
+       ========================================= */
+    const performanceToggle = document.getElementById('toggle-performance');
+    const sidebarRightToggle = document.getElementById('toggle-sidebar-right');
+
+    // Load Saved UI Settings
+    if (localStorage.getItem('performanceMode') === 'true') {
+        document.body.classList.add('performance-mode');
+        if (performanceToggle) performanceToggle.checked = true;
+    }
+
+    if (localStorage.getItem('sidebarRight') === 'true') {
+        document.body.classList.add('sidebar-right');
+        if (sidebarRightToggle) sidebarRightToggle.checked = true;
+    }
+
+    // Performance Toggle Event
+    if (performanceToggle) {
+        performanceToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('performance-mode');
+                localStorage.setItem('performanceMode', 'true');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Modo Rendimiento Activado 🚀',
+                    text: 'Se han desactivado efectos visuales pesados.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: 'var(--color-fondo-secundario)',
+                    color: 'var(--color-texto-principal)'
+                });
+            } else {
+                document.body.classList.remove('performance-mode');
+                localStorage.setItem('performanceMode', 'false');
+            }
+        });
+    }
+
+    // Sidebar Right Toggle Event
+    if (sidebarRightToggle) {
+        sidebarRightToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('sidebar-right');
+                localStorage.setItem('sidebarRight', 'true');
+            } else {
+                document.body.classList.remove('sidebar-right');
+                localStorage.setItem('sidebarRight', 'false');
             }
         });
     }

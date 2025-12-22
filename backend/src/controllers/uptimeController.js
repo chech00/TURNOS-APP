@@ -98,6 +98,25 @@ async function getNodes(req, res) {
     }
 }
 
+// Security: Only Admins/Superadmins should be able to delete (Middleware handles this, but logic is here)
+async function deleteIncident(req, res) {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ error: "Falta el ID del incidente" });
+
+        await db.collection("uptime_logs").doc(id).delete();
+        console.log(`🗑️ Incidente eliminado vía API Backend: ${id}`);
+        res.json({ success: true, message: "Incidente eliminado exitosamente" });
+    } catch (error) {
+        console.error("❌ Error eliminando incidente:", error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+// NEW: Close Incident Specific Endpoint (For clearer intent)
+// (Function moved/removed to avoid duplicates)
+
+
 async function getNodesWithPons(req, res) {
     try {
         const nodesSnapshot = await db.collection("Nodos").orderBy('name').get();
@@ -549,9 +568,73 @@ async function syncWithDudeFullSync(req, res) {
     }
 }
 
+/**
+ * Securely create a new Node (Topology)
+ */
+async function createNode(req, res) {
+    try {
+        const { name } = req.body;
+        if (!name) return res.status(400).json({ error: "Nombre del nodo requerido" });
+
+        const safeName = name.trim();
+
+        // Add to Firestore
+        const docRef = await db.collection("Nodos").add({
+            name: safeName,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`✅ [Secure] Node created: ${safeName} (${docRef.id})`);
+        res.json({ success: true, id: docRef.id, name: safeName });
+    } catch (error) {
+        console.error("Error creating node:", error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+/**
+ * Securely update a Node
+ */
+async function updateNode(req, res) {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        if (!id || !name) return res.status(400).json({ error: "ID y Nombre requeridos" });
+
+        await db.collection("Nodos").doc(id).update({
+            name: name.trim()
+        });
+
+        console.log(`✅ [Secure] Node updated: ${id} -> ${name}`);
+        res.json({ success: true, id });
+    } catch (error) {
+        console.error("Error updating node:", error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+/**
+ * Securely delete a Node
+ */
+async function deleteNode(req, res) {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ error: "ID requerido" });
+
+        await db.collection("Nodos").doc(id).delete();
+        console.log(`✅ [Secure] Node deleted: ${id}`);
+        res.json({ success: true, id });
+    } catch (error) {
+        console.error("Error deleting node:", error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
+    syncDudeDevices,
     createIncident,
     updateIncident,
+    deleteIncident,
     getNodes,
     getNodesWithPons,
     getIncidents,
@@ -567,5 +650,9 @@ module.exports = {
     removeLabDevice,
     refreshLabCache,
     initializeDeviceCache,
-    syncWithDudeFullSync
+    syncWithDudeFullSync,
+    // Node Topology
+    createNode,
+    updateNode,
+    deleteNode
 };

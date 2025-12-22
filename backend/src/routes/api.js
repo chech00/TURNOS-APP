@@ -71,7 +71,13 @@ router.post("/uptime/:id/close", checkAuth, uptimeController.closeIncident);
 router.get("/uptime/list", checkAuth, uptimeController.getIncidents);
 router.get("/uptime/nodes", checkAuth, uptimeController.getNodes);
 router.get("/uptime/search-data", checkAuth, uptimeController.getNodesWithPons);
+router.delete("/uptime/logs/:id", checkAuth, requireAdmin, uptimeController.deleteIncident); // New Delete Route
 router.delete("/uptime/purge", checkAuth, uptimeController.purgeIncidents);
+
+// --- Node Topology Management (Secure) ---
+router.post("/uptime/nodes", checkAuth, requireAdmin, uptimeController.createNode);
+router.put("/uptime/nodes/:id", checkAuth, requireAdmin, uptimeController.updateNode);
+router.delete("/uptime/nodes/:id", checkAuth, requireAdmin, uptimeController.deleteNode);
 
 // New optimized endpoints
 router.get("/uptime/summary", checkAuth, uptimeController.getMonthlySummary);

@@ -450,6 +450,66 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'Buenas noches';
     };
 
+    // === Pro Text Editor Logic ===
+    const setupTextEditor = () => {
+        const buttons = document.querySelectorAll('.toolbar-btn');
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const command = btn.dataset.command;
+
+                if (command === 'createLink') {
+                    const url = prompt('Ingrese el enlace:', 'https://');
+                    if (url) {
+                        document.execCommand(command, false, url);
+                    }
+                } else if (command) {
+                    document.execCommand(command, false, null);
+                }
+
+                // Keep focus on the editor
+                const activePanel = document.querySelector('.preview-panel.active');
+                if (activePanel) {
+                    const editor = activePanel.querySelector('.email-body');
+                    // editor.focus(); // Optional: keeps keyboard up on mobile
+                }
+
+                updateToolbarStates();
+            });
+        });
+
+        // Update active state of buttons based on cursor position
+        const updateToolbarStates = () => {
+            buttons.forEach(btn => {
+                const command = btn.dataset.command;
+                if (!command || command === 'createLink') return;
+
+                if (document.queryCommandState(command)) {
+                    btn.classList.add('active');
+                    btn.style.color = '#7796CB'; // Visual feedback
+                    btn.style.background = 'rgba(119, 150, 203, 0.1)';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.color = '';
+                    btn.style.background = '';
+                }
+            });
+        };
+
+        // Listen for selection changes to update toolbar
+        document.addEventListener('selectionchange', updateToolbarStates);
+
+        // Listen for input in editors to ensure toolbar sync
+        const editors = document.querySelectorAll('.email-body');
+        editors.forEach(ed => {
+            ed.addEventListener('keyup', updateToolbarStates);
+            ed.addEventListener('mouseup', updateToolbarStates);
+        });
+    };
+
+    setupTextEditor(); // Initialize Editor Logic
+
     // === Update Previews ===
     const updatePreviews = () => {
         const servicesList = Array.from(selectedServices).map(s => `• ${s}`).join('<br>');

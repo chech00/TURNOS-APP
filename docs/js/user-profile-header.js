@@ -14,6 +14,7 @@
      */
     function loadCachedProfile() {
         const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+        loadUISettings(); // Load UI settings alongside profile
         if (!cached) return;
 
         try {
@@ -255,6 +256,27 @@
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
+    }
+
+    /**
+     * Load cached UI settings (Theme, Performance, Sidebar)
+     */
+    function loadUISettings() {
+        // Performance Mode
+        if (localStorage.getItem('performanceMode') === 'true') {
+            document.body.classList.add('performance-mode');
+        }
+
+        // Sidebar Position
+        if (localStorage.getItem('sidebarRight') === 'true') {
+            document.body.classList.add('sidebar-right');
+        }
+
+        // Sidebar Opacity
+        const opacity = localStorage.getItem('sidebarOpacity');
+        if (opacity) {
+            document.documentElement.style.setProperty('--sidebar-opacity', opacity);
+        }
     }
 
     // Export function globally for manual updates if needed

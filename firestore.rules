@@ -1,269 +1,71 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // =======================================================================
-    // HELPER FUNCTIONS
-    // =======================================================================
-    
-    // Verificar si está autenticado
+  
+    // ========================================================
+    // REGLAS GENERALES: Validar autenticación
+    // ========================================================
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Obtener el rol del usuario actual (solo usar en reglas que NO son userRoles)
-    function getUserRole() {
-      return get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol;
-    }
-    
-    // Verificar si es admin o superadmin
-    function isAdmin() {
-      return isAuthenticated() && getUserRole() in ['admin', 'superadmin'];
-    }
-    
-    // Verificar si es superadmin
-    function isSuperAdmin() {
-      return isAuthenticated() && getUserRole() == 'superadmin';
-    }
-    
-    // =======================================================================
-    // DATA VALIDATION
-    // =======================================================================
-    
-    function isValidRole(role) {
-      return role in ['user', 'admin', 'superadmin'];
-    }
-    
-    function isValidUserRoleData() {
-      let data = request.resource.data;
-      return data.keys().hasAll(['email', 'rol']) &&
-             data.email is string &&
-             data.rol is string &&
-             isValidRole(data.rol);
-    }
-    
-    // =======================================================================
-    // USER ROLES - CRÍTICO: Solo superadmins pueden modificar roles
-    // =======================================================================
-    match /userRoles/{userId} {
-      // Cualquier usuario autenticado puede LEER (para verificar su propio rol)
-      allow read: if isAuthenticated();
-      
-      // CREAR: Solo superadmins Y los datos deben ser válidos
-      allow create: if isAuthenticated() && 
-        get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol == 'superadmin' &&
-        isValidUserRoleData();
-      
-      // ACTUALIZAR: Superadmins pueden todo, usuarios solo pueden actualizar SU documento SIN cambiar el rol
-      allow update: if isAuthenticated() && (
-        get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol == 'superadmin' ||
-        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['rol']))
-      );
-      
-      // ELIMINAR: Solo superadmins
-      allow delete: if isAuthenticated() && 
-        get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol == 'superadmin';
-    }
-    
-    // =======================================================================
-    // USER STATUS - Solo admins pueden suspender
-    // =======================================================================
-    match /userStatus/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // =======================================================================
-    // CALENDARIOS Y TURNOS - Admins pueden escribir
-    // =======================================================================
-    match /calendarios/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    match /turnos/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // =======================================================================
-    // EMPLEADOS - Admins pueden escribir
-    // =======================================================================
-    match /empleados/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // =======================================================================
-    // CONFIG - Configuración del sistema
-    // =======================================================================
-    match /config/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // Legacy: Soporte para Config con mayúscula (datos antiguos)
-    match /Config/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // =======================================================================
-    // FIBER SIGNALS - Señales de fibra
-    // =======================================================================
-    match /fiberSignals/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /Nodos/{nodoId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-      
-      match /PONLetters/{letter} {
-        allow read, write: if isAuthenticated();
-        
-        match /PONs/{ponId} {
-          allow read, write: if isAuthenticated();
-          
-          match /Cajas/{cajaId} {
-             allow read, write: if isAuthenticated();
-             
-             match /Filamentos/{filamentoId} {
-                allow read, write: if isAuthenticated();
-             }
-          }
-        }
-      }
-    }
-    
-    match /cabinets/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /olts/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // =======================================================================
-    // DOCUMENTS - Documentos NOC
-    // =======================================================================
-    match /documents/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // =======================================================================
-    // LOGS - Inmutables después de crear
-    // =======================================================================
-    match /loginLogs/{logId} {
-      allow read: if isSuperAdmin();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
-    }
-    
-    match /auditLogs/{logId} {
-      allow read: if isSuperAdmin();
-      allow create: if isAuthenticated();
-      allow update, delete: if false;
-    }
-    
-    // =======================================================================
-    // REGISTROS Y BACKUPS
-    // =======================================================================
-    match /registros/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    match /backups/{document=**} {
-      allow read: if isSuperAdmin();
-      allow write: if isSuperAdmin();
-    }
-    
-    // =======================================================================
-    // DIRECTORIO
-    // =======================================================================
-    match /directorio/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    // =======================================================================
-    // SURALIS - Notificaciones e incidentes
-    // =======================================================================
-    match /suralisIncidents/{document=**} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-    
-    match /suralis_config/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    match /suralis_services/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-    
-    // ESTADO REAL-TIME (Semáforo)
-    match /suralis_states/{document=**} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // =======================================================================
-    // ACTIVE SESSIONS - Sesiones activas en tiempo real
-    // =======================================================================
-    match /activeSessions/{sessionId} {
-      // Superadmins pueden leer todas las sesiones
-      allow read: if isSuperAdmin();
-      
-      // Usuarios pueden crear SU PROPIA sesión (sessionId = uid)
-      allow create: if isAuthenticated() && request.auth.uid == sessionId;
-      
-      // Usuarios pueden actualizar SU PROPIA sesión
-      // Superadmins pueden actualizar CUALQUIER sesión (para marcar como terminada)
-      allow update: if isAuthenticated() && (request.auth.uid == sessionId || isSuperAdmin());
-      
-      // Superadmins pueden eliminar cualquier sesión (para terminar remotamente)
-      // Los usuarios también pueden eliminar su propia sesión (al hacer logout)
-      allow delete: if isAuthenticated() && (isSuperAdmin() || request.auth.uid == sessionId);
-    }
-    
-    // =======================================================================
-    // ANIMACIONES - Solo superadmin puede modificar
-    // =======================================================================
-    match /animaciones/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isSuperAdmin();
+    function isEmailVerified() {
+    	// Opcional: request.auth.token.email_verified
+      return isAuthenticated();
     }
 
-    // =======================================================================
-    // UPTIME LOGS - Bitácora de incidentes
-    // =======================================================================
-    match /uptime_logs/{document=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+    function isAdmin() {
+      // Verificar claim personalizado o documento en 'userRoles'
+      // Por simplicidad, leemos el doc (tiene costo, pero es seguro)
+      // OMEJOR: Usar Custom Claims si estuvieran configurados.
+      // Aquí usaremos la lectura 'userRoles'
+      return isAuthenticated() && 
+      	get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.rol in ['admin', 'superadmin'];
+    }
+
+    
+    // ========================================================
+    // COLECCIONES
+    // ========================================================
+
+    // 1. Usuarios y Roles
+    match /userRoles/{userId} {
+      allow read: if isAuthenticated(); // Cualquiera puede leer (para ver perfiles) o restringir a propio?
+      // Mejor: Cada uno lee lo suyo, Admin lee todo.
+      // Por ahora dejamos leer autenticado para que la UI cargue.
+      allow write: if isAdmin(); // Solo admin puede cambiar roles
     }
     
-    // =======================================================================
-    // LAB DEVICES - Dispositivos del laboratorio de monitoreo
-    // =======================================================================
-    match /lab_devices/{document=**} {
+    match /users/{userId} {
+    	allow read, write: if request.auth.uid == userId || isAdmin();
+    }
+
+    // 2. Nodos y Topología (Senales)
+    // BLINDADO: Escrituras solo via API Backend
+    match /Nodos/{document=**} {
       allow read: if isAuthenticated();
+      allow write: if false; 
+    }
+
+    // 3. Uptime Logs (INCIDENTES) - BLINDADO (Backend-First)
+    match /uptime_logs/{incidentId} {
+      allow read: if isAuthenticated();
+      // BLOCKED WRITES: Todas las escrituras deben ir por la API Backend
+      allow write: if false; 
+    }
+    
+    // 4. Configuración (Monitoring Toggle, etc)
+    match /config/{docId} {
+    	allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
-    // =======================================================================
-    // DEFAULT: Lectura autenticada, escritura denegada
-    // =======================================================================
-    match /{document=**} {
+
+    // 5. Sesiones Activas (Presencia)
+    match /activeSessions/{userId} {
       allow read: if isAuthenticated();
-      allow write: if false;
+      // Write is handled by client in active-session.js (should ideally be backend but legacy)
+      // Since active-session.js writes directly, we must allow user to write their own doc
+      allow write: if request.auth.uid == userId; 
     }
   }
 }

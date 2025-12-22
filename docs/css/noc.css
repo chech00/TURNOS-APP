@@ -6,19 +6,7 @@
 /* ============================================
    Reinicio Global y Configuración Base
 ============================================ */
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* Global variables and base styles come from styles.css */
 
 /* =============================
    Variables de Colores (Root)
@@ -45,7 +33,7 @@ body.dark-mode {
    Estilos Base
 ================================ */
 body {
-  font-family: "Poppins", sans-serif;
+  /* Font inherited from styles.css */
   background: var(--color-fondo-principal);
   color: var(--color-texto-principal);
   transition: background 0.3s ease, color 0.3s ease;
@@ -72,8 +60,9 @@ main {
    Calendario
 ================================ */
 .calendar-container {
-  background: var(--color-fondo-secundario);
-  border-radius: 16px;
+  /* Fixed background for content legibility, decoupled from sidebar transparency */
+  background: rgba(30, 41, 59, 0.95);
+  border-radius: var(--border-radius-card);
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -95,7 +84,7 @@ main {
 .calendar-container h2 {
   font-size: 1.5rem;
   color: var(--color-texto-principal);
-  font-family: var(--font-secondary);
+  font-family: var(--font-headings);
   font-weight: 600;
   margin-bottom: 1.5rem;
   display: flex;
@@ -784,9 +773,7 @@ main {
 }
 
 /* Admin-only elements (shown by JS when user is admin) */
-.admin-only {
-  display: none !important;
-}
+/* Admin-only elements handled by styles.css */
 
 /* Enhanced Employee Card Styles */
 .employee-card {

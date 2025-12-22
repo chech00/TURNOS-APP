@@ -9,7 +9,7 @@ import { auth } from './firebase.js';
 const isProduction = window.location.hostname.includes('github.io');
 const API_URL = isProduction
     ? 'https://turnos-app-8viu.onrender.com'
-    : 'http://localhost:3000';
+    : 'http://localhost:3001';
 
 async function callApi(endpoint, method, body = null) {
     const user = auth.currentUser;

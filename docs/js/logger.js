@@ -40,4 +40,20 @@ if (window.Logger) {
         // console.warn y console.error se mantienen para debugging de emergencia
     }
 
+    // =========================================================================
+    // THEME INITIALIZATION (Global Transparency)
+    // =========================================================================
+    (function initTheme() {
+        try {
+            const savedOpacity = localStorage.getItem('sidebarOpacity');
+            if (savedOpacity) {
+                document.documentElement.style.setProperty('--sidebar-opacity', savedOpacity);
+                // Also update legacy variable if exists
+                document.documentElement.style.setProperty('--glass-opacity', savedOpacity);
+            }
+        } catch (e) {
+            // Silently fail if localStorage is not available
+        }
+    })();
+
 } // End of else block (guard against double execution)

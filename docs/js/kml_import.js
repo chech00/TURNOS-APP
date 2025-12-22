@@ -1,9 +1,5 @@
 import { auth } from './firebase.js';
-
-const isProduction = window.location.hostname.includes('github.io');
-const API_BASE_URL = isProduction
-    ? 'https://turnos-app-8viu.onrender.com'
-    : 'http://localhost:3001';
+import { API_BASE_URL } from './modules/config.js';
 
 export async function initKmlImport() {
 

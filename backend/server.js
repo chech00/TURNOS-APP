@@ -15,6 +15,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================================================
+// SEGURIDAD: Hardening (Helmet & Sanitization)
+// =============================================================================
+const helmet = require("helmet");
+const xss = require("xss-clean");
+
+app.use(helmet()); // Set Security Headers (HSTS, NoSniff, etc.)
+app.use(xss());    // Sanitize Inputs (prevent XSS in req.body/params)
+
+// =============================================================================
 // SEGURIDAD: Configuración de CORS restrictiva
 // =============================================================================
 const ALLOWED_ORIGINS = [

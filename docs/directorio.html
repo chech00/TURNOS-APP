@@ -18,9 +18,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="stylesheet" href="./css/enhancements.css" />
-    <link rel="stylesheet" href="./css/styles.css?v=8" />
+    <link rel="stylesheet" href="./css/styles.css?v=9" />
     <link rel="stylesheet" href="./css/user-profile-header.css" />
     <link rel="stylesheet" href="./css/directorio.css" />
+    <link rel="stylesheet" href="./css/animaciones.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="./js/lucide-instant.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -30,7 +31,7 @@
     <script src="./js/security-helpers.js"></script>
     <!-- Optimistic Profile Header Loading -->
     <script src="./js/user-profile-header.js"></script>
-    <script defer src="./js/christmas.js"></script>
+    <!-- <script defer src="./js/christmas.js"></script> -->
     <!-- Performance Helpers (debounced icons, DOM utils) -->
     <script src="./js/performance-helpers.js"></script>
 </head>
@@ -159,7 +160,7 @@
                 </div>
                 <div class="stat-card vacation">
                     <div class="stat-icon">
-                        <i data-lucide="palm-tree"></i>
+                        <i data-lucide="palmtree"></i>
                     </div>
                     <div class="stat-info">
                         <span class="stat-value" id="stat-vacation">0</span>
@@ -355,6 +356,7 @@
         // Use debounced refreshIcons for performance
         if (window.refreshIcons) refreshIcons(); else lucide.createIcons();
     </script>
+    <script defer src="./js/christmas.js"></script>
     <script src="./js/sw-register.js"></script>
 </body>
 

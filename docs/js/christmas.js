@@ -18,7 +18,15 @@
         matrix: 'matrix-container',
         particles: 'particles-container',
         christmas_lights: 'christmas-lights-container',
-        golden_border: 'golden-border-container'
+        golden_border: 'golden-border-container',
+        christmas_total: 'christmas-total-container',
+        newyear_gold: 'newyear-gold-container',
+        cyberpunk: 'cyberpunk-container',
+        warp_speed: 'warp-speed-container',
+        radar: 'radar-container',
+        synthwave: 'synthwave-container',
+        circuit: 'circuit-container',
+        biotech: 'biotech-container'
     };
 
     const STORAGE_KEY = 'seasonalAnimations';
@@ -143,7 +151,24 @@
         // Christmas Lights
         data.christmas_lights ? enableChristmasLights() : disableAnimation('christmas_lights');
         // Golden Border
+        // Golden Border
         data.golden_border ? enableGoldenBorder() : disableAnimation('golden_border');
+        // Christmas Total
+        data.christmas_total ? enableChristmasTotal(data) : disableAnimation('christmas_total');
+        // New Year Gold
+        data.newyear_gold ? enableNewYearGold() : disableAnimation('newyear_gold');
+        // Cyberpunk
+        data.cyberpunk ? enableCyberpunk() : disableAnimation('cyberpunk');
+        // Warp Speed
+        data.warp_speed ? enableWarpSpeed() : disableAnimation('warp_speed');
+        // Radar
+        data.radar ? enableRadar() : disableAnimation('radar');
+        // Synthwave
+        data.synthwave ? enableSynthwave() : disableAnimation('synthwave');
+        // Circuit
+        data.circuit ? enableCircuit() : disableAnimation('circuit');
+        // Biotech
+        data.biotech ? enableBiotech() : disableAnimation('biotech');
     }
 
     function disableAnimation(type) {
@@ -1017,4 +1042,994 @@
         animate();
     };
 
-})();
+
+    // ==========================================
+    // 13. CHRISTMAS TOTAL 🎅 (Realistic & Cinematic)
+    // ==========================================
+    function enableChristmasTotal(data) {
+        const container = createContainer('christmas_total');
+        if (!container) return;
+
+        // A. HYPER-REAL ATMOSPHERE (Background)
+        // 1. Starfield (Static + Twinkling)
+        const starContainer = document.createElement('div');
+        starContainer.style.position = 'fixed';
+        starContainer.style.top = '0';
+        starContainer.style.left = '0';
+        starContainer.style.width = '100%';
+        starContainer.style.height = '100%';
+        starContainer.style.zIndex = '0';
+
+        // Generate stars using box-shadow for performance
+        let starsSmall = '';
+        let starsMedium = '';
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        for (let i = 0; i < 200; i++) {
+            starsSmall += `${Math.random() * w}px ${Math.random() * h}px 0 white, `;
+            if (i < 50) starsMedium += `${Math.random() * w}px ${Math.random() * h}px 0 rgba(255,255,255,0.5), `;
+        }
+        const smallStars = document.createElement('div');
+        smallStars.style.width = '1px';
+        smallStars.style.height = '1px';
+        smallStars.style.boxShadow = starsSmall.slice(0, -2);
+        starContainer.appendChild(smallStars);
+
+        container.appendChild(starContainer);
+
+        // 2. Realistic Moon (CSS Craters) 🌕
+        const moon = document.createElement('div');
+        moon.style.position = 'fixed';
+        moon.style.top = '5%';
+        moon.style.right = '10%';
+        moon.style.width = '120px';
+        moon.style.height = '120px';
+        moon.style.borderRadius = '50%';
+        // Complex gradient for crater illusion
+        moon.style.background = 'radial-gradient(circle at 30% 30%, #fffdf0, #e6e6d8)';
+        moon.style.boxShadow = '0 0 60px rgba(255, 253, 224, 0.4), inset -20px -20px 50px rgba(0,0,0,0.1)';
+        moon.style.zIndex = '1';
+
+        // Craters
+        const craters = document.createElement('div');
+        craters.style.position = 'absolute';
+        craters.style.top = '0';
+        craters.style.left = '0';
+        craters.style.width = '100%';
+        craters.style.height = '100%';
+        craters.style.borderRadius = '50%';
+        craters.style.backgroundImage = `
+            radial-gradient(circle at 70% 20%, rgba(200,200,200,0.3) 10%, transparent 11%),
+            radial-gradient(circle at 30% 60%, rgba(200,200,200,0.3) 15%, transparent 16%),
+            radial-gradient(circle at 80% 50%, rgba(200,200,200,0.2) 8%, transparent 9%)
+        `;
+        moon.appendChild(craters);
+        container.appendChild(moon);
+
+        // 3. Moving Clouds/Mist (CSS Parallax) ☁️
+        for (let c = 0; c < 2; c++) {
+            const cloud = document.createElement('div');
+            cloud.style.position = 'fixed';
+            cloud.style.top = `${10 + c * 20}%`;
+            cloud.style.left = '0';
+            cloud.style.width = '200%';
+            cloud.style.height = '300px';
+            cloud.style.background = 'radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%)';
+            cloud.style.opacity = '0.7';
+            cloud.style.zIndex = '2'; // In front of stars/moon, behind Santa
+            cloud.style.filter = 'blur(40px)';
+
+            cloud.animate([
+                { transform: 'translateX(-50%)' },
+                { transform: 'translateX(0%)' }
+            ], {
+                duration: 60000 + c * 30000, // Very slow
+                iterations: Infinity,
+                direction: c % 2 === 0 ? 'normal' : 'reverse' // Alternate direction
+            });
+            container.appendChild(cloud);
+        }
+
+        // B. REALISTIC SNOW (Parallax Layers)
+        const layers = 3;
+        for (let l = 0; l < layers; l++) {
+            const layer = document.createElement('div');
+            layer.className = `snow-layer-${l}`;
+            layer.style.position = 'fixed';
+            layer.style.top = '0';
+            layer.style.left = '0';
+            layer.style.width = '100%';
+            layer.style.height = '100%';
+            layer.style.pointerEvents = 'none';
+            layer.style.zIndex = '9990';
+            container.appendChild(layer);
+
+            const count = 50 + (l * 30);
+            for (let i = 0; i < count; i++) {
+                const flake = document.createElement('div');
+                // Use rounded div instead of text for realism
+                flake.className = 'real-snowflake';
+                flake.style.position = 'absolute';
+                flake.style.background = 'white';
+                flake.style.borderRadius = '50%';
+
+                // Depth effects
+                const size = (l + 1) * 2 + Math.random() * 2;
+                flake.style.width = `${size}px`;
+                flake.style.height = `${size}px`;
+                flake.style.opacity = 0.4 + (l * 0.2);
+                flake.style.filter = `blur(${3 - l}px)`; // Farther snow is blurrier
+
+                flake.style.left = `${Math.random() * 100}vw`;
+                flake.style.top = `-${Math.random() * 20}vh`; // Start above
+
+                // Physics
+                const duration = 10 - (l * 2) + Math.random() * 5; // Closer layers fall faster
+                flake.animate([
+                    { transform: `translate(0, -10vh)` },
+                    { transform: `translate(${Math.random() * 100 - 50}px, 110vh)` }
+                ], {
+                    duration: duration * 1000,
+                    iterations: Infinity,
+                    delay: Math.random() * -20000 // Start mid-air
+                });
+
+                layer.appendChild(flake);
+            }
+        }
+
+        // C. REALISTIC CURVED LIGHTS 💡 (SVG Catenary)
+        const svgNS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(svgNS, "svg");
+        svg.style.position = "fixed";
+        svg.style.top = "0";
+        svg.style.left = "0";
+        svg.style.width = "100%";
+        svg.style.height = "150px";
+        svg.style.zIndex = "9998";
+        svg.style.pointerEvents = "none";
+
+        // Draw the wire (Catenary curve approximation)
+        const path = document.createElementNS(svgNS, "path");
+        // A simple curve from -10% to 110% width
+        path.setAttribute("d", "M -100,0 Q 50% 150, 20000,0"); // Overkill width to cover screens, simple quadratic
+        // Better: Dynamic calculation? For now static quadratic is okay for top hang.
+        // Actually, let's just do a nice curve based on 100vw
+        const width = window.innerWidth;
+        path.setAttribute("d", `M 0,0 Q ${width / 2},120 ${width},0`);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#222");
+        path.setAttribute("stroke-width", "2");
+        svg.appendChild(path);
+
+        // Add Bulbs along the curve
+        const bulbCount = 40;
+        const colors = ['#ff4444', '#44ff44', '#ffff44', '#4444ff', '#ff00ff'];
+
+        for (let i = 1; i < bulbCount; i++) {
+            const t = i / bulbCount;
+            // Quadratic Bezier Point: B(t) = (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
+            // P0=(0,0), P1=(w/2, 120), P2=(w, 0)
+            const x = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * (width / 2) + t * t * width;
+            const y = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * 120 + t * t * 0;
+
+            const bulb = document.createElementNS(svgNS, "circle");
+            bulb.setAttribute("cx", x);
+            bulb.setAttribute("cy", y + 5); // Hang slightly below wire
+            bulb.setAttribute("r", "4");
+            const color = colors[i % colors.length];
+            bulb.setAttribute("fill", color);
+
+            // Glow effect
+            const animate = document.createElementNS(svgNS, "animate");
+            animate.setAttribute("attributeName", "opacity");
+            animate.setAttribute("values", "0.4; 1; 0.4");
+            animate.setAttribute("dur", `${1 + Math.random()}s`);
+            animate.setAttribute("repeatCount", "indefinite");
+            bulb.appendChild(animate);
+
+            svg.appendChild(bulb);
+        }
+        container.appendChild(svg);
+
+        // Handle Resize for Wire
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            path.setAttribute("d", `M 0,0 Q ${w / 2},120 ${w},0`);
+            // Re-calculating bulbs is hard without re-drawing. 
+            // Ideally we'd remove and re-add. For this prototype, we'll leave it or reload.
+        });
+
+        // Add Galloping Keyframe
+        const gallopStyle = document.createElement('style');
+        gallopStyle.textContent = `
+            @keyframes gallop {
+                0%, 100% { transform: translateY(0) rotate(0deg) scaleX(-1); }
+                25% { transform: translateY(-5px) rotate(-5deg) scaleX(-1); }
+                50% { transform: translateY(0) rotate(0deg) scaleX(-1); }
+                75% { transform: translateY(3px) rotate(5deg) scaleX(-1); }
+            }
+        `;
+        container.appendChild(gallopStyle);
+
+
+        // D. MAGIC SANTA (Silhouette + Particle Trail) - Less Cartoony
+        // D. MAGIC SANTA (Real Silhouette using Noto Emoji)
+        const santaGroup = document.createElement('div');
+        santaGroup.style.position = 'fixed';
+        santaGroup.style.zIndex = '9999';
+        santaGroup.style.top = '15%';
+        santaGroup.style.willChange = 'transform';
+        santaGroup.style.display = 'flex';
+        santaGroup.style.alignItems = 'flex-end';
+        // Add Bloom to the whole group for magic feel
+        santaGroup.style.filter = 'drop-shadow(0 20px 20px rgba(0,0,0,0.6))';
+
+        // Base URL for stable emoji images
+        const emBase = 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/';
+        // Silhouette Filter: High contrast silhouette with slight "moonlight" tint (blueish)
+        const silhouetteStyle = 'height: 60px; width: auto; filter: brightness(0) drop-shadow(0 0 1px rgba(255,255,255,0.2)); margin-right: -12px;';
+
+
+        // 2. Sleigh + Santa Container
+        const sleighCont = document.createElement('div');
+        sleighCont.style.position = 'relative';
+        sleighCont.style.marginLeft = '20px'; // Rope gap
+
+        // Sleigh
+        const sleigh = document.createElement('img');
+        sleigh.src = `${emBase}emoji_u1f6f7.png`; // Sleigh
+        sleigh.style.cssText = silhouetteStyle;
+        sleigh.style.transform = 'scaleX(-1)';
+        sleighCont.appendChild(sleigh);
+
+        // Santa (Sitting in sleigh)
+        const santaImg = document.createElement('img');
+        santaImg.src = `${emBase}emoji_u1f385.png`; // Santa
+        santaImg.style.cssText = silhouetteStyle;
+        santaImg.style.position = 'absolute';
+        santaImg.style.left = '10px';
+        santaImg.style.bottom = '15px'; // Sit down
+        santaImg.style.height = '40px';
+        santaImg.style.transform = 'scaleX(-1) rotate(-10deg)';
+        sleighCont.appendChild(santaImg);
+
+        santaGroup.appendChild(sleighCont);
+
+        // 1. Reindeers (3 pairs = 3 images)
+        for (let r = 0; r < 3; r++) {
+            const deer = document.createElement('img');
+            deer.src = `${emBase}emoji_u1f98c.png`; // Deer
+            deer.style.cssText = silhouetteStyle;
+            deer.style.transformOrigin = 'bottom center';
+            deer.style.animation = `gallop 0.4s infinite linear`;
+            deer.style.animationDelay = `${r * -0.1}s`; // Offset legs
+            // Wait, animation moves LEFT to RIGHT (translate 120vw).
+            // MDI/Emoji usually face LEFT.
+            // If flying Left->Right, we need to flip them to face Right: scaleX(-1).
+            santaGroup.appendChild(deer);
+        }
+
+        // Magic Trail (Particles)
+        const trail = document.createElement('div');
+        trail.style.position = 'absolute';
+        trail.style.top = '20px';
+        trail.style.right = '0'; // Behind sleigh
+        santaGroup.appendChild(trail);
+
+        // Animate Trail
+        setInterval(() => {
+            const part = document.createElement('div');
+            part.style.width = '4px';
+            part.style.height = '4px';
+            part.style.background = 'gold';
+            part.style.borderRadius = '50%';
+            part.style.position = 'absolute';
+            part.style.top = `${Math.random() * 10}px`;
+            part.style.right = `${Math.random() * 50}px`;
+            part.style.boxShadow = '0 0 5px gold';
+            part.style.pointerEvents = 'none';
+
+            // Fade out
+            part.animate([
+                { opacity: 1, transform: 'scale(1) translate(0,0)' },
+                { opacity: 0, transform: 'scale(0) translate(-50px, 10px)' }
+            ], {
+                duration: 1000,
+                iterations: 1
+            }).onfinish = () => part.remove();
+
+            trail.appendChild(part);
+        }, 50);
+
+        container.appendChild(santaGroup);
+
+        // PHYSICS FLIGHT LOOP ✈️
+        let startTime = performance.now();
+        const flightDuration = 20000; // Slower, more majestic
+
+        // Turbulence Noise Generator (Simple pseudo-random)
+        let noiseOffset = 0;
+
+        function fly(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = (timestamp - startTime) % flightDuration;
+            const percent = progress / flightDuration; // 0 to 1
+
+            // X Position: Linear flight
+            const x = (percent * 130) - 15; // Start earlier, end later
+
+            // Y Position: Turbulence ! Sine Wave
+            // We sum multiple sine waves to create "random" turbulence
+            noiseOffset += 0.02;
+            const wave1 = Math.sin(percent * Math.PI * 2) * 5; // Main arc
+            const wave2 = Math.sin(noiseOffset) * 1.5; // High freq turbulence
+            const wave3 = Math.cos(noiseOffset * 0.5) * 2; // Slow drift
+
+            const y = 15 + wave1 + wave2 + wave3;
+
+            // Rotation: Aerodynamic Tilt + Pitching
+            const slope = (Math.cos(percent * Math.PI * 2) * 5) + (Math.cos(noiseOffset) * 1.5);
+            // Smooth damping
+            const tilt = slope * 2;
+
+            santaGroup.style.left = `${x}vw`;
+            santaGroup.style.top = `${y}vh`;
+            santaGroup.style.transform = `rotate(${tilt}deg)`;
+
+            // Update Snow Wind based on Santa's speed?
+            // Let's just vary wind slowly
+            const wind = Math.sin(timestamp * 0.0005) * 20;
+            container.style.setProperty('--wind', `${wind}px`);
+
+            if (document.body.contains(container)) {
+                requestAnimationFrame(fly);
+            }
+        }
+        requestAnimationFrame(fly);
+
+        // E. CINEMATIC GREETING
+        const greeting = document.createElement('div');
+        greeting.innerHTML = '✨ Feliz Navidad ✨';
+        greeting.style.position = 'fixed';
+        greeting.style.bottom = '30px';
+        greeting.style.left = '50%';
+        greeting.style.transform = 'translateX(-50%)';
+        greeting.style.fontSize = '2rem';
+        greeting.style.color = 'transparent';
+        greeting.style.background = 'linear-gradient(45deg, #ffd700, #fff, #ffd700)';
+        greeting.style.backgroundClip = 'text';
+        greeting.style.webkitBackgroundClip = 'text';
+        greeting.style.fontFamily = "'Cinzel', serif"; // Attempt to use a serif font
+        greeting.style.letterSpacing = '5px';
+        greeting.style.textShadow = '0 0 30px rgba(255, 215, 0, 0.3)';
+        greeting.style.opacity = '0';
+        greeting.style.zIndex = '9999';
+
+        greeting.animate([
+            { opacity: 0, transform: 'translateX(-50%) translateY(20px)' },
+            { opacity: 1, transform: 'translateX(-50%) translateY(0)' }
+        ], {
+            duration: 2000,
+            delay: 1000,
+            fill: 'forwards'
+        });
+
+        container.appendChild(greeting);
+    }
+
+    // ==========================================
+    // F. NEW YEAR GOLD 2026 🥂 (Premium)
+    // ==========================================
+    function enableNewYearGold() {
+        const container = createContainer('newyear_gold');
+        if (!container) return;
+
+        // 1. Gold Rain (Canvas for performance)
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '9998'; // Behind text
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        const particleCount = 100;
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                speed: Math.random() * 2 + 1,
+                size: Math.random() * 3 + 1,
+                alpha: Math.random()
+            });
+        }
+
+        function renderGoldRain() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FFD700';
+
+            particles.forEach(p => {
+                p.y += p.speed;
+                if (p.y > canvas.height) p.y = 0;
+
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (document.body.contains(container)) requestAnimationFrame(renderGoldRain);
+        }
+        renderGoldRain();
+
+        // 2. Cinematic 2026 Text
+        const text = document.createElement('div');
+        text.innerHTML = '2026';
+        text.style.position = 'fixed';
+        text.style.top = '50%';
+        text.style.left = '50%';
+        text.style.transform = 'translate(-50%, -50%)';
+        text.style.fontSize = '15vw';
+        text.style.fontFamily = "'Cinzel', serif";
+        text.style.fontWeight = 'bold';
+        text.style.color = 'transparent';
+        text.style.webkitTextStroke = '2px #FFD700'; // Gold stroke
+        text.style.zIndex = '9999';
+        text.style.opacity = '0.3';
+        // Elegant pulse
+        text.animate([
+            { opacity: 0.3, transform: 'translate(-50%, -50%) scale(1)' },
+            { opacity: 0.6, transform: 'translate(-50%, -50%) scale(1.05)' }
+        ], { duration: 3000, iterations: Infinity, direction: 'alternate' });
+
+        container.appendChild(text);
+
+        // 3. Realistic Gold Explosions
+        setInterval(() => {
+            const x = Math.random() * 100;
+            const y = Math.random() * 50;
+            createGoldExplosion(container, x, y);
+        }, 1200);
+    }
+
+    function createGoldExplosion(container, x, y) {
+        const explosion = document.createElement('div');
+        explosion.style.position = 'fixed';
+        explosion.style.left = `${x}%`;
+        explosion.style.top = `${y}%`;
+        explosion.style.pointerEvents = 'none';
+
+        for (let i = 0; i < 30; i++) {
+            const spark = document.createElement('div');
+            spark.style.position = 'absolute';
+            spark.style.width = '4px';
+            spark.style.height = '4px';
+            spark.style.background = `hsl(${45 + Math.random() * 15}, 100%, 50%)`; // Gold/Orange
+            spark.style.borderRadius = '50%';
+
+            // Random direction
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 100 + 50;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+
+            spark.animate([
+                { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+            ], {
+                duration: 1000 + Math.random() * 500,
+                easing: 'cubic-bezier(0, .9, .57, 1)'
+            });
+
+            explosion.appendChild(spark);
+        }
+
+        container.appendChild(explosion);
+        setTimeout(() => explosion.remove(), 2000);
+    }
+
+    // ==========================================
+    // G. CYBERPUNK MODE 🦾 (Sci-Fi)
+    // ==========================================
+    function enableCyberpunk() {
+        const container = createContainer('cyberpunk');
+        if (!container) return;
+
+        // 1. Overlay Scanlines
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0, 255, 255, 0.03) 3px)';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '9999';
+        // Vignette
+        overlay.style.boxShadow = 'inset 0 0 100px rgba(0,0,0,0.9)';
+        container.appendChild(overlay);
+
+        // 2. Neon Rain (Matrix style but Cyan/Pink)
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '9998';
+        canvas.style.opacity = '0.4';
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const columns = Math.floor(canvas.width / 20);
+        const drops = Array(columns).fill(0);
+
+        function drawCyberRain() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = '15px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = Math.random() > 0.5 ? '1' : '0';
+                // Alternating colors
+                ctx.fillStyle = i % 2 === 0 ? '#0ff' : '#f0f';
+                ctx.fillText(text, i * 20, drops[i] * 20);
+
+                if (drops[i] * 20 > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+            if (document.body.contains(container)) requestAnimationFrame(drawCyberRain);
+        }
+        drawCyberRain();
+
+        // 3. Glitch HUD Element
+        const hud = document.createElement('div');
+        hud.textContent = 'SYSTEM_ONLINE // NOC_SECURE';
+        hud.style.position = 'fixed';
+        hud.style.top = '20px';
+        hud.style.right = '20px';
+        hud.style.fontFamily = 'monospace';
+        hud.style.color = '#0ff';
+        hud.style.zIndex = '10000';
+        hud.style.textShadow = '2px 0 #f0f';
+        container.appendChild(hud);
+
+        // Glitch Interval
+        setInterval(() => {
+            hud.style.transform = `translate(${Math.random() * 4 - 2}px, ${Math.random() * 4 - 2}px)`;
+            hud.style.textShadow = Math.random() > 0.8 ? '-2px 0 red, 2px 0 blue' : '2px 0 #f0f';
+        }, 100);
+    }
+
+    // ==========================================
+    // H. WARP SPEED 🚀 (Interstellar)
+    // ==========================================
+    function enableWarpSpeed() {
+        const container = createContainer('warp_speed');
+        if (!container) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '0'; // Background
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        const stars = [];
+        const starCount = 300; // Dense field
+
+        for (let i = 0; i < starCount; i++) {
+            stars.push({
+                x: Math.random() * canvas.width - cx,
+                y: Math.random() * canvas.height - cy,
+                z: Math.random() * canvas.width // Depth
+            });
+        }
+
+        function drawWarp() {
+            // Fill with semi-transparent black for trails
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'white';
+
+            stars.forEach(star => {
+                // Move star closer
+                star.z -= 15; // Speed
+                if (star.z <= 0) {
+                    star.z = canvas.width;
+                    star.x = Math.random() * canvas.width - cx;
+                    star.y = Math.random() * canvas.height - cy;
+                }
+
+                const k = 128.0 / star.z;
+                const px = star.x * k + cx;
+                const py = star.y * k + cy;
+
+                if (px >= 0 && px <= canvas.width && py >= 0 && py <= canvas.height) {
+                    const size = (1 - star.z / canvas.width) * 4;
+                    // Draw Streak
+                    const oldPx = star.x * (128.0 / (star.z + 15)) + cx;
+                    const oldPy = star.y * (128.0 / (star.z + 15)) + cy;
+
+                    ctx.beginPath();
+                    ctx.moveTo(oldPx, oldPy);
+                    ctx.lineTo(px, py);
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${1 - star.z / canvas.width})`;
+                    ctx.lineWidth = size * 0.5;
+                    ctx.stroke();
+                }
+            });
+
+            if (document.body.contains(container)) requestAnimationFrame(drawWarp);
+        }
+        drawWarp();
+    }
+
+    // ==========================================
+    // I. RADAR NOC 📡 (Tactical)
+    // ==========================================
+    function enableRadar() {
+        const container = createContainer('radar');
+        if (!container) return;
+
+        // Dark green tactical overlay
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '9998'; // Below text usually
+        canvas.style.opacity = '0.4';
+        canvas.style.pointerEvents = 'none';
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        // Radar radius covers the whole screen
+        const maxRadius = Math.max(canvas.width, canvas.height);
+
+        let angle = 0;
+        // Simulated targets
+        const targets = [];
+        for (let i = 0; i < 10; i++) {
+            targets.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                life: 0 // 0 to 1, 1 is bright
+            });
+        }
+
+        function drawRadar() {
+            // Fade out
+            ctx.fillStyle = 'rgba(0, 20, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+            ctx.lineWidth = 1;
+
+            // Concentric circles
+            ctx.beginPath();
+            for (let r = 100; r < maxRadius; r += 150) {
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            }
+            ctx.stroke();
+
+            // Crosshairs
+            ctx.beginPath();
+            ctx.moveTo(0, cy);
+            ctx.lineTo(canvas.width, cy);
+            ctx.moveTo(cx, 0);
+            ctx.lineTo(cx, canvas.height);
+            ctx.stroke();
+
+            // Sweep Line
+            angle += 0.02;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(angle) * maxRadius, cy + Math.sin(angle) * maxRadius);
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#0f0';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Sweep Gradient (The "fan")
+            const gradient = ctx.createConicGradient(angle - Math.PI / 2, cx, cy); // Corrected angle for conic
+            // Actually conic gradient is supported in modern browsers
+            // If not, we skip the fan or use simple line
+            // Let's stick to line + targets for simplicity/compatibility
+
+            // Check Targets
+            const sweepX = Math.cos(angle);
+            const sweepY = Math.sin(angle);
+
+            targets.forEach(t => {
+                // Determine angle of target
+                const tx = t.x - cx;
+                const ty = t.y - cy;
+                const tAngle = Math.atan2(ty, tx);
+
+                // Normalize angles
+                let diff = angle - tAngle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+
+                // If sweep passes over
+                if (Math.abs(diff) < 0.05) {
+                    t.life = 1.0;
+                }
+
+                if (t.life > 0) {
+                    ctx.fillStyle = `rgba(0, 255, 0, ${t.life})`;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    // ID text next to blip
+                    ctx.fillStyle = `rgba(0, 255, 0, ${t.life})`;
+                    ctx.font = '10px monospace';
+                    ctx.fillText(`TRG-${Math.floor(t.x)}`, t.x + 8, t.y);
+
+                    t.life -= 0.01;
+                }
+            });
+
+            if (document.body.contains(container)) requestAnimationFrame(drawRadar);
+        }
+        drawRadar();
+    }
+
+    // ==========================================
+    // J. SYNTHWAVE 80s 🕶️ (Retro)
+    // ==========================================
+    function enableSynthwave() {
+        const container = createContainer('synthwave');
+        if (!container) return;
+
+        const mainDiv = document.createElement('div');
+        mainDiv.style.position = 'fixed';
+        mainDiv.style.top = '0';
+        mainDiv.style.left = '0';
+        mainDiv.style.width = '100vw';
+        mainDiv.style.height = '100vh';
+        mainDiv.style.background = 'linear-gradient(to bottom, #2b0f42 0%, #1a0b2e 50%, #000 100%)';
+        mainDiv.style.zIndex = '-1';
+        mainDiv.style.overflow = 'hidden';
+        container.appendChild(mainDiv);
+
+        // Sun
+        const sun = document.createElement('div');
+        Object.assign(sun.style, {
+            position: 'absolute',
+            bottom: '30%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '300px',
+            height: '300px',
+            background: 'linear-gradient(to top, #ff00cc, #ffff00)',
+            borderRadius: '50%',
+            boxShadow: '0 0 40px #ff00cc, 0 0 80px #ff00cc',
+            // Stripes mask (Clip path is complex, using simple bars)
+            webkitMaskImage: 'repeating-linear-gradient(rgba(0,0,0,1) 0px, rgba(0,0,0,1) 10px, rgba(0,0,0,0) 10px, rgba(0,0,0,0) 12px)'
+        });
+        // Mask fix to be only bottom to top
+        sun.style.maskImage = 'repeating-linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 10px, rgba(0,0,0,0) 10px, rgba(0,0,0,0) 14px)';
+        mainDiv.appendChild(sun);
+
+        // Grid
+        const grid = document.createElement('div');
+        Object.assign(grid.style, {
+            position: 'absolute',
+            bottom: '-50%',
+            left: '-50%',
+            width: '200%',
+            height: '100%',
+            background: `
+                linear-gradient(transparent 0%, #ff00cc 2%, transparent 3%),
+                linear-gradient(90deg, transparent 0%, #ff00cc 2%, transparent 3%)
+            `,
+            backgroundSize: '100px 100px', // Smaller squares
+            transform: 'perspective(500px) rotateX(60deg) translateY(0)',
+            animation: 'synthGridMove 4s linear infinite',
+            opacity: '0.6'
+        });
+        mainDiv.appendChild(grid);
+
+        // Add dynamic CSS for keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes synthGridMove {
+                0% { background-position: 0 0; }
+                100% { background-position: 0 100px; }
+            }
+        `;
+        container.appendChild(style);
+    }
+
+    // ==========================================
+    // K. CIRCUIT DIGITAL 🔌 (Tech)
+    // ==========================================
+    function enableCircuit() {
+        const container = createContainer('circuit');
+        if (!container) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '0';
+        canvas.style.opacity = '0.3';
+        // Dark background
+        canvas.style.background = '#0a0a12';
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        const paths = [];
+
+        // Initialize paths
+        for (let i = 0; i < 15; i++) {
+            paths.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                history: [], // Trail
+                dir: Math.floor(Math.random() * 4), // 0: up, 1: right, 2: down, 3: left
+                speed: 3,
+                color: Math.random() > 0.5 ? '#00ccff' : '#0066ff'
+            });
+        }
+
+        function drawCircuit() {
+            // Fade effect only for the trails, but here we want persistent circuit board look?
+            // Let's do moving electrons on static paths? 
+            // Better: Growing paths that fade out very slowly.
+
+            ctx.fillStyle = 'rgba(10, 10, 18, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            paths.forEach(p => {
+                // Move
+                if (p.dir === 0) p.y -= p.speed;
+                if (p.dir === 1) p.x += p.speed;
+                if (p.dir === 2) p.y += p.speed;
+                if (p.dir === 3) p.x -= p.speed;
+
+                // Random turn
+                if (Math.random() < 0.02) {
+                    p.dir = Math.floor(Math.random() * 4);
+                }
+
+                // Boundary check
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                // Draw head
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+
+                // Draw trail (connect dots)?
+                // Actually simply drawing small rects works for digital look
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = p.color;
+                ctx.fillRect(p.x, p.y, 2, 2);
+                ctx.shadowBlur = 0;
+
+                // Nodes
+                if (Math.random() < 0.01) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            });
+
+            if (document.body.contains(container)) requestAnimationFrame(drawCircuit);
+        }
+        drawCircuit();
+    }
+
+    // ==========================================
+    // L. BIOTECH ADN 🧬 (Future)
+    // ==========================================
+    function enableBiotech() {
+        const container = createContainer('biotech');
+        if (!container) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '0';
+        canvas.style.background = 'radial-gradient(circle, #001 0%, #000 100%)';
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+
+        let offset = 0;
+        const strandCount = 2; // Double helix
+
+        function drawDNA() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Particles in background
+            ctx.fillStyle = 'rgba(0, 255, 136, 0.5)';
+            for (let i = 0; i < 20; i++) {
+                const px = (noise(i, offset * 0.01) * canvas.width + canvas.width) % canvas.width;
+                const py = (noise(i + 100, offset * 0.01) * canvas.height + canvas.height) % canvas.height;
+                ctx.beginPath();
+                ctx.arc(px, py, 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw Helix
+            // Center horizontal
+            const cx = canvas.width / 2;
+            const height = canvas.height;
+            const points = 30; // Pairs shown
+
+            for (let i = 0; i < points; i++) {
+                const y = (i * 40 + offset) % (height + 200) - 100;
+                const relY = i * 0.5 + offset * 0.05; // oscillation speed
+
+                const width = 100; // Helix radius
+                const x1 = cx + Math.sin(relY) * width;
+                const x2 = cx + Math.sin(relY + Math.PI) * width;
+
+                // Connector (Base pairs)
+                ctx.strokeStyle = `rgba(0, 255, 136, ${0.1 + Math.abs(Math.cos(relY)) * 0.4})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.stroke();
+
+                // Strand 1 Node
+                ctx.fillStyle = '#00ff88';
+                ctx.beginPath();
+                ctx.arc(x1, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Strand 2 Node
+                ctx.fillStyle = '#0088ff';
+                ctx.beginPath();
+                ctx.arc(x2, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            offset += 1;
+            if (document.body.contains(container)) requestAnimationFrame(drawDNA);
+        }
+
+        // Simple Pseudo-Noise
+        function noise(x, y) {
+            return Math.sin(x * 12.9898 + y * 78.233) * 43758.5453 - Math.floor(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453);
+        }
+
+        drawDNA();
+    }
+
+})(); // End IIFE

@@ -1663,9 +1663,26 @@ async function calcularHorasExtras(date) {
   // Si no hay datos locales, intentamos leer de Firestore (fallback)
   if (!prevData) {
     try {
-      const doc = await db.collection("calendarios").doc(prevKey).get();
+      // INTENTO 1: Clave v3 (por si acaso migramos a claves consistentes en el futuro)
+      let doc = await db.collection("calendarios").doc(prevKey).get();
+
+      // INTENTO 2: ID Legible "noviembre 2024" (Formato actual de guardado)
+      if (!doc.exists) {
+        const monthName = prevDate.toLocaleString("default", { month: "long" });
+        const firestoreId = `${monthName} ${currentYear}`; // ej: "noviembre 2025"
+        // Nota: Asegurarse de que el año sea el correcto si retrocedimos a diciembre del año anterior
+        const realYear = prevDate.getFullYear();
+        const realFirestoreId = `${monthName} ${realYear}`;
+
+        console.log(`[Horas Extra] Intentando fallback Firestore: ${realFirestoreId}`);
+        doc = await db.collection("calendarios").doc(realFirestoreId).get();
+      }
+
       if (doc.exists) {
         prevData = doc.data();
+        // Guardar en caché local para la próxima vez
+        localStorage.setItem(prevKey, JSON.stringify(prevData));
+        console.log("[Horas Extra] Datos mes anterior recuperados de Firestore y cacheados.");
       }
     } catch (error) {
       console.error("Error obteniendo mes anterior de Firestore:", error);

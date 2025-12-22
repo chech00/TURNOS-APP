@@ -1,35 +1,126 @@
 :root {
-  --color-fondo-principal: #1B1F23;
-  /* Azul grisáceo oscuro, profesional y elegante */
-  --color-fondo-secundario: #23272E;
-  /* Un gris profundo con matices azulados */
-  --color-texto-principal: #E3E6EB;
-  /* Blanco ahumado, suave y cómodo para la vista */
-  --color-texto-secundario: #A1A9B5;
-  /* Gris azulado apagado, sin demasiado contraste */
+  /* =========================================
+     MASTER DESIGN TOKENS
+     Theme: Professional High-Tech (Unified)
+     ========================================= */
 
-  --color-acento-primario: #7796CB;
-  --color-acento-secundario: #8FBCBB;
-  /* Verde azulado pastel, fresco pero sutil */
-  --color-detalle: #C3D0E8;
-  /* Celeste apagado, aporta luz sin ser estridente */
+  /* Primary Colors - Deep Blue-Grey Slate */
+  --color-fondo-principal: #0f172a;
+  /* Slate 900 - Darker, richer than previous */
+  --color-fondo-secundario: #1e293b;
+  /* Slate 800 - Lighter for cards */
+  --color-fondo-terciario: #334155;
+  /* Slate 700 - Borders/Hover */
 
-  --color-error: #D77A7A;
-  /* Rojo terracota suave, no agresivo */
-  --color-exito: #88C0A6;
-  /* Verde menta natural y relajante */
-  --color-advertencia: #E8C27E;
-  /* Amarillo dorado, aporta contraste sin ser molesto */
+  /* Text Colors */
+  --color-texto-principal: #f8fafc;
+  /* Slate 50 */
+  --color-texto-secundario: #94a3b8;
+  /* Slate 400 */
+  --color-texto-terciario: #64748b;
+  /* Slate 500 */
 
-  --font-primary: 'Nunito', sans-serif;
-  --font-secondary: 'Inter', sans-serif;
+  /* Accents - Neon Blue & Tech Green */
+  --color-acento-primario: #3b82f6;
+  /* Blue 500 */
+  --color-acento-hover: #2563eb;
+  /* Blue 600 */
+  --color-acento-secundario: #10b981;
+  /* Emerald 500 */
+  --color-detalle: #6366f1;
+  /* Indigo 500 */
+
+  /* Status Colors */
+  --color-error: #ef4444;
+  --color-exito: #22c55e;
+  --color-advertencia: #f59e0b;
+  --color-info: #0ea5e9;
+
+  /* Typography */
+  --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-headings: 'Orbitron', 'Inter', sans-serif;
+  /* Tech feel for headers */
+
+  /* Dimensions & Spacing */
+  --border-radius-card: 12px;
+  --border-radius-btn: 8px;
+  --header-height: 70px;
   --transition-speed: 0.3s;
 
-  --sidebar-opacity: 0.4;
-  /* Default opacity */
+  /* Glassmorphism Tokens */
+  /* Glassmorphism Tokens - Dynamic Opacity */
+  --glass-bg: rgba(30, 41, 59, var(--sidebar-opacity));
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  --sidebar-opacity: 0.95;
 }
 
-/* Role-based visibility utilities */
+/* Typography Base */
+body {
+  font-family: var(--font-primary);
+  background-color: var(--color-fondo-principal);
+  color: var(--color-texto-principal);
+  background-color: var(--color-fondo-principal);
+  color: var(--color-texto-principal);
+}
+
+/* =========================================
+   UI SETTINGS MODES
+   ========================================= */
+
+/* PERFORMANCE MODE: Reduce load */
+body.performance-mode * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: none !important;
+  background-image: none !important;
+  /* Removes gradients/patterns */
+}
+
+/* SIDEBAR RIGHT MODE */
+body.sidebar-right {
+  display: flex;
+  flex-direction: row-reverse;
+  /* Reverses the main container layout */
+}
+
+/* Fix for sidebar absolute positioning when right-aligned */
+body.sidebar-right .sidebar {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Fix margin for main content */
+body.sidebar-right .main-content {
+  margin-left: 0;
+  margin-right: 250px;
+  /* Standard sidebar width */
+}
+
+/* Mobile responsive fix for sidebar right */
+@media (max-width: 768px) {
+  body.sidebar-right .main-content {
+    margin-right: 0;
+  }
+}
+
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-headings);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 .admin-only,
 .superadmin-only {
   display: none;
@@ -468,12 +559,16 @@ button[disabled] {
      FOOTER
      ------------------------------------------------------- */
 footer {
-  background-color: var(--color-fondo-secundario);
+  background-color: rgba(30, 41, 59, var(--sidebar-opacity));
   color: var(--color-texto-secundario);
   text-align: center;
   font-size: 0.9rem;
   padding: 1rem 1.5rem;
   position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s ease;
 }
 
 footer p {
@@ -1344,20 +1439,10 @@ td.pendiente {
   box-shadow: 0 0 20px rgba(119, 150, 203, 0.15);
 }
 
-.sidebar-menu ul li a.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 50%;
-  background-color: var(--color-acento-primario);
-  border-radius: 0 4px 4px 0;
-  box-shadow: 0 0 10px var(--color-acento-primario);
-  /* Glow effect */
-}
+/* Vertical bar removed for cleaner look */
+/* .sidebar-menu ul li a.active::after { ... } removed */
 
+/* Estilos para los iconos */
 /* Estilos para los iconos */
 .sidebar-menu [data-lucide],
 .sidebar-menu .lucide,
@@ -1372,6 +1457,28 @@ td.pendiente {
 .sidebar-menu ul li a.active [data-lucide] {
   stroke: var(--color-acento-primario);
   transform: scale(1.1);
+}
+
+/* Collapsed State Adjustment for "Square" feel */
+.sidebar:not(.expanded) .sidebar-menu ul li a {
+  justify-content: center;
+  padding: 0;
+  height: 36px;
+  /* Reduced to 36px */
+  width: 36px;
+  /* Reduced to 36px */
+  margin: 0 auto;
+  /* Center horizontally in the UL pad */
+  border-radius: 10px;
+  /* Radius adjusted for smaller size */
+}
+
+/* Ensure full width in Expanded state */
+.sidebar.expanded .sidebar-menu ul li a {
+  width: 100%;
+  height: auto;
+  padding: 0.75rem 1rem;
+  margin: 0;
 }
 
 /* Botón de menú - Diseño Minimalista Elegante */

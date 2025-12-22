@@ -11,6 +11,7 @@ const CONFIG = {
 };
 
 let allEmployees = [];
+let onlineUnsubscribe = null; // Global listener unsubscribe
 let currentFilter = 'all';
 let searchTerm = '';
 let currentViewMode = 'grid'; // 'grid' or 'compact'
@@ -103,6 +104,7 @@ async function loadEmployees() {
         allEmployees = employeesList;
         renderEmployees(employeesList);
         updateStats(employeesList);
+        startOnlineStatusListener(); // Start listening for presence
 
     } catch (error) {
         console.error("[DIRECTORIO] Error fatal:", error);
@@ -612,7 +614,8 @@ function createEmployeeCard(emp, index) {
       <div class="employee-photo-container">
         <img src="${photoUrl}" alt="${emp.nombre}" class="employee-photo" 
              onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(emp.nombre)}&background=7796cb&color=fff&size=120'" />
-      </div>
+        <div class="online-indicator" id="online-${index}" data-email="${emp.email || ''}"></div>
+    </div>
     </div>
     <div class="employee-card-body">
       <h3 class="employee-name">${emp.nombre}</h3>
@@ -1003,3 +1006,68 @@ document.addEventListener("DOMContentLoaded", () => {
         loadEmployees();
     });
 });
+
+// ===========================================================================
+// ONLINE PRESENCE LOGIC
+// ===========================================================================
+function startOnlineStatusListener() {
+    if (!window.db || onlineUnsubscribe) return;
+
+    console.log("[DIRECTORIO] Iniciando listener de presencia...");
+
+    onlineUnsubscribe = window.db.collection("activeSessions").onSnapshot((snapshot) => {
+        const activeUsers = {};
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.email) {
+                activeUsers[data.email.toLowerCase()] = data.lastActivity;
+            }
+        });
+
+        updateOnlineIndicators(activeUsers);
+    }, (error) => {
+        console.warn("[DIRECTORIO] Error escuchando presencia:", error);
+    });
+}
+
+function updateOnlineIndicators(activeUsers) {
+    const indicators = document.querySelectorAll('.online-indicator');
+    const now = new Date(); // Browser time
+
+    indicators.forEach(indicator => {
+        const email = indicator.dataset.email?.toLowerCase();
+        if (!email) return;
+
+        const lastActivityTimestamp = activeUsers[email];
+
+        if (lastActivityTimestamp) {
+            // Convert Firestore Timestamp to Date object
+            let lastActivityDate;
+            if (lastActivityTimestamp.toDate) {
+                lastActivityDate = lastActivityTimestamp.toDate();
+            } else if (lastActivityTimestamp.seconds) { // Raw seconds
+                lastActivityDate = new Date(lastActivityTimestamp.seconds * 1000);
+            } else {
+                lastActivityDate = new Date(lastActivityTimestamp); // Date string or object
+            }
+
+            const diffMinutes = (now - lastActivityDate) / 1000 / 60;
+
+            if (diffMinutes < 5) {
+                // Online & Active (< 5 min)
+                indicator.className = 'online-indicator active';
+                indicator.title = 'En línea ahora';
+            } else if (diffMinutes < 30) {
+                // Idle (5-30 min)
+                indicator.className = 'online-indicator active idle';
+                indicator.title = `Ausente (${Math.floor(diffMinutes)} min)`;
+            } else {
+                // Offline
+                indicator.className = 'online-indicator';
+            }
+        } else {
+            indicator.className = 'online-indicator';
+        }
+    });
+}
