@@ -1050,372 +1050,271 @@
         const container = createContainer('christmas_total');
         if (!container) return;
 
-        // A. HYPER-REAL ATMOSPHERE (Background)
-        // 1. Starfield (Static + Twinkling)
-        const starContainer = document.createElement('div');
-        starContainer.style.position = 'fixed';
-        starContainer.style.top = '0';
-        starContainer.style.left = '0';
-        starContainer.style.width = '100%';
-        starContainer.style.height = '100%';
-        starContainer.style.zIndex = '0';
+        try {
+            console.log("🎅 Christmas Total: Starting...");
 
-        // Generate stars using box-shadow for performance
-        let starsSmall = '';
-        let starsMedium = '';
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        for (let i = 0; i < 200; i++) {
-            starsSmall += `${Math.random() * w}px ${Math.random() * h}px 0 white, `;
-            if (i < 50) starsMedium += `${Math.random() * w}px ${Math.random() * h}px 0 rgba(255,255,255,0.5), `;
-        }
-        const smallStars = document.createElement('div');
-        smallStars.style.width = '1px';
-        smallStars.style.height = '1px';
-        smallStars.style.boxShadow = starsSmall.slice(0, -2);
-        starContainer.appendChild(smallStars);
+            // A. HYPER-REAL ATMOSPHERE (Background)
+            // 1. Starfield (Static + Twinkling)
+            const starContainer = document.createElement('div');
+            starContainer.style.position = 'fixed';
+            starContainer.style.top = '0';
+            starContainer.style.left = '0';
+            starContainer.style.width = '100%';
+            starContainer.style.height = '100%';
+            starContainer.style.zIndex = '0';
 
-        container.appendChild(starContainer);
-
-        // 2. Realistic Moon (CSS Craters) 🌕
-        const moon = document.createElement('div');
-        moon.style.position = 'fixed';
-        moon.style.top = '5%';
-        moon.style.right = '10%';
-        moon.style.width = '120px';
-        moon.style.height = '120px';
-        moon.style.borderRadius = '50%';
-        // Complex gradient for crater illusion
-        moon.style.background = 'radial-gradient(circle at 30% 30%, #fffdf0, #e6e6d8)';
-        moon.style.boxShadow = '0 0 60px rgba(255, 253, 224, 0.4), inset -20px -20px 50px rgba(0,0,0,0.1)';
-        moon.style.zIndex = '1';
-
-        // Craters
-        const craters = document.createElement('div');
-        craters.style.position = 'absolute';
-        craters.style.top = '0';
-        craters.style.left = '0';
-        craters.style.width = '100%';
-        craters.style.height = '100%';
-        craters.style.borderRadius = '50%';
-        craters.style.backgroundImage = `
-            radial-gradient(circle at 70% 20%, rgba(200,200,200,0.3) 10%, transparent 11%),
-            radial-gradient(circle at 30% 60%, rgba(200,200,200,0.3) 15%, transparent 16%),
-            radial-gradient(circle at 80% 50%, rgba(200,200,200,0.2) 8%, transparent 9%)
-        `;
-        moon.appendChild(craters);
-        container.appendChild(moon);
-
-        // 3. Moving Clouds/Mist (CSS Parallax) ☁️
-        for (let c = 0; c < 2; c++) {
-            const cloud = document.createElement('div');
-            cloud.style.position = 'fixed';
-            cloud.style.top = `${10 + c * 20}%`;
-            cloud.style.left = '0';
-            cloud.style.width = '200%';
-            cloud.style.height = '300px';
-            cloud.style.background = 'radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%)';
-            cloud.style.opacity = '0.7';
-            cloud.style.zIndex = '2'; // In front of stars/moon, behind Santa
-            cloud.style.filter = 'blur(40px)';
-
-            cloud.animate([
-                { transform: 'translateX(-50%)' },
-                { transform: 'translateX(0%)' }
-            ], {
-                duration: 60000 + c * 30000, // Very slow
-                iterations: Infinity,
-                direction: c % 2 === 0 ? 'normal' : 'reverse' // Alternate direction
-            });
-            container.appendChild(cloud);
-        }
-
-        // B. REALISTIC SNOW (Parallax Layers)
-        const layers = 3;
-        for (let l = 0; l < layers; l++) {
-            const layer = document.createElement('div');
-            layer.className = `snow-layer-${l}`;
-            layer.style.position = 'fixed';
-            layer.style.top = '0';
-            layer.style.left = '0';
-            layer.style.width = '100%';
-            layer.style.height = '100%';
-            layer.style.pointerEvents = 'none';
-            layer.style.zIndex = '9990';
-            container.appendChild(layer);
-
-            const count = 50 + (l * 30);
-            for (let i = 0; i < count; i++) {
-                const flake = document.createElement('div');
-                // Use rounded div instead of text for realism
-                flake.className = 'real-snowflake';
-                flake.style.position = 'absolute';
-                flake.style.background = 'white';
-                flake.style.borderRadius = '50%';
-
-                // Depth effects
-                const size = (l + 1) * 2 + Math.random() * 2;
-                flake.style.width = `${size}px`;
-                flake.style.height = `${size}px`;
-                flake.style.opacity = 0.4 + (l * 0.2);
-                flake.style.filter = `blur(${3 - l}px)`; // Farther snow is blurrier
-
-                flake.style.left = `${Math.random() * 100}vw`;
-                flake.style.top = `-${Math.random() * 20}vh`; // Start above
-
-                // Physics
-                const duration = 10 - (l * 2) + Math.random() * 5; // Closer layers fall faster
-                flake.animate([
-                    { transform: `translate(0, -10vh)` },
-                    { transform: `translate(${Math.random() * 100 - 50}px, 110vh)` }
-                ], {
-                    duration: duration * 1000,
-                    iterations: Infinity,
-                    delay: Math.random() * -20000 // Start mid-air
-                });
-
-                layer.appendChild(flake);
-            }
-        }
-
-        // C. REALISTIC CURVED LIGHTS 💡 (SVG Catenary)
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.style.position = "fixed";
-        svg.style.top = "0";
-        svg.style.left = "0";
-        svg.style.width = "100%";
-        svg.style.height = "150px";
-        svg.style.zIndex = "9998";
-        svg.style.pointerEvents = "none";
-
-        // Draw the wire (Catenary curve approximation)
-        const path = document.createElementNS(svgNS, "path");
-        // A simple curve from -10% to 110% width
-        path.setAttribute("d", "M -100,0 Q 50% 150, 20000,0"); // Overkill width to cover screens, simple quadratic
-        // Better: Dynamic calculation? For now static quadratic is okay for top hang.
-        // Actually, let's just do a nice curve based on 100vw
-        const width = window.innerWidth;
-        path.setAttribute("d", `M 0,0 Q ${width / 2},120 ${width},0`);
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke", "#222");
-        path.setAttribute("stroke-width", "2");
-        svg.appendChild(path);
-
-        // Add Bulbs along the curve
-        const bulbCount = 40;
-        const colors = ['#ff4444', '#44ff44', '#ffff44', '#4444ff', '#ff00ff'];
-
-        for (let i = 1; i < bulbCount; i++) {
-            const t = i / bulbCount;
-            // Quadratic Bezier Point: B(t) = (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
-            // P0=(0,0), P1=(w/2, 120), P2=(w, 0)
-            const x = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * (width / 2) + t * t * width;
-            const y = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * 120 + t * t * 0;
-
-            const bulb = document.createElementNS(svgNS, "circle");
-            bulb.setAttribute("cx", x);
-            bulb.setAttribute("cy", y + 5); // Hang slightly below wire
-            bulb.setAttribute("r", "4");
-            const color = colors[i % colors.length];
-            bulb.setAttribute("fill", color);
-
-            // Glow effect
-            const animate = document.createElementNS(svgNS, "animate");
-            animate.setAttribute("attributeName", "opacity");
-            animate.setAttribute("values", "0.4; 1; 0.4");
-            animate.setAttribute("dur", `${1 + Math.random()}s`);
-            animate.setAttribute("repeatCount", "indefinite");
-            bulb.appendChild(animate);
-
-            svg.appendChild(bulb);
-        }
-        container.appendChild(svg);
-
-        // Handle Resize for Wire
-        window.addEventListener('resize', () => {
+            // Generate stars using box-shadow for performance
+            let starsSmall = '';
+            let starsMedium = '';
             const w = window.innerWidth;
-            path.setAttribute("d", `M 0,0 Q ${w / 2},120 ${w},0`);
-            // Re-calculating bulbs is hard without re-drawing. 
-            // Ideally we'd remove and re-add. For this prototype, we'll leave it or reload.
-        });
-
-        // Add Galloping Keyframe
-        const gallopStyle = document.createElement('style');
-        gallopStyle.textContent = `
-            @keyframes gallop {
-                0%, 100% { transform: translateY(0) rotate(0deg) scaleX(-1); }
-                25% { transform: translateY(-5px) rotate(-5deg) scaleX(-1); }
-                50% { transform: translateY(0) rotate(0deg) scaleX(-1); }
-                75% { transform: translateY(3px) rotate(5deg) scaleX(-1); }
+            const h = window.innerHeight;
+            for (let i = 0; i < 200; i++) {
+                starsSmall += `${Math.random() * w}px ${Math.random() * h}px 0 white, `;
+                if (i < 50) starsMedium += `${Math.random() * w}px ${Math.random() * h}px 0 rgba(255,255,255,0.5), `;
             }
-        `;
-        container.appendChild(gallopStyle);
+            const smallStars = document.createElement('div');
+            smallStars.style.width = '1px';
+            smallStars.style.height = '1px';
+            smallStars.style.boxShadow = starsSmall.slice(0, -2);
+            starContainer.appendChild(smallStars);
 
+            container.appendChild(starContainer);
 
-        // D. MAGIC SANTA (Silhouette + Particle Trail) - Less Cartoony
-        // D. MAGIC SANTA (Real Silhouette using Noto Emoji)
-        const santaGroup = document.createElement('div');
-        santaGroup.style.position = 'fixed';
-        santaGroup.style.zIndex = '9999';
-        santaGroup.style.top = '15%';
-        santaGroup.style.willChange = 'transform';
-        santaGroup.style.display = 'flex';
-        santaGroup.style.alignItems = 'flex-end';
-        // Add Bloom to the whole group for magic feel
-        santaGroup.style.filter = 'drop-shadow(0 20px 20px rgba(0,0,0,0.6))';
+            // 2. Realistic Moon (CSS Craters) 🌕
+            const moon = document.createElement('div');
+            moon.style.position = 'fixed';
+            moon.style.top = '5%';
+            moon.style.right = '10%';
+            moon.style.width = '120px';
+            moon.style.height = '120px';
+            moon.style.borderRadius = '50%';
+            // Complex gradient for crater illusion
+            moon.style.background = 'radial-gradient(circle at 30% 30%, #fffdf0, #e6e6d8)';
+            moon.style.boxShadow = '0 0 60px rgba(255, 253, 224, 0.4), inset -20px -20px 50px rgba(0,0,0,0.1)';
+            moon.style.zIndex = '1';
 
-        // Base URL for stable emoji images
-        const emBase = 'https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/';
-        // Silhouette Filter: High contrast silhouette with slight "moonlight" tint (blueish)
-        const silhouetteStyle = 'height: 60px; width: auto; filter: brightness(0) drop-shadow(0 0 1px rgba(255,255,255,0.2)); margin-right: -12px;';
+            // Craters
+            const craters = document.createElement('div');
+            craters.style.position = 'absolute';
+            craters.style.top = '0';
+            craters.style.left = '0';
+            craters.style.width = '100%';
+            craters.style.height = '100%';
+            craters.style.borderRadius = '50%';
+            craters.style.backgroundImage = `
+                radial-gradient(circle at 70% 20%, rgba(200,200,200,0.3) 10%, transparent 11%),
+                radial-gradient(circle at 30% 60%, rgba(200,200,200,0.3) 15%, transparent 16%),
+                radial-gradient(circle at 80% 50%, rgba(200,200,200,0.2) 8%, transparent 9%)
+            `;
+            moon.appendChild(craters);
+            container.appendChild(moon);
 
+            // 3. Moving Clouds/Mist (CSS Parallax) ☁️
+            for (let c = 0; c < 2; c++) {
+                const cloud = document.createElement('div');
+                cloud.style.position = 'fixed';
+                cloud.style.top = `${10 + c * 20}%`;
+                cloud.style.left = '0';
+                cloud.style.width = '200%';
+                cloud.style.height = '300px';
+                cloud.style.background = 'radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, transparent 70%)';
+                cloud.style.opacity = '0.7';
+                cloud.style.zIndex = '2'; // In front of stars/moon, behind Santa
+                cloud.style.filter = 'blur(40px)';
 
-        // 2. Sleigh + Santa Container
-        const sleighCont = document.createElement('div');
-        sleighCont.style.position = 'relative';
-        sleighCont.style.marginLeft = '20px'; // Rope gap
+                cloud.animate([
+                    { transform: 'translateX(-50%)' },
+                    { transform: 'translateX(0%)' }
+                ], {
+                    duration: 60000 + c * 30000, // Very slow
+                    iterations: Infinity,
+                    direction: c % 2 === 0 ? 'normal' : 'reverse' // Alternate direction
+                });
+                container.appendChild(cloud);
+            }
 
-        // Sleigh
-        const sleigh = document.createElement('img');
-        sleigh.src = `${emBase}emoji_u1f6f7.png`; // Sleigh
-        sleigh.style.cssText = silhouetteStyle;
-        sleigh.style.transform = 'scaleX(-1)';
-        sleighCont.appendChild(sleigh);
-
-        // Santa (Sitting in sleigh)
-        const santaImg = document.createElement('img');
-        santaImg.src = `${emBase}emoji_u1f385.png`; // Santa
-        santaImg.style.cssText = silhouetteStyle;
-        santaImg.style.position = 'absolute';
-        santaImg.style.left = '10px';
-        santaImg.style.bottom = '15px'; // Sit down
-        santaImg.style.height = '40px';
-        santaImg.style.transform = 'scaleX(-1) rotate(-10deg)';
-        sleighCont.appendChild(santaImg);
-
-        santaGroup.appendChild(sleighCont);
-
-        // 1. Reindeers (3 pairs = 3 images)
-        for (let r = 0; r < 3; r++) {
-            const deer = document.createElement('img');
-            deer.src = `${emBase}emoji_u1f98c.png`; // Deer
-            deer.style.cssText = silhouetteStyle;
-            deer.style.transformOrigin = 'bottom center';
-            deer.style.animation = `gallop 0.4s infinite linear`;
-            deer.style.animationDelay = `${r * -0.1}s`; // Offset legs
-            // Wait, animation moves LEFT to RIGHT (translate 120vw).
-            // MDI/Emoji usually face LEFT.
-            // If flying Left->Right, we need to flip them to face Right: scaleX(-1).
-            santaGroup.appendChild(deer);
-        }
-
-        // Magic Trail (Particles)
-        const trail = document.createElement('div');
-        trail.style.position = 'absolute';
-        trail.style.top = '20px';
-        trail.style.right = '0'; // Behind sleigh
-        santaGroup.appendChild(trail);
-
-        // Animate Trail
-        setInterval(() => {
-            const part = document.createElement('div');
-            part.style.width = '4px';
-            part.style.height = '4px';
-            part.style.background = 'gold';
-            part.style.borderRadius = '50%';
-            part.style.position = 'absolute';
-            part.style.top = `${Math.random() * 10}px`;
-            part.style.right = `${Math.random() * 50}px`;
-            part.style.boxShadow = '0 0 5px gold';
-            part.style.pointerEvents = 'none';
-
-            // Fade out
-            part.animate([
-                { opacity: 1, transform: 'scale(1) translate(0,0)' },
-                { opacity: 0, transform: 'scale(0) translate(-50px, 10px)' }
+            // 4. NEW: Snow Accumulation Effect 🏔️
+            const snowPile = document.createElement('div');
+            snowPile.style.position = 'fixed';
+            snowPile.style.bottom = '0';
+            snowPile.style.left = '0';
+            snowPile.style.width = '100%';
+            snowPile.style.height = '15vh'; // Covers bottom 15%
+            snowPile.style.background = 'linear-gradient(to top, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 40%, transparent 100%)';
+            snowPile.style.zIndex = '9997'; // Behind Santa, front of background
+            snowPile.style.pointerEvents = 'none';
+            snowPile.style.filter = 'blur(8px)';
+            // Animate slight rise
+            snowPile.animate([
+                { transform: 'translateY(10%)', opacity: 0.5 },
+                { transform: 'translateY(0%)', opacity: 1 }
             ], {
-                duration: 1000,
-                iterations: 1
-            }).onfinish = () => part.remove();
+                duration: 10000,
+                fill: 'forwards'
+            });
+            container.appendChild(snowPile);
 
-            trail.appendChild(part);
-        }, 50);
+            // B. REALISTIC SNOW (Parallax Layers)
+            const layers = 3;
+            for (let l = 0; l < layers; l++) {
+                const layer = document.createElement('div');
+                layer.className = `snow-layer-${l}`;
+                layer.style.position = 'fixed';
+                layer.style.top = '0';
+                layer.style.left = '0';
+                layer.style.width = '100%';
+                layer.style.height = '100%';
+                layer.style.pointerEvents = 'none';
+                layer.style.zIndex = '9990';
+                container.appendChild(layer);
 
-        container.appendChild(santaGroup);
+                const count = 50 + (l * 30);
+                for (let i = 0; i < count; i++) {
+                    const flake = document.createElement('div');
+                    // Use rounded div instead of text for realism
+                    flake.className = 'real-snowflake';
+                    flake.style.position = 'absolute';
+                    flake.style.background = 'white';
+                    flake.style.borderRadius = '50%';
 
-        // PHYSICS FLIGHT LOOP ✈️
-        let startTime = performance.now();
-        const flightDuration = 20000; // Slower, more majestic
+                    // Depth effects
+                    const size = (l + 1) * 2 + Math.random() * 2;
+                    flake.style.width = `${size}px`;
+                    flake.style.height = `${size}px`;
+                    flake.style.opacity = 0.4 + (l * 0.2);
+                    flake.style.filter = `blur(${3 - l}px)`; // Farther snow is blurrier
 
-        // Turbulence Noise Generator (Simple pseudo-random)
-        let noiseOffset = 0;
+                    flake.style.left = `${Math.random() * 100}vw`;
+                    flake.style.top = `-${Math.random() * 20}vh`; // Start above
 
-        function fly(timestamp) {
-            if (!startTime) startTime = timestamp;
-            const progress = (timestamp - startTime) % flightDuration;
-            const percent = progress / flightDuration; // 0 to 1
+                    // Physics
+                    const duration = 10 - (l * 2) + Math.random() * 5; // Closer layers fall faster
+                    flake.animate([
+                        { transform: `translate(0, -10vh)` },
+                        { transform: `translate(${Math.random() * 100 - 50}px, 110vh)` }
+                    ], {
+                        duration: duration * 1000,
+                        iterations: Infinity,
+                        delay: Math.random() * -20000 // Start mid-air
+                    });
 
-            // X Position: Linear flight
-            const x = (percent * 130) - 15; // Start earlier, end later
-
-            // Y Position: Turbulence ! Sine Wave
-            // We sum multiple sine waves to create "random" turbulence
-            noiseOffset += 0.02;
-            const wave1 = Math.sin(percent * Math.PI * 2) * 5; // Main arc
-            const wave2 = Math.sin(noiseOffset) * 1.5; // High freq turbulence
-            const wave3 = Math.cos(noiseOffset * 0.5) * 2; // Slow drift
-
-            const y = 15 + wave1 + wave2 + wave3;
-
-            // Rotation: Aerodynamic Tilt + Pitching
-            const slope = (Math.cos(percent * Math.PI * 2) * 5) + (Math.cos(noiseOffset) * 1.5);
-            // Smooth damping
-            const tilt = slope * 2;
-
-            santaGroup.style.left = `${x}vw`;
-            santaGroup.style.top = `${y}vh`;
-            santaGroup.style.transform = `rotate(${tilt}deg)`;
-
-            // Update Snow Wind based on Santa's speed?
-            // Let's just vary wind slowly
-            const wind = Math.sin(timestamp * 0.0005) * 20;
-            container.style.setProperty('--wind', `${wind}px`);
-
-            if (document.body.contains(container)) {
-                requestAnimationFrame(fly);
+                    layer.appendChild(flake);
+                }
             }
+
+            // C. REALISTIC CURVED LIGHTS 💡 (SVG Catenary)
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.style.position = "fixed";
+            svg.style.top = "0";
+            svg.style.left = "0";
+            svg.style.width = "100%";
+            svg.style.height = "150px";
+            svg.style.zIndex = "9998";
+            svg.style.pointerEvents = "none";
+
+            // Draw the wire (Catenary curve approximation)
+            const path = document.createElementNS(svgNS, "path");
+            const width = window.innerWidth;
+            path.setAttribute("d", `M 0,0 Q ${width / 2},120 ${width},0`);
+            path.setAttribute("fill", "none");
+            path.setAttribute("stroke", "#222");
+            path.setAttribute("stroke-width", "2");
+            svg.appendChild(path);
+
+            // Add Bulbs along the curve
+            const bulbCount = 40;
+            const colors = ['#ff4444', '#44ff44', '#ffff44', '#4444ff', '#ff00ff'];
+
+            for (let i = 1; i < bulbCount; i++) {
+                const t = i / bulbCount;
+                // Quadratic Bezier Point
+                const x = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * (width / 2) + t * t * width;
+                const y = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * 120 + t * t * 0;
+
+                const bulb = document.createElementNS(svgNS, "circle");
+                bulb.setAttribute("cx", x);
+                bulb.setAttribute("cy", y + 5); // Hang slightly below wire
+                bulb.setAttribute("r", "4");
+                const color = colors[i % colors.length];
+                bulb.setAttribute("fill", color);
+
+                // Glow effect
+                const animate = document.createElementNS(svgNS, "animate");
+                animate.setAttribute("attributeName", "opacity");
+                animate.setAttribute("values", "0.4; 1; 0.4");
+                animate.setAttribute("dur", `${1 + Math.random()}s`);
+                animate.setAttribute("repeatCount", "indefinite");
+                bulb.appendChild(animate);
+
+                svg.appendChild(bulb);
+            }
+            container.appendChild(svg);
+
+            // Handle Resize for Wire
+            window.addEventListener('resize', () => {
+                const w = window.innerWidth;
+                path.setAttribute("d", `M 0,0 Q ${w / 2},120 ${w},0`);
+            });
+
+            // Add Galloping Keyframe
+            const gallopStyle = document.createElement('style');
+            gallopStyle.textContent = `
+                @keyframes gallop {
+                    0%, 100% { transform: translateY(0) rotate(0deg) scaleX(-1); }
+                    25% { transform: translateY(-5px) rotate(-5deg) scaleX(-1); }
+                    50% { transform: translateY(0) rotate(0deg) scaleX(-1); }
+                    75% { transform: translateY(3px) rotate(5deg) scaleX(-1); }
+                }
+            `;
+            container.appendChild(gallopStyle);
+
+            // D. CHRISTMAS TREE 🎄 (Bottom Right)
+            // Explicitly define SVG NS for the tree to avoid any scope issues
+            const treeSvgNS = "http://www.w3.org/2000/svg";
+
+            const treeContainer = document.createElement('div');
+            treeContainer.style.position = 'fixed';
+            treeContainer.style.bottom = '0';
+            treeContainer.style.right = '2rem'; // Bottom Right positioning
+            // D. CHRISTMAS TREE 🎄 - REMOVED BY USER REQUEST
+            // The tree and its container have been removed.
+
+            // E. CINEMATIC GREETING
+            const greeting = document.createElement('div');
+            greeting.innerHTML = '✨ Feliz Navidad ✨';
+            greeting.style.position = 'fixed';
+            greeting.style.bottom = '30px';
+            greeting.style.left = '50%';
+            greeting.style.transform = 'translateX(-50%)';
+            greeting.style.fontSize = '2rem';
+            greeting.style.color = 'transparent';
+            greeting.style.background = 'linear-gradient(45deg, #ffd700, #fff, #ffd700)';
+            greeting.style.backgroundClip = 'text';
+            greeting.style.webkitBackgroundClip = 'text';
+            greeting.style.fontFamily = "'Cinzel', serif"; // Attempt to use a serif font
+            greeting.style.letterSpacing = '5px';
+            greeting.style.textShadow = '0 0 30px rgba(255, 215, 0, 0.3)';
+            greeting.style.opacity = '0';
+            greeting.style.zIndex = '9999';
+
+            greeting.animate([
+                { opacity: 0, transform: 'translateX(-50%) translateY(20px)' },
+                { opacity: 1, transform: 'translateX(-50%) translateY(0)' }
+            ], {
+                duration: 2000,
+                delay: 1000,
+                fill: 'forwards'
+            });
+
+            container.appendChild(greeting);
+            console.log("🎅 Christmas Total: Generated successfully.");
+
+        } catch (e) {
+            console.error("🎅 Christmas Animation Error:", e);
+            // Fallback alert using native API to guarantee visibility
+            alert(`Christmas Animation Error: ${e.message}`);
         }
-        requestAnimationFrame(fly);
-
-        // E. CINEMATIC GREETING
-        const greeting = document.createElement('div');
-        greeting.innerHTML = '✨ Feliz Navidad ✨';
-        greeting.style.position = 'fixed';
-        greeting.style.bottom = '30px';
-        greeting.style.left = '50%';
-        greeting.style.transform = 'translateX(-50%)';
-        greeting.style.fontSize = '2rem';
-        greeting.style.color = 'transparent';
-        greeting.style.background = 'linear-gradient(45deg, #ffd700, #fff, #ffd700)';
-        greeting.style.backgroundClip = 'text';
-        greeting.style.webkitBackgroundClip = 'text';
-        greeting.style.fontFamily = "'Cinzel', serif"; // Attempt to use a serif font
-        greeting.style.letterSpacing = '5px';
-        greeting.style.textShadow = '0 0 30px rgba(255, 215, 0, 0.3)';
-        greeting.style.opacity = '0';
-        greeting.style.zIndex = '9999';
-
-        greeting.animate([
-            { opacity: 0, transform: 'translateX(-50%) translateY(20px)' },
-            { opacity: 1, transform: 'translateX(-50%) translateY(0)' }
-        ], {
-            duration: 2000,
-            delay: 1000,
-            fill: 'forwards'
-        });
-
-        container.appendChild(greeting);
     }
 
     // ==========================================

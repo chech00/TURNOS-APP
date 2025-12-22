@@ -51,8 +51,9 @@ main {
 }
 
 .stat-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    backdrop-filter: blur(10px);
+    background: #1e293b;
+    /* Solid Slate 800 */
+    backdrop-filter: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 1.5rem;
@@ -116,12 +117,14 @@ main {
 
 /* Sección de Usuarios */
 .users-section {
-    background: rgba(255, 255, 255, 0.03);
+    background: #1e293b;
+    /* Solid Slate 800 */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 2rem;
     min-height: 400px;
+    backdrop-filter: none;
 }
 
 .section-header {
@@ -177,7 +180,8 @@ main {
 .tabla-usuarios {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(0, 0, 0, 0.2);
+    background: #0f172a;
+    /* Solid Slate 900 */
     border-radius: 8px;
     overflow: hidden;
 }

@@ -3,7 +3,7 @@
 
 <head>
   <!-- Logger: Suprime console.log en producción -->
-  <script src="./js/logger.js"></script>
+  <script src="./dist/js/logger.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asignación de Turnos</title>
@@ -18,10 +18,10 @@
 
   <!-- CSS principal (carga asíncrona con media-swap) -->
   <link rel="stylesheet" href="./css/enhancements.css" />
-  <link rel="stylesheet" href="./css/styles.css?v=8" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="./dist/css/styles.min.css?v=8" media="print" onload="this.media='all'">
   <noscript>
     <link rel="stylesheet" href="./css/enhancements.css" />
-    <link rel="stylesheet" href="./css/styles.css?v=8">
+    <link rel="stylesheet" href="./dist/css/styles.min.css?v=8">
   </noscript>
   <link rel="stylesheet" href="./css/user-profile-header.css" />
 
@@ -140,7 +140,7 @@
   <div id="main-content" class="main-content" style="display: none;">
     <header>
       <!-- Logger: Suprime console.log en producción -->
-      <script src="./js/logger.js"></script>
+      <script src="./dist/js/logger.min.js"></script>
       <h1>Calendario de Turnos</h1>
       <!-- Premium User Profile Header -->
       <div class="user-profile-header">
@@ -334,7 +334,7 @@
 
   <!-- Tus scripts de configuración -->
   <script type="module" src="./js/firebase.js"></script>
-  <script type="module" src="./js/script.js"></script>
+  <script type="module" src="./dist/js/script.min.js"></script>
 
   <script type="module">
     // Modulo de incialización optimizado

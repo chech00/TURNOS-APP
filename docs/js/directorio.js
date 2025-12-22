@@ -587,6 +587,14 @@ function createEmployeeCard(emp, index) {
         };
     }
 
+    // MODO VACACIONES - TROPICAL 🏖️
+    // Override visual for specific people on vacation
+    if (emp.nombre === CONFIG.names.holidaySpecial2 || emp.nombre === "Ignacio Aburto") {
+        card.classList.add('vacation-mode');
+        statusInfo.label = "En el caribe 🌴";
+        statusInfo.icon = "palmtree";
+    }
+
     // Check if user is admin BEFORE generating HTML
     const userRole = localStorage.getItem('userRole');
     const isAdmin = userRole === 'admin' || userRole === 'superadmin';

@@ -35,15 +35,15 @@
 
   <!-- CSS principal (puede cargarse después del critical) -->
   <link rel="stylesheet" href="./css/enhancements.css" />
-  <link rel="stylesheet" href="./css/styles.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="./dist/css/styles.min.css" media="print" onload="this.media='all'">
   <noscript>
     <link rel="stylesheet" href="./css/enhancements.css" />
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./dist/css/styles.min.css">
   </noscript>
-  <link rel="stylesheet" href="./css/noc.css" />
+  <link rel="stylesheet" href="./dist/css/noc.min.css" />
   <link rel="stylesheet" href="./css/user-profile-header.css" />
   <!-- Logger: Suprime console.log en producción -->
-  <script src="./js/logger.js"></script>
+  <script src="./dist/js/logger.min.js"></script>
   <script defer src="./js/user-profile-header.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer
@@ -62,28 +62,8 @@
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- SweetAlert2: Lazy load on first use -->
-  <script>
-    // Lazy load SweetAlert2 only when needed
-    window.Swal = window.Swal || new Proxy({}, {
-      get: function (target, prop) {
-        if (prop === 'fire' || prop === 'mixin') {
-          return function (...args) {
-            return new Promise(resolve => {
-              const script = document.createElement('script');
-              script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-              script.onload = () => {
-                if (window.Swal && window.Swal[prop]) {
-                  resolve(window.Swal[prop](...args));
-                }
-              };
-              document.head.appendChild(script);
-            });
-          };
-        }
-        return undefined;
-      }
-    });
-  </script>
+  <!-- SweetAlert2: Standard Loading to prevent Proxy errors -->
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -230,7 +210,7 @@
           </table>
 
           <!-- Reporte de Horas Extras -->
-          <div id="overtime-report-container" class="superadmin-only" style="margin-top: 2rem;"></div>
+          <div id="overtime-report-container" class="admin-only" style="margin-top: 2rem;"></div>
         </section>
 
         <!-- Sección Turnos y Backup -->
@@ -535,7 +515,7 @@
 
   <script type="module" src="./js/firebase.js"></script>
   <script defer src="./js/active-session.js"></script>
-  <script type="module" src="./js/noc.js"></script>
+  <script type="module" src="./dist/js/noc.min.js"></script>
   <!-- Employee cards moved to directorio.html -->
   <script>
     // Usar refreshIcons() debounced para mejor rendimiento

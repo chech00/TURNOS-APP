@@ -319,3 +319,79 @@ body>[id*="devtools"] {
     width: 0 !important;
     position: fixed !important;
 }
+
+/* 17. MODO VACACIONES - TROPICAL 🏖️ */
+.vacation-mode {
+    background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%) !important;
+    border: 2px solid #FFD700 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.vacation-mode h3,
+.vacation-mode p,
+.vacation-mode .employee-role {
+    color: #4a4a4a !important;
+    /* Dark text for contrast against light gradient */
+    font-weight: 700 !important;
+}
+
+.vacation-mode .employee-status {
+    background: #FFD700 !important;
+    color: #000 !important;
+    border-color: #fff !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Flying Plane Animation */
+.vacation-mode::before {
+    content: '✈️';
+    position: absolute;
+    top: 10px;
+    left: -50px;
+    font-size: 2rem;
+    z-index: 5;
+    opacity: 0.9;
+    animation: flyPlane 15s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes flyPlane {
+    0% {
+        transform: translateX(0) translateY(0) rotate(15deg);
+    }
+
+    100% {
+        transform: translateX(450px) translateY(-50px) rotate(15deg);
+    }
+}
+
+/* Sunglasses Overlay */
+.vacation-mode .employee-photo-container::after {
+    content: '🕶️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(2.8) translateY(1px);
+    font-size: 1.5rem;
+    pointer-events: none;
+    z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Stamp "Do Not Disturb" */
+.vacation-mode::after {
+    content: 'DON\'T DISTURB';
+    position: absolute;
+    bottom: 20%;
+    right: 10%;
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: rgba(255, 0, 0, 0.4);
+    border: 2px solid rgba(255, 0, 0, 0.4);
+    padding: 2px 5px;
+    transform: rotate(-15deg);
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}

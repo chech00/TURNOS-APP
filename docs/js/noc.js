@@ -1813,7 +1813,7 @@ async function renderOvertimeTable(data, date) {
   // 1. Header
   const today = new Date();
   const currentDay = today.getDate();
-  const isReminderPeriod = currentDay >= 23 && currentDay <= 25;
+  const isReminderPeriod = currentDay >= 20 && currentDay <= 25;
 
   let notificationHTML = '';
   if (isReminderPeriod) {
@@ -1840,11 +1840,11 @@ async function renderOvertimeTable(data, date) {
           ${periodoStr}
         </span>
       </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end;">
+      <div class="report-actions">
+        ${notificationHTML}
         <button onclick="exportarReporteHorasExtras()" class="btn-premium-export ${isReminderPeriod ? 'pulse-reminder' : ''}">
           <i data-lucide="file-down"></i> Exportar PDF ${isSuperAdmin ? '(Seguro)' : ''}
         </button>
-        ${notificationHTML}
       </div>
     </div>
   `;
@@ -2124,47 +2124,45 @@ async function exportarReporteHorasExtras() {
     const logoBase64 = await getBase64ImageFromURL(logoUrl);
 
     // ---------------------------------------------------------
-    // 1. ENCABEZADO CORPORATIVO (Elegante / Minimalista)
+    // 1. ENCABEZADO CORPORATIVO (Premium Dark)
     // ---------------------------------------------------------
-    const colorCorpBlue = [0, 51, 102]; // #003366 (Dark Blue)
-    const colorCorpYellow = [244, 180, 0]; // #F4B400 (Accent)
-    const colorTextMain = [60, 60, 60]; // Dark Grey for text
-    const colorBg = [255, 255, 255];
+    const colorCorpBlue = [15, 23, 42]; // Slate 900
+    const colorCorpAccent = [59, 130, 246]; // Blue 500
+    const colorTextMain = [51, 65, 85]; // Slate 700
 
-    // Fondo blanco limpio (sin rectángulos pesados)
+    // Franja decorativa superior
+    doc.setFillColor(...colorCorpBlue);
+    doc.rect(0, 0, pageWidth, 6, 'F');
 
-    // Logo (Más pequeño y sobre blanco)
+    // Logo
     if (logoBase64) {
-      const logoW = 35; // Reducido de 50 a 35
-      const logoH = 8.5;
-      doc.addImage(logoBase64, 'PNG', 14, 15, logoW, logoH);
+      doc.addImage(logoBase64, 'PNG', 14, 18, 40, 10);
     } else {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
+      doc.setFontSize(22);
       doc.setTextColor(...colorCorpBlue);
-      doc.text("PatagoniaIP", 14, 22);
+      doc.text("PatagoniaIP", 14, 25);
     }
 
-    // Título Principal (Alineado a la derecha, color corporativo)
+    // Título y Subtítulo
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...colorCorpBlue);
-    doc.setFontSize(20);
-    doc.text("REPORTE DE HORAS EXTRAS", pageWidth - 14, 20, { align: 'right' });
+    doc.setFontSize(22);
+    doc.text("REPORTE DE HORAS EXTRAS", pageWidth - 14, 25, { align: 'right' });
 
-    // Línea de acento sutil (Debajo del título)
-    doc.setDrawColor(...colorCorpYellow);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 14, 23, pageWidth - 120, 23);
-
-    // Subtítulo / Departamento
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text("DEPARTAMENTO DE OPERACIONES NOC", pageWidth - 14, 29, { align: 'right' });
-    doc.text(periodoStr.toUpperCase(), pageWidth - 14, 34, { align: 'right' });
+    doc.setTextColor(100, 116, 139); // Slate 500
+    doc.text("DEPARTAMENTO DE OPERACIONES NOC", pageWidth - 14, 32, { align: 'right' });
+    doc.text(periodoStr.toUpperCase(), pageWidth - 14, 37, { align: 'right' });
+
+    // Línea separadora moderna
+    doc.setDrawColor(226, 232, 240); // Slate 200
+    doc.setLineWidth(0.5);
+    doc.line(14, 45, pageWidth - 14, 45);
 
     // ---------------------------------------------------------
-    // 2. RESUMEN EJECUTIVO (Tarjetas Minimalistas)
+    // 2. RESUMEN EJECUTIVO (Tarjetas Sólidas)
     // ---------------------------------------------------------
     let totalHoras = 0;
     let totalTurnos = 0;
@@ -2191,80 +2189,87 @@ async function exportarReporteHorasExtras() {
       }
     });
 
-    // Dibujar cajitas de resumen (Estilo 'Outline' limpio)
-    const startY = 50;
+    const startY = 60;
     const boxWidth = (pageWidth - 28 - 10) / 3;
-    const boxHeight = 22;
+    const boxHeight = 28;
 
     const drawCard = (x, label, value, accentColor) => {
-      // Borde suave
-      doc.setDrawColor(220, 220, 220);
+      // Fondo sutil
+      doc.setFillColor(248, 250, 252); // Slate 50
+      doc.roundedRect(x, startY, boxWidth, boxHeight, 3, 3, 'F');
+
+      // Borde fino
+      doc.setDrawColor(226, 232, 240);
       doc.setLineWidth(0.1);
-      doc.roundedRect(x, startY, boxWidth, boxHeight, 2, 2, 'S');
+      doc.roundedRect(x, startY, boxWidth, boxHeight, 3, 3, 'S');
 
-      // Indicador de color lateral (muy fino)
+      // Acento lateral izquierdo
       doc.setFillColor(...accentColor);
-      doc.rect(x, startY + 4, 1.5, boxHeight - 8, 'F');
+      doc.rect(x, startY, 2, boxHeight, 'F'); // Acento completo vertical
 
-      // Valor
+      // Valor Grande
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setTextColor(...colorCorpBlue);
-      doc.text(value.toString(), x + 8, startY + 10);
+      doc.text(value.toString(), x + 10, startY + 12);
 
-      // Etiqueta
-      doc.setFont("helvetica", "normal");
+      // Etiqueta pequeña
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
-      doc.setTextColor(120, 120, 120);
-      doc.text(label.toUpperCase(), x + 8, startY + 17);
+      doc.setTextColor(148, 163, 184); // Slate 400
+      doc.text(label.toUpperCase(), x + 10, startY + 20);
     };
 
-    drawCard(14, "Total Horas", totalHoras + " hrs", colorCorpBlue);
-    drawCard(14 + boxWidth + 5, "Total Turnos", totalTurnos, colorCorpYellow);
-    drawCard(14 + (boxWidth + 5) * 2, "Mayor Colaborador", topEmp.split(" ")[0], colorCorpBlue);
+    drawCard(14, "Total Horas", totalHoras + " hrs", [59, 130, 246]); // Blue
+    drawCard(14 + boxWidth + 5, "Total Turnos", totalTurnos, [16, 185, 129]); // Emerald
+    drawCard(14 + (boxWidth + 5) * 2, "Mayor Colaborador", topEmp.split(" ")[0], [245, 158, 11]); // Amber
 
-    // Información del Periodo (Texto flotante sutil)
+    // Metadata flotante
     doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
-    doc.setTextColor(180, 180, 180);
-    doc.text(`Generado: ${fechaReporte}`, 14, startY + boxHeight + 6);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Generado: ${fechaReporte}`, 14, startY + boxHeight + 8);
 
     // ---------------------------------------------------------
-    // 3. TABLA DE DETALLE
+    // 3. TABLA DE DETALLE (Estilo Profesional)
     // ---------------------------------------------------------
     doc.autoTable({
       startY: startY + boxHeight + 15,
-      head: [['EMPLEADO', 'TURNOS', 'HORAS TOTALES', 'ESTADO']],
+      head: [['EMPLEADO', 'TURNOS', 'HORAS', 'ESTADO']],
       body: rows,
       theme: 'grid',
       styles: {
-        fontSize: 10,
-        cellPadding: 6,
-        lineColor: [230, 230, 230],
+        fontSize: 9,
+        cellPadding: 8,
+        lineColor: [226, 232, 240],
         lineWidth: 0.1,
-        font: "helvetica"
+        font: "helvetica",
+        textColor: [71, 85, 105] // Slate 600
       },
       headStyles: {
-        fillColor: colorCorpBlue,
-        textColor: 255,
+        fillColor: [241, 245, 249], // Slate 100
+        textColor: [30, 41, 59], // Slate 800
         fontStyle: 'bold',
-        halign: 'center'
+        halign: 'left',
+        lineWidth: 0 // Sin borde en header
       },
-      bodyStyles: { textColor: 50 },
       columnStyles: {
-        0: { cellWidth: 'auto', fontStyle: 'bold' },
-        1: { halign: 'center', cellWidth: 30 },
-        2: { halign: 'center', cellWidth: 40 },
-        3: { halign: 'center', cellWidth: 40, fontStyle: 'bold' }
+        0: { cellWidth: 'auto', fontStyle: 'bold', textColor: [15, 23, 42] },
+        1: { halign: 'center', cellWidth: 32 }, /* Increased to prevent wrapping */
+        2: { halign: 'center', cellWidth: 35 },
+        3: { halign: 'center', cellWidth: 35, fontStyle: 'bold' }
       },
-      alternateRowStyles: { fillColor: [245, 247, 250] }, // Alternado suave
+      alternateRowStyles: { fillColor: [255, 255, 255] },
       didParseCell: function (data) {
         if (data.section === 'body' && data.column.index === 3) {
           const text = data.cell.raw;
-          // Colores de estado
-          if (text === 'CRÍTICO') data.cell.styles.textColor = [231, 76, 60];
-          else if (text === 'ALTO') data.cell.styles.textColor = [241, 196, 15]; // Yellow styled
-          else data.cell.styles.textColor = [46, 204, 113];
+          if (text === 'CRÍTICO') {
+            data.cell.styles.textColor = [220, 38, 38]; // Red
+          } else if (text === 'ALTO') {
+            data.cell.styles.textColor = [217, 119, 6]; // Amber 600 (LEGIBLE)
+          } else {
+            data.cell.styles.textColor = [22, 163, 74]; // Green 600
+          }
         }
       }
     });
@@ -2279,8 +2284,60 @@ async function exportarReporteHorasExtras() {
     doc.setTextColor(150, 150, 150);
     doc.text("PatagoniaIP - Conexión que transforma realidades", pageWidth / 2, finalY + 10, { align: 'center' });
 
-    Swal.close();
     doc.save(`Reporte_NOC_${yearReport}_${monthReport + 1}.pdf`);
+
+    // -----------------------------------------------------------------------------
+    // 5. COMPARTIR RÁPIDO (WhatsApp / RRHH)
+    // -----------------------------------------------------------------------------
+    const pdfBlob = doc.output('blob');
+    const fileName = `Reporte_NOC_${yearReport}_${monthReport + 1}.pdf`;
+    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+    const mensaje = `Hola RRHH, adjunto reporte de horas extras del periodo ${periodoStr}.`;
+
+    // Cerrar loading inicial
+    Swal.close();
+
+    // Intentar compartir nativamente (Móvil/Tablet)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      Swal.fire({
+        title: 'Reporte Listo',
+        text: '¿Deseas enviarlo por WhatsApp a RRHH ahora?',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Enviar ahora 🚀',
+        cancelButtonText: 'Solo guardar',
+        confirmButtonColor: '#25D366'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Reporte Horas Extras',
+              text: mensaje
+            });
+          } catch (err) {
+            console.log('Compartir cancelado o error:', err);
+          }
+        }
+      });
+    } else {
+      // Fallback Escritorio (WhatsApp Web)
+      Swal.fire({
+        title: 'Reporte Descargado',
+        html: `El archivo se ha guardado en tu PC.<br>Para enviar a RRHH:<br>1. Presiona el botón abajo.<br>2. Adjunta el archivo <b>${fileName}</b>.`,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Abrir WhatsApp Web',
+        cancelButtonText: 'Cerrar',
+        confirmButtonColor: '#25D366'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Abre WhatsApp Web prellenando el mensaje (Usuario debe adjuntar archivo y elegir contacto)
+          const waUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+          window.open(waUrl, '_blank');
+        }
+      });
+    }
 
   } catch (error) {
     Swal.close();

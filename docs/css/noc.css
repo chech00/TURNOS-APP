@@ -1672,16 +1672,36 @@ body.is-admin .admin-only {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(231, 76, 60, 0.15);
-  /* Soft red background */
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  padding: 0.75rem 1rem;
+  /* Match button vertical padding */
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.2);
   color: #e74c3c;
-  /* Red text */
-  font-size: 0.85rem;
-  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 12px;
+  /* Match button radius */
+  margin: 0;
+  height: auto;
   animation: fadeIn 0.5s ease;
+}
+
+.report-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Mobile responsive for header actions */
+@media (max-width: 768px) {
+  .report-actions {
+    flex-direction: column-reverse;
+    /* Reminder on top on mobile */
+    align-items: flex-end;
+    gap: 8px;
+  }
+
 }
 
 .reminder-tooltip i {
@@ -2025,3 +2045,62 @@ body.is-admin .prev-month-panel.admin-only.active {
     height: 48px;
   }
 }
+/* =========================================
+   REPORT HEADER LAYOUT (ADDED FIX)
+   ========================================= */
+.report-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 2rem;
+  flex-wrap: wrap; 
+  gap: 15px;
+}
+
+.report-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-title-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.report-period {
+  font-size: 0.9rem;
+  color: #a5b1c2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Redefine reminder for a cleaner look (Badge style) */
+.reminder-tooltip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.4rem 1rem !important; /* Force override */
+  background: rgba(231, 76, 60, 0.1); 
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  color: #ff6b6b;
+  font-size: 0.8rem !important;
+  font-weight: 500;
+  border-radius: 50px !important; /* Pill shape */
+  margin: 0;
+  height: auto;
+  white-space: nowrap;
+}
+
+/* Ensure actions align properly */
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
